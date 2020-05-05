@@ -225,7 +225,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 bool isFinal = data.timedData.finalFlag;
                 KeyedData<A,B> outputD {std::get<0>(iter->second), std::move(data.timedData.value.key())};
-                WithTime<KeyedData<A,B>,typename StateT::TimePointType> outputT {data.timedData.timePoint, std::move(outputD)};                                  
+                //There is a slight difference in how RealTimeMonad and SinglePassIterationMonad
+                //handles the "final" reply message in an OnOrderFacility
+                //For SinglePassIterationMonad, when the message goes to the consumer, it will be marked as
+                //"final" ONLY IF this message is the last one ever in the OnOrderFacility (meaning that the
+                //key is a "final" one too). This makes sense because otherwise we will terminate the
+                //OnOrderFacility too early in that monad.
+                //However, here, for RealTimeMonad, the final flag will be preserved when it gets into the consumer
+                //The reason is that in RealTimeMonad, the final flag is only used to release 
+                //internal key records of OnOrderFacility, so we pass the final flag in case that the consumer
+                //is actually somehow passing it to another OnOrderFacility which will release its internal key
+                //object. Since RealTimeMonad does not really terminate the logic of OnOrderFacility based
+                //on final flag, this is harmless
+                WithTime<KeyedData<A,B>,typename StateT::TimePointType> outputT {data.timedData.timePoint, std::move(outputD), isFinal};                                  
                 h->handle(withtime_utils::pureTimedDataWithEnvironment<KeyedData<A,B>, StateT, typename StateT::TimePointType>(data.environment, std::move(outputT)));    
                 if (isFinal) {
                     theMap_.erase(iter);
