@@ -81,6 +81,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Certificate(std::optional<TimePoint> &&tp, Provider<T> *signer) : timePoint_(std::move(tp)), signerStack_() {
                 signerStack_.push(signer);
             }
+            Certificate(Certificate const &c) = default;
+            Certificate &operator=(Certificate const &c) = default;
             Certificate(Certificate &&c) = default;
             Certificate &operator=(Certificate &&c) = default;
             Certificate push(Provider<T> *signer) {
@@ -122,7 +124,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class Provider : public virtual ProviderBase {
         public:
             virtual Certificate<T> poll() = 0;
-            virtual InnerData<T> next(Certificate<T> &&cert) = 0;
+            virtual Data<T> next(Certificate<T> &&cert) = 0;
             virtual ~Provider() {}
         };
 
@@ -140,9 +142,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return {data_->timedData.timePoint, this};
                 }
             }
-            virtual InnerData<T> next(Certificate<T> &&cert) override final {
+            virtual Data<T> next(Certificate<T> &&cert) override final {
                 cert.consume(this);
-                InnerData<T> ret = std::move(*data_);
+                Data<T> ret = std::move(data_);
                 data_ = std::nullopt;
                 return ret;
             }
@@ -191,17 +193,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return cert.push(this);
             }
-            virtual InnerData<T> next(Certificate<T> &&cert) override final {
+            virtual Data<T> next(Certificate<T> &&cert) override final {
                 cert.consume(this);
                 auto *p = cert.topSigner();
-                InnerData<T> x = p->next(std::move(cert));
-                if (x.timedData.finalFlag) {
+                Data<T> x = p->next(std::move(cert));
+                if (!x) {
+                    return x;
+                }
+                if (x->timedData.finalFlag) {
                     if (sourceSet_.find(p) != sourceSet_.end()) {
                         sources_.erase(std::find(sources_.begin(), sources_.end(), p));
                         sourceSet_.erase(p);
                     }                                    
                     if (!sources_.empty()) {
-                        x.timedData.finalFlag = false;
+                        x->timedData.finalFlag = false;
                     }
                 }
                 return x;
@@ -245,7 +250,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             Provider<T> *source_;
             struct QueueItem {
-                std::unique_ptr<InnerData<T>> data;
+                std::unique_ptr<std::tuple<TimePoint,Data<T>>> data;
                 int remainingCount;
             };
             using Queue = std::deque<QueueItem>;
@@ -273,10 +278,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         auto parentCert = parent_->source_->poll();
                         return parentCert.push(this);
                     } else { 
-                        return Certificate<T> {(parent_->queue_.begin()+qPos_)->data->timedData.timePoint, this};
+                        return Certificate<T> {std::get<0>(*((parent_->queue_.begin()+qPos_)->data)), this};
                     }
                 }
-                virtual InnerData<T> next(Certificate<T> &&cert) override final {
+                virtual Data<T> next(Certificate<T> &&cert) override final {
                     if (parent_->outputs_.size() == 1) {
                         cert.consume(this);
                         return parent_->source_->next(std::move(cert));
@@ -286,7 +291,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         if (parent_->queue_.empty()) {
                             parent_->enqueue(std::move(cert));
                             auto iter = parent_->queue_.begin();
-                            auto x = iter->data->clone();
+                            Data<T> x;
+                            if (std::get<1>(*(iter->data))) {
+                                x = std::get<1>(*(iter->data))->clone();
+                            } else {
+                                x = std::nullopt;
+                            }
                             --(iter->remainingCount);
                             qPos_ = 1;
                             parent_->updateQueue();
@@ -294,7 +304,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         } else {
                             parent_->enqueue(std::move(cert));
                             auto iter = parent_->queue_.begin()+qPos_;
-                            auto x = iter->data->clone();
+                            Data<T> x;
+                            if (std::get<1>(*(iter->data))) {
+                                x = std::get<1>(*(iter->data))->clone();
+                            } else {
+                                x = std::nullopt;
+                            }
                             --(iter->remainingCount);
                             qPos_ = parent_->queue_.size();
                             parent_->updateQueue();
@@ -302,7 +317,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     } else {
                         auto iter = parent_->queue_.begin()+qPos_;
-                        auto x = iter->data->clone();
+                        Data<T> x;
+                        if (std::get<1>(*(iter->data))) {
+                            x = std::get<1>(*(iter->data))->clone();
+                        } else {
+                            x = std::nullopt;
+                        }
                         --(iter->remainingCount);
                         ++qPos_;
                         parent_->updateQueue();
@@ -336,8 +356,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return outputs_.back().get();
             }
             void enqueue(Certificate<T> &&cert) {
+                auto tp = fetchTimePointUnsafe(cert);
                 queue_.push_back({
-                    std::make_unique<InnerData<T>>(source_->next(std::move(cert)))
+                    std::make_unique<std::tuple<TimePoint,Data<T>>>(tp, source_->next(std::move(cert)))
                     , (int) outputs_.size()
                 });
             }
@@ -414,27 +435,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class B>
         class BufferedProvider : public virtual Provider<B> {
         protected:
-            struct CheckAndProduceResult {
-                bool remainIdle;
-                Data<B> busyProduct;
-            };
+            using CheckAndProduceResult =
+                std::optional<
+                    std::tuple<TimePoint, std::function<Data<B>()>>
+                >;
             virtual CheckAndProduceResult checkAndProduce() = 0;
         private:
-            std::optional<InnerData<B>> buffer_; 
+            CheckAndProduceResult buffer_; 
             void fillBuffer() {
                 if (buffer_) {
                     return;
                 }
-                while (true) {
-                    CheckAndProduceResult res = checkAndProduce();
-                    if (res.remainIdle) {
-                        break;
-                    }
-                    if (res.busyProduct) {
-                        buffer_ = *(res.busyProduct);
-                        break;
-                    }
-                }
+                buffer_ = checkAndProduce();
             }
         public:
             virtual Certificate<B> poll() override final {
@@ -444,14 +456,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!buffer_) {
                     return Certificate<B> { std::nullopt , this };
                 } else {
-                    return Certificate<B> { buffer_->timedData.timePoint , this };
+                    return Certificate<B> { std::get<0>(*buffer_) , this };
                 }
             }
-            virtual InnerData<B> next(Certificate<B> &&cert) override final {
+            virtual Data<B> next(Certificate<B> &&cert) override final {
                 cert.consume(this);
-                InnerData<B> ret = std::move(*buffer_);
+                std::tuple<TimePoint, std::function<Data<B>()>> ret = std::move(*buffer_);
                 buffer_ = std::nullopt;
-                return ret;
+                return std::get<1>(ret)();
             }
         };
 
@@ -459,12 +471,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class ActionCore : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual BufferedProvider<B> {
         protected:
             virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
-                auto t = this->source()->poll();
+                Certificate<A> t { this->source()->poll() };
                 if (!t.check()) {
-                    return {true, std::nullopt};
+                    return std::nullopt;
                 }
-                auto input = this->source()->next(std::move(t));
-                return {false, handle(std::move(input))};
+                auto tp = fetchTimePointUnsafe(t);
+                auto produce = [t=std::move(t),this]() -> Data<B> {
+                    Certificate<A> t1 {std::move(t)};
+                    auto input = this->source()->next(std::move(t1));
+                    if (!input) {
+                        return std::nullopt;
+                    }
+                    return handle(std::move(*input));
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp, produce};
             }       
             virtual Data<B> handle(InnerData<A> &&) = 0;
         public:
@@ -569,7 +589,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 auto c = y_->poll();
                 return c.push(this);
             }
-            virtual InnerData<C> next(Certificate<C> &&cert) override final {
+            virtual Data<C> next(Certificate<C> &&cert) override final {
                 cert.consume(this);
                 return y_->next(std::move(cert));
             }
@@ -606,11 +626,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     return Certificate<KeyedData<A,B>> {queue_.top().timedData.timePoint, this};
                 }
-                virtual InnerData<KeyedData<A,B>> next(Certificate<KeyedData<A,B>> &&cert) override final {
+                virtual Data<KeyedData<A,B>> next(Certificate<KeyedData<A,B>> &&cert) override final {
                     cert.consume(this);
                     auto ret = std::move(queue_.top());              
                     queue_.pop();
-                    return ret;
+                    return {ret};
                 }
             };
             std::unordered_map<typename StateT::IDType, std::tuple<Key<A>, bool, ResponseProvider *>, typename StateT::IDHash> keyMap_;
@@ -628,6 +648,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return {key, b.key()};
                     }
                     , std::move(response)
+                    , true
                 );
                 auto *responder = std::get<2>(iter->second);
                 if (isFinalResponseForThisKey) {
@@ -803,10 +824,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         protected:
             //an importer is NEVER idle in this monad
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {
-                return {false, generate()};
+                auto d = generate();
+                return std::tuple<TimePoint, std::function<Data<T>()>> {d.timedData.timePoint, [d=std::move(d)]() -> Data<T> {return {std::move(d)};}};
             }
         public:           
-            virtual Data<T> generate() = 0;
+            virtual InnerData<T> generate() = 0;
             AbstractImporterCore() : BufferedProvider<T>() {}
         };
 
@@ -832,7 +854,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void start(StateT *environment) override final {
                 environment_ = environment;
             }
-            virtual Data<T> generate() override final {
+            virtual InnerData<T> generate() override final {
                 return f_(environment_);
             }
         };
@@ -858,18 +880,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return {std::nullopt, this};
                 }
             } 
-            virtual InnerData<SpecialOutputDataTypeForExporters> next(Certificate<SpecialOutputDataTypeForExporters> &&cert) override final {
+            virtual Data<SpecialOutputDataTypeForExporters> next(Certificate<SpecialOutputDataTypeForExporters> &&cert) override final {
                 cert.consume(this);
                 auto input = this->source()->next(std::move(sourceCert_));
-                handle(std::move(input));
-                return pureInnerData<SpecialOutputDataTypeForExporters>(
-                    input.environment,
+                if (!input) {
+                    return std::nullopt;
+                }
+                auto env = input->environment;
+                auto tp = input->timedData.timePoint;
+                auto flag = input->timedData.finalFlag;
+                handle(std::move(*input));
+                return { pureInnerData<SpecialOutputDataTypeForExporters>(
+                    env,
                     {
-                        input.timedData.timePoint,
+                        tp,
                         SpecialOutputDataTypeForExporters(),
-                        input.timedData.finalFlag
+                        flag
                     }
-                );
+                ) };
             }
             AbstractExporterCore() : Consumer<T>(), sourceCert_() {}
         };
@@ -920,12 +948,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 virtual void start(StateT *environment) override final {
                     orig_.core_->start(environment);
                 }
-                virtual Data<T2> generate() override final {
-                    Certificate<T2> cert = post_.core_->poll();
-                    if (cert.check()) {
-                        return post_.core_->next(std::move(cert));
-                    } else {
-                        return std::nullopt;
+                virtual InnerData<T2> generate() override final {
+                    while (true) {
+                        Certificate<T2> cert = post_.core_->poll(); //this can be assumed to always succeed
+                        auto d = post_.core_->next(std::move(cert));
+                        if (d) {
+                            return *d;
+                        }
                     }
                 }
             };
@@ -952,7 +981,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     auto cert = pre_.core_->poll();
                     if (cert.check()) {
                         auto t2 = pre_.core_->next(std::move(cert));
-                        orig_.core_->handle(std::move(t2));
+                        if (t2) {
+                            orig_.core_->handle(std::move(*t2));
+                        }
                     }
                 }
             };
@@ -1285,7 +1316,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     auto cert = finalMultiplexer.poll();
                     if (cert.check()) {
                         auto d = finalMultiplexer.next(std::move(cert));
-                        if (d.timedData.finalFlag) {
+                        if (!d) {
+                            continue;
+                        }
+                        if (d->timedData.finalFlag) {
                             break;
                         }
                     }

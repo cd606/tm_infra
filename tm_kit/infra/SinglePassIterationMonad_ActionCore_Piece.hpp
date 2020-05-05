@@ -19,46 +19,66 @@ protected:
             vec.push_back({1, fetchTimePointUnsafe(cert1)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&) = 0;
@@ -173,57 +193,95 @@ protected:
             vec.push_back({2, fetchTimePointUnsafe(cert2)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&) = 0;
@@ -350,68 +408,126 @@ protected:
             vec.push_back({3, fetchTimePointUnsafe(cert3)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&) = 0;
@@ -550,79 +666,159 @@ protected:
             vec.push_back({4, fetchTimePointUnsafe(cert4)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 4:
             {
-                auto x4 = this->Consumer<A4>::source()->next(std::move(cert4));
-                if (!StateT::CheckTime || !hasA4_ || x4.timedData.timePoint >= a4_.timePoint) {
-                    a4_ = std::move(x4.timedData);
-                    hasA4_ = true;
-                    env = x4.environment;
-                }
+                auto produce = [cert4=std::move(cert4),updateIdx,this]() -> Data<B> {
+                    Certificate<A4> cert4_copy = std::move(cert4);
+                    auto x4 = this->Consumer<A4>::source()->next(std::move(cert4_copy));
+                    if (!x4) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
+                        a4_ = std::move(x4->timedData);
+                        hasA4_ = true;
+                        StateT *env = x4->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_) && 
-             (!requireMask_[4] || hasA4_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&) = 0;
@@ -773,90 +969,194 @@ protected:
             vec.push_back({5, fetchTimePointUnsafe(cert5)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 4:
             {
-                auto x4 = this->Consumer<A4>::source()->next(std::move(cert4));
-                if (!StateT::CheckTime || !hasA4_ || x4.timedData.timePoint >= a4_.timePoint) {
-                    a4_ = std::move(x4.timedData);
-                    hasA4_ = true;
-                    env = x4.environment;
-                }
+                auto produce = [cert4=std::move(cert4),updateIdx,this]() -> Data<B> {
+                    Certificate<A4> cert4_copy = std::move(cert4);
+                    auto x4 = this->Consumer<A4>::source()->next(std::move(cert4_copy));
+                    if (!x4) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
+                        a4_ = std::move(x4->timedData);
+                        hasA4_ = true;
+                        StateT *env = x4->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 5:
             {
-                auto x5 = this->Consumer<A5>::source()->next(std::move(cert5));
-                if (!StateT::CheckTime || !hasA5_ || x5.timedData.timePoint >= a5_.timePoint) {
-                    a5_ = std::move(x5.timedData);
-                    hasA5_ = true;
-                    env = x5.environment;
-                }
+                auto produce = [cert5=std::move(cert5),updateIdx,this]() -> Data<B> {
+                    Certificate<A5> cert5_copy = std::move(cert5);
+                    auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
+                    if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
+                        a5_ = std::move(x5->timedData);
+                        hasA5_ = true;
+                        StateT *env = x5->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_) && 
-             (!requireMask_[4] || hasA4_) && 
-             (!requireMask_[5] || hasA5_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&) = 0;
@@ -1019,101 +1319,231 @@ protected:
             vec.push_back({6, fetchTimePointUnsafe(cert6)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 4:
             {
-                auto x4 = this->Consumer<A4>::source()->next(std::move(cert4));
-                if (!StateT::CheckTime || !hasA4_ || x4.timedData.timePoint >= a4_.timePoint) {
-                    a4_ = std::move(x4.timedData);
-                    hasA4_ = true;
-                    env = x4.environment;
-                }
+                auto produce = [cert4=std::move(cert4),updateIdx,this]() -> Data<B> {
+                    Certificate<A4> cert4_copy = std::move(cert4);
+                    auto x4 = this->Consumer<A4>::source()->next(std::move(cert4_copy));
+                    if (!x4) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
+                        a4_ = std::move(x4->timedData);
+                        hasA4_ = true;
+                        StateT *env = x4->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 5:
             {
-                auto x5 = this->Consumer<A5>::source()->next(std::move(cert5));
-                if (!StateT::CheckTime || !hasA5_ || x5.timedData.timePoint >= a5_.timePoint) {
-                    a5_ = std::move(x5.timedData);
-                    hasA5_ = true;
-                    env = x5.environment;
-                }
+                auto produce = [cert5=std::move(cert5),updateIdx,this]() -> Data<B> {
+                    Certificate<A5> cert5_copy = std::move(cert5);
+                    auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
+                    if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
+                        a5_ = std::move(x5->timedData);
+                        hasA5_ = true;
+                        StateT *env = x5->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 6:
             {
-                auto x6 = this->Consumer<A6>::source()->next(std::move(cert6));
-                if (!StateT::CheckTime || !hasA6_ || x6.timedData.timePoint >= a6_.timePoint) {
-                    a6_ = std::move(x6.timedData);
-                    hasA6_ = true;
-                    env = x6.environment;
-                }
+                auto produce = [cert6=std::move(cert6),updateIdx,this]() -> Data<B> {
+                    Certificate<A6> cert6_copy = std::move(cert6);
+                    auto x6 = this->Consumer<A6>::source()->next(std::move(cert6_copy));
+                    if (!x6) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
+                        a6_ = std::move(x6->timedData);
+                        hasA6_ = true;
+                        StateT *env = x6->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_) && 
-             (!requireMask_[4] || hasA4_) && 
-             (!requireMask_[5] || hasA5_) && 
-             (!requireMask_[6] || hasA6_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&) = 0;
@@ -1288,112 +1718,270 @@ protected:
             vec.push_back({7, fetchTimePointUnsafe(cert7)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 4:
             {
-                auto x4 = this->Consumer<A4>::source()->next(std::move(cert4));
-                if (!StateT::CheckTime || !hasA4_ || x4.timedData.timePoint >= a4_.timePoint) {
-                    a4_ = std::move(x4.timedData);
-                    hasA4_ = true;
-                    env = x4.environment;
-                }
+                auto produce = [cert4=std::move(cert4),updateIdx,this]() -> Data<B> {
+                    Certificate<A4> cert4_copy = std::move(cert4);
+                    auto x4 = this->Consumer<A4>::source()->next(std::move(cert4_copy));
+                    if (!x4) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
+                        a4_ = std::move(x4->timedData);
+                        hasA4_ = true;
+                        StateT *env = x4->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 5:
             {
-                auto x5 = this->Consumer<A5>::source()->next(std::move(cert5));
-                if (!StateT::CheckTime || !hasA5_ || x5.timedData.timePoint >= a5_.timePoint) {
-                    a5_ = std::move(x5.timedData);
-                    hasA5_ = true;
-                    env = x5.environment;
-                }
+                auto produce = [cert5=std::move(cert5),updateIdx,this]() -> Data<B> {
+                    Certificate<A5> cert5_copy = std::move(cert5);
+                    auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
+                    if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
+                        a5_ = std::move(x5->timedData);
+                        hasA5_ = true;
+                        StateT *env = x5->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 6:
             {
-                auto x6 = this->Consumer<A6>::source()->next(std::move(cert6));
-                if (!StateT::CheckTime || !hasA6_ || x6.timedData.timePoint >= a6_.timePoint) {
-                    a6_ = std::move(x6.timedData);
-                    hasA6_ = true;
-                    env = x6.environment;
-                }
+                auto produce = [cert6=std::move(cert6),updateIdx,this]() -> Data<B> {
+                    Certificate<A6> cert6_copy = std::move(cert6);
+                    auto x6 = this->Consumer<A6>::source()->next(std::move(cert6_copy));
+                    if (!x6) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
+                        a6_ = std::move(x6->timedData);
+                        hasA6_ = true;
+                        StateT *env = x6->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 7:
             {
-                auto x7 = this->Consumer<A7>::source()->next(std::move(cert7));
-                if (!StateT::CheckTime || !hasA7_ || x7.timedData.timePoint >= a7_.timePoint) {
-                    a7_ = std::move(x7.timedData);
-                    hasA7_ = true;
-                    env = x7.environment;
-                }
+                auto produce = [cert7=std::move(cert7),updateIdx,this]() -> Data<B> {
+                    Certificate<A7> cert7_copy = std::move(cert7);
+                    auto x7 = this->Consumer<A7>::source()->next(std::move(cert7_copy));
+                    if (!x7) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
+                        a7_ = std::move(x7->timedData);
+                        hasA7_ = true;
+                        StateT *env = x7->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_) && 
-             (!requireMask_[4] || hasA4_) && 
-             (!requireMask_[5] || hasA5_) && 
-             (!requireMask_[6] || hasA6_) && 
-             (!requireMask_[7] || hasA7_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&) = 0;
@@ -1580,123 +2168,311 @@ protected:
             vec.push_back({8, fetchTimePointUnsafe(cert8)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 4:
             {
-                auto x4 = this->Consumer<A4>::source()->next(std::move(cert4));
-                if (!StateT::CheckTime || !hasA4_ || x4.timedData.timePoint >= a4_.timePoint) {
-                    a4_ = std::move(x4.timedData);
-                    hasA4_ = true;
-                    env = x4.environment;
-                }
+                auto produce = [cert4=std::move(cert4),updateIdx,this]() -> Data<B> {
+                    Certificate<A4> cert4_copy = std::move(cert4);
+                    auto x4 = this->Consumer<A4>::source()->next(std::move(cert4_copy));
+                    if (!x4) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
+                        a4_ = std::move(x4->timedData);
+                        hasA4_ = true;
+                        StateT *env = x4->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 5:
             {
-                auto x5 = this->Consumer<A5>::source()->next(std::move(cert5));
-                if (!StateT::CheckTime || !hasA5_ || x5.timedData.timePoint >= a5_.timePoint) {
-                    a5_ = std::move(x5.timedData);
-                    hasA5_ = true;
-                    env = x5.environment;
-                }
+                auto produce = [cert5=std::move(cert5),updateIdx,this]() -> Data<B> {
+                    Certificate<A5> cert5_copy = std::move(cert5);
+                    auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
+                    if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
+                        a5_ = std::move(x5->timedData);
+                        hasA5_ = true;
+                        StateT *env = x5->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 6:
             {
-                auto x6 = this->Consumer<A6>::source()->next(std::move(cert6));
-                if (!StateT::CheckTime || !hasA6_ || x6.timedData.timePoint >= a6_.timePoint) {
-                    a6_ = std::move(x6.timedData);
-                    hasA6_ = true;
-                    env = x6.environment;
-                }
+                auto produce = [cert6=std::move(cert6),updateIdx,this]() -> Data<B> {
+                    Certificate<A6> cert6_copy = std::move(cert6);
+                    auto x6 = this->Consumer<A6>::source()->next(std::move(cert6_copy));
+                    if (!x6) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
+                        a6_ = std::move(x6->timedData);
+                        hasA6_ = true;
+                        StateT *env = x6->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 7:
             {
-                auto x7 = this->Consumer<A7>::source()->next(std::move(cert7));
-                if (!StateT::CheckTime || !hasA7_ || x7.timedData.timePoint >= a7_.timePoint) {
-                    a7_ = std::move(x7.timedData);
-                    hasA7_ = true;
-                    env = x7.environment;
-                }
+                auto produce = [cert7=std::move(cert7),updateIdx,this]() -> Data<B> {
+                    Certificate<A7> cert7_copy = std::move(cert7);
+                    auto x7 = this->Consumer<A7>::source()->next(std::move(cert7_copy));
+                    if (!x7) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
+                        a7_ = std::move(x7->timedData);
+                        hasA7_ = true;
+                        StateT *env = x7->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 8:
             {
-                auto x8 = this->Consumer<A8>::source()->next(std::move(cert8));
-                if (!StateT::CheckTime || !hasA8_ || x8.timedData.timePoint >= a8_.timePoint) {
-                    a8_ = std::move(x8.timedData);
-                    hasA8_ = true;
-                    env = x8.environment;
-                }
+                auto produce = [cert8=std::move(cert8),updateIdx,this]() -> Data<B> {
+                    Certificate<A8> cert8_copy = std::move(cert8);
+                    auto x8 = this->Consumer<A8>::source()->next(std::move(cert8_copy));
+                    if (!x8) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
+                        a8_ = std::move(x8->timedData);
+                        hasA8_ = true;
+                        StateT *env = x8->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_) && 
-             (!requireMask_[4] || hasA4_) && 
-             (!requireMask_[5] || hasA5_) && 
-             (!requireMask_[6] || hasA6_) && 
-             (!requireMask_[7] || hasA7_) && 
-             (!requireMask_[8] || hasA8_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&) = 0;
@@ -1895,134 +2671,354 @@ protected:
             vec.push_back({9, fetchTimePointUnsafe(cert9)});
         }
         if (vec.empty()) {
-            return {true, std::nullopt};
+            return std::nullopt;
         }
         std::sort(vec.begin(), vec.end());
         int updateIdx = vec[0].idx;
-        StateT *env = nullptr;
         switch (updateIdx) {
         case 0:
             {
-                auto x0 = this->Consumer<A0>::source()->next(std::move(cert0));
-                if (!StateT::CheckTime || !hasA0_ || x0.timedData.timePoint >= a0_.timePoint) {
-                    a0_ = std::move(x0.timedData);
-                    hasA0_ = true;
-                    env = x0.environment;
-                }
+                auto produce = [cert0=std::move(cert0),updateIdx,this]() -> Data<B> {
+                    Certificate<A0> cert0_copy = std::move(cert0);
+                    auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
+                    if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
+                        a0_ = std::move(x0->timedData);
+                        hasA0_ = true;
+                        StateT *env = x0->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 1:
             {
-                auto x1 = this->Consumer<A1>::source()->next(std::move(cert1));
-                if (!StateT::CheckTime || !hasA1_ || x1.timedData.timePoint >= a1_.timePoint) {
-                    a1_ = std::move(x1.timedData);
-                    hasA1_ = true;
-                    env = x1.environment;
-                }
+                auto produce = [cert1=std::move(cert1),updateIdx,this]() -> Data<B> {
+                    Certificate<A1> cert1_copy = std::move(cert1);
+                    auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
+                    if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
+                        a1_ = std::move(x1->timedData);
+                        hasA1_ = true;
+                        StateT *env = x1->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 2:
             {
-                auto x2 = this->Consumer<A2>::source()->next(std::move(cert2));
-                if (!StateT::CheckTime || !hasA2_ || x2.timedData.timePoint >= a2_.timePoint) {
-                    a2_ = std::move(x2.timedData);
-                    hasA2_ = true;
-                    env = x2.environment;
-                }
+                auto produce = [cert2=std::move(cert2),updateIdx,this]() -> Data<B> {
+                    Certificate<A2> cert2_copy = std::move(cert2);
+                    auto x2 = this->Consumer<A2>::source()->next(std::move(cert2_copy));
+                    if (!x2) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
+                        a2_ = std::move(x2->timedData);
+                        hasA2_ = true;
+                        StateT *env = x2->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 3:
             {
-                auto x3 = this->Consumer<A3>::source()->next(std::move(cert3));
-                if (!StateT::CheckTime || !hasA3_ || x3.timedData.timePoint >= a3_.timePoint) {
-                    a3_ = std::move(x3.timedData);
-                    hasA3_ = true;
-                    env = x3.environment;
-                }
+                auto produce = [cert3=std::move(cert3),updateIdx,this]() -> Data<B> {
+                    Certificate<A3> cert3_copy = std::move(cert3);
+                    auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
+                    if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
+                        a3_ = std::move(x3->timedData);
+                        hasA3_ = true;
+                        StateT *env = x3->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 4:
             {
-                auto x4 = this->Consumer<A4>::source()->next(std::move(cert4));
-                if (!StateT::CheckTime || !hasA4_ || x4.timedData.timePoint >= a4_.timePoint) {
-                    a4_ = std::move(x4.timedData);
-                    hasA4_ = true;
-                    env = x4.environment;
-                }
+                auto produce = [cert4=std::move(cert4),updateIdx,this]() -> Data<B> {
+                    Certificate<A4> cert4_copy = std::move(cert4);
+                    auto x4 = this->Consumer<A4>::source()->next(std::move(cert4_copy));
+                    if (!x4) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
+                        a4_ = std::move(x4->timedData);
+                        hasA4_ = true;
+                        StateT *env = x4->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 5:
             {
-                auto x5 = this->Consumer<A5>::source()->next(std::move(cert5));
-                if (!StateT::CheckTime || !hasA5_ || x5.timedData.timePoint >= a5_.timePoint) {
-                    a5_ = std::move(x5.timedData);
-                    hasA5_ = true;
-                    env = x5.environment;
-                }
+                auto produce = [cert5=std::move(cert5),updateIdx,this]() -> Data<B> {
+                    Certificate<A5> cert5_copy = std::move(cert5);
+                    auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
+                    if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
+                        a5_ = std::move(x5->timedData);
+                        hasA5_ = true;
+                        StateT *env = x5->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 6:
             {
-                auto x6 = this->Consumer<A6>::source()->next(std::move(cert6));
-                if (!StateT::CheckTime || !hasA6_ || x6.timedData.timePoint >= a6_.timePoint) {
-                    a6_ = std::move(x6.timedData);
-                    hasA6_ = true;
-                    env = x6.environment;
-                }
+                auto produce = [cert6=std::move(cert6),updateIdx,this]() -> Data<B> {
+                    Certificate<A6> cert6_copy = std::move(cert6);
+                    auto x6 = this->Consumer<A6>::source()->next(std::move(cert6_copy));
+                    if (!x6) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
+                        a6_ = std::move(x6->timedData);
+                        hasA6_ = true;
+                        StateT *env = x6->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 7:
             {
-                auto x7 = this->Consumer<A7>::source()->next(std::move(cert7));
-                if (!StateT::CheckTime || !hasA7_ || x7.timedData.timePoint >= a7_.timePoint) {
-                    a7_ = std::move(x7.timedData);
-                    hasA7_ = true;
-                    env = x7.environment;
-                }
+                auto produce = [cert7=std::move(cert7),updateIdx,this]() -> Data<B> {
+                    Certificate<A7> cert7_copy = std::move(cert7);
+                    auto x7 = this->Consumer<A7>::source()->next(std::move(cert7_copy));
+                    if (!x7) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
+                        a7_ = std::move(x7->timedData);
+                        hasA7_ = true;
+                        StateT *env = x7->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 8:
             {
-                auto x8 = this->Consumer<A8>::source()->next(std::move(cert8));
-                if (!StateT::CheckTime || !hasA8_ || x8.timedData.timePoint >= a8_.timePoint) {
-                    a8_ = std::move(x8.timedData);
-                    hasA8_ = true;
-                    env = x8.environment;
-                }
+                auto produce = [cert8=std::move(cert8),updateIdx,this]() -> Data<B> {
+                    Certificate<A8> cert8_copy = std::move(cert8);
+                    auto x8 = this->Consumer<A8>::source()->next(std::move(cert8_copy));
+                    if (!x8) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
+                        a8_ = std::move(x8->timedData);
+                        hasA8_ = true;
+                        StateT *env = x8->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         case 9:
             {
-                auto x9 = this->Consumer<A9>::source()->next(std::move(cert9));
-                if (!StateT::CheckTime || !hasA9_ || x9.timedData.timePoint >= a9_.timePoint) {
-                    a9_ = std::move(x9.timedData);
-                    hasA9_ = true;
-                    env = x9.environment;
-                }
+                auto produce = [cert9=std::move(cert9),updateIdx,this]() -> Data<B> {
+                    Certificate<A9> cert9_copy = std::move(cert9);
+                    auto x9 = this->Consumer<A9>::source()->next(std::move(cert9_copy));
+                    if (!x9) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA9_ || x9->timedData.timePoint >= a9_.timePoint) {
+                        a9_ = std::move(x9->timedData);
+                        hasA9_ = true;
+                        StateT *env = x9->environment;
+                        bool good = (
+                             (!requireMask_[0] || hasA0_) && 
+                             (!requireMask_[1] || hasA1_) && 
+                             (!requireMask_[2] || hasA2_) && 
+                             (!requireMask_[3] || hasA3_) && 
+                             (!requireMask_[4] || hasA4_) && 
+                             (!requireMask_[5] || hasA5_) && 
+                             (!requireMask_[6] || hasA6_) && 
+                             (!requireMask_[7] || hasA7_) && 
+                             (!requireMask_[8] || hasA8_) && 
+                             (!requireMask_[9] || hasA9_)
+                        );
+                        if (good) {
+                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
+                        } else {
+                            return std::nullopt;
+                        }
+                    }
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
             }
             break;
         default:
-            return {true, std::nullopt};
-        }
-        if (env == nullptr) {
-            return {false, std::nullopt};
-        }
-        bool good = (
-             (!requireMask_[0] || hasA0_) && 
-             (!requireMask_[1] || hasA1_) && 
-             (!requireMask_[2] || hasA2_) && 
-             (!requireMask_[3] || hasA3_) && 
-             (!requireMask_[4] || hasA4_) && 
-             (!requireMask_[5] || hasA5_) && 
-             (!requireMask_[6] || hasA6_) && 
-             (!requireMask_[7] || hasA7_) && 
-             (!requireMask_[8] || hasA8_) && 
-             (!requireMask_[9] || hasA9_)
-        );
-        if (good) {
-            return {false, handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_))};
-        } else {
-            return {false, std::nullopt};
+            return std::nullopt;
+            break;
         }
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&, WithTime<A9,TimePoint> &&) = 0;
