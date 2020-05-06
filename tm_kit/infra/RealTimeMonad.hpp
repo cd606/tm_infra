@@ -327,6 +327,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~MaybeOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
+        class EnhancedMaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
+        private:
+            F f_;
+            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+                auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
+                if (b) {
+                    return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
+                        data.timePoint,
+                        std::move(*b),
+                        (ForceFinal?true:data.finalFlag)
+                    });
+                } else {
+                    return std::nullopt;
+                }
+            }
+        public:
+            EnhancedMaybeOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
+            EnhancedMaybeOneLevelDownKleisli(EnhancedMaybeOneLevelDownKleisli const &) = delete;
+            EnhancedMaybeOneLevelDownKleisli &operator=(EnhancedMaybeOneLevelDownKleisli const &) = delete;
+            EnhancedMaybeOneLevelDownKleisli(EnhancedMaybeOneLevelDownKleisli &&) = default;
+            EnhancedMaybeOneLevelDownKleisli &operator=(EnhancedMaybeOneLevelDownKleisli &&) = default;
+            virtual ~EnhancedMaybeOneLevelDownKleisli() {}
+        };
+        template <class A, class B, class F, bool ForceFinal>
         class DirectOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
@@ -543,6 +567,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 ActionCore<A,B,Threaded>
                                 >;
         template <class A, class B, class F, bool Threaded>
+        using EnhancedMaybeActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+                                A, B, F,
+                                typename RealTimeMonadComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,false>,
+                                ActionCore<A,B,Threaded>
+                                >;
+        template <class A, class B, class F, bool Threaded>
         using KleisliActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
                                 typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,false>,
@@ -574,6 +604,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f)));
             } else {
                 return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f)));
+            }
+        }
+        template <class A, class F>
+        static auto enhancedMaybe(F &&f, bool threaded=false) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            if (threaded) {
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f)));
+            } else {
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f)));
             }
         }
         template <class A, class F>
@@ -652,6 +690,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 OnOrderFacilityCore<A,B,Threaded>
                                 >;
         template <class A, class B, class F, bool Threaded>
+        using EnhancedMaybeOnOrderFacilityCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+                                A, B, F,
+                                typename RealTimeMonadComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B,Threaded>
+                                >;
+        template <class A, class B, class F, bool Threaded>
         using KleisliOnOrderFacilityCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
                                 typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
@@ -679,6 +723,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f)));
             } else {
                 return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f)));
+            }
+        }
+        template <class A, class F>
+        static auto enhancedMaybeOnOrderFacility(F &&f, bool threaded=false) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            if (threaded) {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f)));
+            } else {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f)));
             }
         }
         template <class A, class F>

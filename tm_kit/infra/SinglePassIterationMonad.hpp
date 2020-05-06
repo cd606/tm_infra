@@ -529,6 +529,27 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~MaybeActionCore() {}
         };
         template <class A, class B, class F>
+        class EnhancedMaybeActionCore final : public ActionCore<A,B> {
+        private:
+            F f_;
+        protected:
+            virtual Data<B> handle(InnerData<A> &&a) override final {
+                std::optional<B> y = f_(std::tuple<TimePoint, A> {a.timedData.timePoint, std::move(a.timedData.value)});
+                if (!y) {
+                    return std::nullopt;
+                } else {
+                    return pureInnerData<B>(
+                        a.environment,
+                        {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
+                    );
+                }
+            }
+        public:
+            EnhancedMaybeActionCore(F &&f) : ActionCore<A,B>(), f_(std::move(f)) {
+            }
+            virtual ~EnhancedMaybeActionCore() {}
+        };
+        template <class A, class B, class F>
         class KleisliActionCore final : public ActionCore<A,B> {
         private:
             F f_;
@@ -559,6 +580,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto liftMaybe(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
             -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f)));
+        }
+        template <class A, class F>
+        static auto enhancedMaybe(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f)));
         }
         template <class A, class F>
         static auto kleisli(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
@@ -738,6 +764,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B, class F>
+        class EnhancedMaybeOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
+        private:
+            F f_;
+        public:
+            EnhancedMaybeOnOrderFacilityCore(F &&f) : OnOrderFacilityCore<A,B>(), f_(std::move(f)) {
+            }
+            virtual ~EnhancedMaybeOnOrderFacilityCore() {}
+            virtual void handle(InnerData<Key<A>> &&input) override final {
+                typename StateT::IDType id = input.timedData.value.id();
+                std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
+                if (x) {
+                    this->publishResponse(pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}));
+                } 
+            }
+        };
+        template <class A, class B, class F>
         class KleisliOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
         private:
             F f_;
@@ -770,6 +812,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto liftMaybeOnOrderFacility(F &&f) 
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F>(std::move(f)));
+        }
+        template <class A, class F>
+        static auto enhancedMaybeOnOrderFacility(F &&f) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f)));
         }
         template <class A, class F>
         static auto kleisliOnOrderFacility(F &&f) 

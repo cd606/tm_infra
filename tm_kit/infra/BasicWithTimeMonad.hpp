@@ -101,6 +101,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
         }
+        //This lifts (time,A)->optional<B> to Action<A,B>
+        template <class A, class F>
+        static auto enhancedMaybe_(F &&f, bool suggestThreaded=false) 
+            -> Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type> {
+            return [f=std::move(f)](InnerData<A> &&d) -> Data<typename decltype(f(std::tuple<TimePoint, A>()))::value_type> {
+                auto x = f(std::tuple<TimePoint, A> {d.timedData.timePoint, std::move(d.timedData.value)});
+                if (x) {
+                    return {
+                        pureInnerData<typename decltype(f(std::tuple<TimePoint,A>()))::value_type>(d.environment, {d.timedData.timePoint, std::move(*x), d.timedData.finalFlag})
+                    };
+                } else {
+                    return {std::nullopt};
+                }
+            };
+        }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
         static auto kleisli_(F &&f, bool suggestThreaded=false) 
@@ -131,6 +146,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (x) {
                     return {
                         pureInnerData<KeyedData<A,typename decltype(f(A()))::value_type>>(d.environment, {d.timedData.timePoint, {keyCopy, std::move(*x)}, d.timedData.finalFlag})
+                    };
+                } else {
+                    return std::nullopt;
+                }
+            };
+        }
+        //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
+        template <class A, class F>
+        static auto enhancedMaybeOnOrderFacility_(F &&f, bool suggestThreaded=false) 
+            -> OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type> {
+            return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+                Key<A> keyCopy = d.timedData.value;
+                auto x = f(std::tuple<TimePoint,A> {d.timedData.timePoint, std::move(d.timedData.value.key())});
+                if (x) {
+                    return {
+                        pureInnerData<KeyedData<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(d.environment, {d.timedData.timePoint, {keyCopy, std::move(*x)}, d.timedData.finalFlag})
                     };
                 } else {
                     return std::nullopt;
@@ -203,6 +234,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 liftMaybe_<A,F>(std::move(f), suggestThreaded)
             );
         }
+        //This lifts (time,A)->optional<B> to Action<A,B>
+        template <class A, class F>
+        static auto enhancedMaybe(F &&f, bool suggestThreaded=false) 
+            -> std::shared_ptr<decltype(enhancedMaybe_<A,F>(std::move(f), suggestThreaded))> {
+            return std::make_shared<decltype(enhancedMaybe_<A,F>(std::move(f), suggestThreaded))>(
+                enhancedMaybe_<A,F>(std::move(f), suggestThreaded)
+            );
+        }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
         static auto kleisli(F &&f, bool suggestThreaded=false) 
@@ -225,6 +264,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             -> std::shared_ptr<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))> {
             return std::make_shared<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))>(
                 liftMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded)
+            );
+        }
+        //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
+        template <class A, class F>
+        static auto enhancedMaybeOnOrderFacility(F &&f, bool suggestThreaded=false) 
+            -> std::shared_ptr<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))> {
+            return std::make_shared<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))>(
+                enhancedMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded)
             );
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
