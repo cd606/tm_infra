@@ -32,6 +32,7 @@ tm_infra_headers = [
     , 'Environments.hpp'
     , 'TerminationController.hpp'
     , 'ChronoUtils.hpp'
+    , 'IntIDComponent.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')

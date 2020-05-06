@@ -184,25 +184,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
-        //It is NOT ALLOWED to directly publish a KeyedData<A,B> in a producer of KeyedData<A,B>
-        //The reason is that any producer of KeyedData<A,B> is supposed to be an on-order facility
-        //and the produced KeyedData<A,B> must come from a **STORED** Key<A>. So, the producer is 
+        //In OnOrderFacility, it is NOT ALLOWED to directly publish a KeyedData<A,B> in its base producer
+        //The reason is that the produced KeyedData<A,B> must come from a **STORED** Key<A>. So, the producer is 
         //only allowed to calculate and publish Key<B>'s, and the logic here will automatically
         //lookup the correct Key<A> to match with it and combine them into KeyedData<A,B>.
         //This is why this specialization is a completely separate implemention from the generic 
         //Producer<T>.
+        template <class T>
+        class OnOrderFacilityProducer {};
         template <class A, class B>
-        class Producer<KeyedData<A,B>> {
+        class OnOrderFacilityProducer<KeyedData<A,B>> {
         private:
             std::unordered_map<typename StateT::IDType, std::tuple<Key<A>, IHandler<KeyedData<A,B>> *>, typename StateT::IDHash> theMap_;
             std::mutex mutex_;
         public:
-            Producer() : theMap_(), mutex_() {}
-            Producer(Producer const &) = delete;
-            Producer &operator=(Producer const &) = delete;
-            Producer(Producer &&) = default;
-            Producer &operator=(Producer &&) = default;
-            virtual ~Producer() {}
+            OnOrderFacilityProducer() : theMap_(), mutex_() {}
+            OnOrderFacilityProducer(OnOrderFacilityProducer const &) = delete;
+            OnOrderFacilityProducer &operator=(OnOrderFacilityProducer const &) = delete;
+            OnOrderFacilityProducer(OnOrderFacilityProducer &&) = default;
+            OnOrderFacilityProducer &operator=(OnOrderFacilityProducer &&) = default;
+            virtual ~OnOrderFacilityProducer() {}
             void registerKeyHandler(Key<A> const &k, IHandler<KeyedData<A,B>> *handler) {
                 std::lock_guard<std::mutex> _(mutex_);
                 if (handler != nullptr) {
@@ -270,7 +271,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
         };
         template <class A, class B>
-        using AbstractOnOrderFacility = AbstractAction<Key<A>,KeyedData<A,B>>;
+        class AbstractOnOrderFacility: public virtual IHandler<Key<A>>, public OnOrderFacilityProducer<KeyedData<A,B>> {
+        };
         template <class A, class B>
         class AbstractOffShoreFacility : public virtual IExternalComponent, public virtual AbstractOnOrderFacility<A,B> {};
 
@@ -584,10 +586,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     public:
         //We don't allow any action to manufacture KeyedData "out of the blue"
         //, but it is ok to manipulate Keys, so the check is one-sided
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B>, int> = 0>
+        //Moreover, we allow manipulation of KeyedData
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
         using AbstractAction = typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B>;
 
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B>, int> = 0>
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
         using Action = TwoWayHolder<typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B>,A,B>;
         
         template <class A, class F>
@@ -640,7 +643,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                 auto res = this->action(data.environment, std::move(a));
                 if (res) {
-                    Producer<KeyedData<A,B>>::publish(
+                    RealTimeMonadComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                         pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
                             return {std::move(id), std::move(b)};
                         }, std::move(*res))
@@ -668,7 +671,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                     auto res = this->action(data.environment, std::move(a));
                     if (res) {
-                        Producer<KeyedData<A,B>>::publish(
+                        RealTimeMonadComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                             pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
                                 return {std::move(id), std::move(b)};
                             }, std::move(*res))

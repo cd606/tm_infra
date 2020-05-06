@@ -52,7 +52,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         //we don't allow any action to manufacture KeyedData "out of the blue"
         //, but it is ok to manipulate Keys, so the check is one-sided
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B>, int> = 0>
+        //Moreover, we allow manipulation of keyed datas
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
         using Action = TimedMonadModelKleisli<A,B,StateT>;
 
         template <class A, class B>

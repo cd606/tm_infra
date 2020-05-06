@@ -564,10 +564,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     public:
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B>,int> = 0 >
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
         using AbstractAction = AbstractActionCore<A,B>;
 
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B>,int> = 0 >
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
         using Action = TwoWayHolder<AbstractActionCore<A,B>,A,B>;
 
     public:
@@ -866,7 +866,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~IExternalComponent() {}
             virtual void start(StateT *environment) = 0;
         };
-        template <class T>
+        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
             //an importer is NEVER idle in this monad
