@@ -16,7 +16,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             m.tm_isdst = -1;
             return std::chrono::system_clock::from_time_t(std::mktime(&m))+std::chrono::microseconds(microseconds);
         }
-        std::chrono::system_clock::time_point parseTodayActualLocalTime(int hour, int minute, int second, int microseconds) {
+        std::chrono::system_clock::time_point parseLocalTodayActualTime(int hour, int minute, int second, int microseconds) {
             std::time_t tp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
             std::tm *m = localtime(&tp);            
             m->tm_hour = hour;
