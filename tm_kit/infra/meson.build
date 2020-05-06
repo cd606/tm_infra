@@ -17,6 +17,7 @@ tm_infra_headers = [
     , 'RealTimeMonad_ExecuteAction_Piece.hpp'
     , 'RealTimeMonad_KleisliN_Piece.hpp'
     , 'RealTimeMonad_MaybeN_Piece.hpp'
+    , 'RealTimeMonad_EnhancedMaybeN_Piece.hpp'
     , 'RealTimeMonad_Merge_Piece.hpp'
     , 'RealTimeMonad_PureN_Piece.hpp'
     , 'RealTimeMonad_ThreadedHandler_Piece.hpp'

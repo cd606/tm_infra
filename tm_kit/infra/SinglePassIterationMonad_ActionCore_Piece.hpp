@@ -154,6 +154,41 @@ public:
     virtual ~MaybeActionCore() {}
 };
 template <class A0, class A1, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
+};
+template <class A0, class A1, class B, class F>
 class KleisliActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
 private:
     F f_;
@@ -361,6 +396,44 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
@@ -613,6 +686,47 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -910,6 +1024,50 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class A4, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        case 4:
+            tp = a4.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -1254,6 +1412,53 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        case 4:
+            tp = a4.timePoint;
+            break;
+        case 5:
+            tp = a5.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -1647,6 +1852,56 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        case 4:
+            tp = a4.timePoint;
+            break;
+        case 5:
+            tp = a5.timePoint;
+            break;
+        case 6:
+            tp = a6.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -2091,6 +2346,59 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        case 4:
+            tp = a4.timePoint;
+            break;
+        case 5:
+            tp = a5.timePoint;
+            break;
+        case 6:
+            tp = a6.timePoint;
+            break;
+        case 7:
+            tp = a7.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -2588,6 +2896,62 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        case 4:
+            tp = a4.timePoint;
+            break;
+        case 5:
+            tp = a5.timePoint;
+            break;
+        case 6:
+            tp = a6.timePoint;
+            break;
+        case 7:
+            tp = a7.timePoint;
+            break;
+        case 8:
+            tp = a8.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)}, std::tuple<TimePoint, A8> {a8.timePoint, std::move(a8.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -3140,6 +3504,65 @@ public:
     MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(requireMask), f_(std::move(f)) {
     }
     virtual ~MaybeActionCore() {}
+};
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
+class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
+private:
+    F f_;
+protected:
+    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+        TimePoint tp;
+        switch (which) {
+        case 0:
+            tp = a0.timePoint;
+            break;
+        case 1:
+            tp = a1.timePoint;
+            break;
+        case 2:
+            tp = a2.timePoint;
+            break;
+        case 3:
+            tp = a3.timePoint;
+            break;
+        case 4:
+            tp = a4.timePoint;
+            break;
+        case 5:
+            tp = a5.timePoint;
+            break;
+        case 6:
+            tp = a6.timePoint;
+            break;
+        case 7:
+            tp = a7.timePoint;
+            break;
+        case 8:
+            tp = a8.timePoint;
+            break;
+        case 9:
+            tp = a9.timePoint;
+            break;
+        default:
+            return std::nullopt;
+        }
+        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)}, std::tuple<TimePoint, A8> {a8.timePoint, std::move(a8.value)}, std::tuple<TimePoint, A9> {a9.timePoint, std::move(a9.value)});
+        if (!b) {
+            return std::nullopt;
+        }
+        return pureInnerData<B>(
+            env
+            , {
+                tp
+                , std::move(*b)
+                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+            }
+        );
+    }
+public:
+    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(requireMask), f_(std::move(f)) {
+    }
+    virtual ~EnhancedMaybeActionCore() {}
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {

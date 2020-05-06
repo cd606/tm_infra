@@ -866,6 +866,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     #include <tm_kit/infra/RealTimeMonad_Merge_Piece.hpp>
     #include <tm_kit/infra/RealTimeMonad_PureN_Piece.hpp>
     #include <tm_kit/infra/RealTimeMonad_MaybeN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeMonad_EnhancedMaybeN_Piece.hpp>  
     #include <tm_kit/infra/RealTimeMonad_KleisliN_Piece.hpp>  
 
     public:
