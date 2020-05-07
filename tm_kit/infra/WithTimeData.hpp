@@ -494,6 +494,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         int nextColorCode_;
         std::list<std::shared_ptr<void>> components_;
         std::unordered_set<std::shared_ptr<void>> otherPreservedPtrs_;
+        std::map<std::tuple<std::string,std::string>, std::string> stateSharingRecords_;
         mutable std::mutex mutex_;
 
         template <class A, class B>
@@ -602,9 +603,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             MonadRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        MonadRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), mutex_() {}
+        MonadRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), mutex_() {}
         template <class T>
-        MonadRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), mutex_() {}
+        MonadRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), mutex_() {}
         MonadRunner(MonadRunner const &) = delete;
         MonadRunner &operator=(MonadRunner const &) = delete;
         MonadRunner(MonadRunner &&) = default;
@@ -1043,6 +1044,36 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 ++counter;
             }
+            std::unordered_map<std::string, int> stateNames;
+            int stateNameCounter = 0;
+            for (auto const &sharing : stateSharingRecords_) {
+                if (sharing.second != "") {
+                    auto stateNameIter = stateNames.find(sharing.second);
+                    int stateIdx;
+                    if (stateNameIter == stateNames.end()) {
+                        stateIdx = ++stateNameCounter;
+                        stateNames.insert({sharing.second, stateIdx});
+                    } else {
+                        stateIdx = stateNameIter->second;
+                    }
+                }
+            }
+            for (auto const &item : stateNames) {
+                os << "\t state" << item.second << " [label=\"" << item.first << "\",shape=house];\n";
+            }
+            for (auto const &sharing : stateSharingRecords_) {
+                if (sharing.second != "") {
+                    auto stateIdx = stateNames[sharing.second];
+                    auto name1Idx = m[std::get<0>(sharing.first)];
+                    auto name2Idx = m[std::get<1>(sharing.first)];
+                    os << "\t action" << name1Idx << " -> state" << stateIdx << " [dir=none,style=bold];\n";
+                    os << "\t action" << name2Idx << " -> state" << stateIdx << " [dir=none,style=bold];\n";
+                } else {
+                    auto name1Idx = m[std::get<0>(sharing.first)];
+                    auto name2Idx = m[std::get<1>(sharing.first)];
+                    os << "\t action" << name1Idx << " -> action" << name2Idx << " [dir=none,style=bold];\n";
+                }
+            }
             os << "}\n";
         }
     private:
@@ -1122,6 +1153,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void preservePointer(std::shared_ptr<T> const &ptr) {
             std::lock_guard<std::mutex> _(mutex_);
             otherPreservedPtrs_.insert(std::static_pointer_cast<void>(ptr));
+        }
+
+        template <class A, class B>
+        void markStateSharing(std::shared_ptr<A> const &item1, std::shared_ptr<B> const &item2, std::string const &sharedStateName="") {
+            std::lock_guard<std::mutex> _(mutex_);
+            auto name1 = checkName_((void *) item1.get());
+            auto name2 = checkName_((void *) item2.get());
+            if (name1 == name2) {
+                throw MonadRunnerException(
+                    "Cannot mark a state sharing between two identical components"
+                );
+            }
+            auto smallerName = std::min(name1, name2);
+            auto biggerName = std::max(name1, name2);
+            stateSharingRecords_[{smallerName, biggerName}] = sharedStateName;
         }
     };
 
