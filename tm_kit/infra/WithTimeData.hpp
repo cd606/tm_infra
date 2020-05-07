@@ -493,6 +493,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<std::string, void *> reverseLookup_;
         int nextColorCode_;
         std::list<std::shared_ptr<void>> components_;
+        std::unordered_set<std::shared_ptr<void>> otherPreservedPtrs_;
         mutable std::mutex mutex_;
 
         template <class A, class B>
@@ -601,9 +602,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             MonadRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        MonadRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), mutex_() {}
+        MonadRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), mutex_() {}
         template <class T>
-        MonadRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), mutex_() {}
+        MonadRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), mutex_() {}
         MonadRunner(MonadRunner const &) = delete;
         MonadRunner &operator=(MonadRunner const &) = delete;
         MonadRunner(MonadRunner &&) = default;
@@ -1115,6 +1116,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             m_.finalize()(env_);
+        }
+
+        template <class T>
+        void preservePointer(std::shared_ptr<T> const &ptr) {
+            std::lock_guard<std::mutex> _(mutex_);
+            otherPreservedPtrs_.insert(std::static_pointer_cast<void>(ptr));
         }
     };
 
