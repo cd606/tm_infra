@@ -6,7 +6,12 @@
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
-    template <class StateT>
+    enum class BasicWithTimeMonadRunMode {
+        TypeCheckOnly
+        , MinimalTestRun
+    };
+
+    template <class StateT, BasicWithTimeMonadRunMode RunMode=BasicWithTimeMonadRunMode::TypeCheckOnly>
     class BasicWithTimeMonad {
     private:
         friend class MonadRunner<BasicWithTimeMonad>;
@@ -301,6 +306,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class BasicWithTimeMonad;
             Data<T> data;
+            Source() : data(std::nullopt) {}
             Source(Data<T> &&d) : data(std::move(d)) {}
         public:
             Source clone() const {
@@ -314,6 +320,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class BasicWithTimeMonad;
             std::function<void(Source<T> &&)> action;
+            Sink() : action() {}
             Sink(std::function<void(Source<T> &&)> f) : action(f) {}
         };
 
@@ -391,71 +398,153 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         template <class T>
         Source<T> importerAsSource(StateT *env, Importer<T> &importer) {
-            return {importer(env)};
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                return {};
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                return {importer(env)};
+            default:
+                return {};
+            } 
         }
         template <class A, class B>
         Source<B> actionAsSource(StateT *env, Action<A,B> &action) {
-            return {action(pureInnerData(env, A()))};
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                return {};
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                return {action(pureInnerData(env, A()))};
+            default:
+                return {};
+            }
         }
         template <class A, class B>
         Source<B> execute(Action<A,B> &action, Source<A> &&variable) {
-            return {apply(action, std::move(variable.data))};
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                return {};
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                return {apply(action, std::move(variable.data))};
+            default:
+                return {};
+            }
         }
 
         #include <tm_kit/infra/BasicWithTimeMonad_ExecuteAction_Piece.hpp> 
 
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
-            return Sink<T> {
-                [&exporter](Source<T> &&src) {
-                    if (src.data) {
-                        exporter(std::move(*(src.data)));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                return {};
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                return Sink<T> {
+                    [&exporter](Source<T> &&src) {
+                        if (src.data) {
+                            exporter(std::move(*(src.data)));
+                        }
                     }
-                }
-            };
+                };
+            default:
+                return {};
+            }
         }
         template <class A, class B>
         Sink<A> actionAsSink(Action<A,B> &action) {
-            return Sink<A> {
-                [this,&action](Source<A> &&src) {
-                    execute(action, std::move(src));
-                }
-            };
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                return {};
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                return Sink<A> {
+                    [this,&action](Source<A> &&src) {
+                        execute(action, std::move(src));
+                    }
+                };
+            default:
+                return {};
+            }
         }
 
         #include <tm_kit/infra/BasicWithTimeMonad_VariantSink_Piece.hpp>
 
         template <class A, class B>
         void placeOrderWithFacility(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility, Sink<KeyedData<A,B>> const &sink) {
-            sink.action(applyAtOnOrderFacility(facility, std::move(input.data)));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                break;
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                sink.action(applyAtOnOrderFacility(facility, std::move(input.data)));
+                break;
+            default:
+                break;
+            }
         }  
         template <class A, class B>
         void placeOrderWithFacilityAndForget(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility) {
-            applyAtOnOrderFacility(facility, std::move(input.data));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                break;
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                applyAtOnOrderFacility(facility, std::move(input.data));
+                break;
+            default:
+                break;
+            }
         }  
 
         template <class A, class B, class C>
         void placeOrderWithLocalFacility(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility, Sink<KeyedData<A,B>> const &sink) {
-            sink.action(applyAtOnOrderFacility(facility.facility, std::move(input.data)));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                break;
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                sink.action(applyAtOnOrderFacility(facility.facility, std::move(input.data)));
+                break;
+            default:
+                break;
+            }
         } 
         template <class A, class B, class C>
         void placeOrderWithLocalFacilityAndForget(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility) {
-            applyAtOnOrderFacility(facility.facility, std::move(input.data));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                break;
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                applyAtOnOrderFacility(facility.facility, std::move(input.data));
+                break;
+            default:
+                break;
+            }
         } 
         template <class A, class B, class C>
         Sink<C> localFacilityAsSink(LocalOnOrderFacility<A,B,C> &facility) {
-            return Sink<C> {
-                [&facility](Source<C> &&src) {
-                    if (src.data) {
-                        facility.exporter(std::move(*(src.data)));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                return {};
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                return Sink<C> {
+                    [&facility](Source<C> &&src) {
+                        if (src.data) {
+                            facility.exporter(std::move(*(src.data)));
+                        }
                     }
-                }
-            };
+                };
+            default:
+                return {};
+            }
         }
 
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
-            sink.action(std::move(src));
+            switch (RunMode) {
+            case BasicWithTimeMonadRunMode::TypeCheckOnly:
+                break;
+            case BasicWithTimeMonadRunMode::MinimalTestRun:
+                sink.action(std::move(src));
+                break;
+            default:
+                break;
+            }
         }
 
         std::function<void(StateT *)> finalize() {   
