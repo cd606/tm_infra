@@ -612,9 +612,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         MonadRunner &operator=(MonadRunner &&) = default;
         ~MonadRunner() noexcept {
         }
-	StateT *environment() const {
-		return env_;
-	}
+        StateT *environment() const {
+            return env_;
+        }
         /*
          * The reason that methods related to actions are templaterized differently from
          * other methods is as follows.
@@ -1168,6 +1168,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto smallerName = std::min(name1, name2);
             auto biggerName = std::max(name1, name2);
             stateSharingRecords_[{smallerName, biggerName}] = sharedStateName;
+        }
+
+        
+        template <class A, class B>
+        using FacilitioidConnector =
+            std::function<void(MonadRunner &, Source<typename Monad::template Key<A>> &&, Sink<typename Monad::template KeyedData<A,B>> const &)>;
+        template <class A, class B>
+        using FacilityWrapper =
+            std::optional<std::function<void(MonadRunner &, OnOrderFacilityPtr<A,B> const &)>>;
+        template <class A, class B, class C>
+        using LocalFacilityWrapper =
+            std::optional<std::function<void(MonadRunner &, LocalOnOrderFacilityPtr<A,B,C> const &)>>;
+
+        template <class A, class B>
+        static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityPtr<A,B> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithFacility(std::move(source), facility, sink);
+            };
+        }
+        template <class A, class B, class C>
+        static FacilitioidConnector<A,B> localFacilityConnector(LocalOnOrderFacilityPtr<A,B,C> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithLocalFacility(std::move(source), facility, sink);
+            };
         }
     };
 
