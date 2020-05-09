@@ -45,6 +45,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -71,6 +73,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -255,6 +259,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -282,6 +288,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -309,6 +317,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -509,6 +519,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -537,6 +549,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -565,6 +579,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -593,6 +609,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -809,6 +827,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -838,6 +858,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -867,6 +889,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -896,6 +920,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -925,6 +951,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1157,6 +1185,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1187,6 +1217,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1217,6 +1249,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1247,6 +1281,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1277,6 +1313,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1307,6 +1345,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1555,6 +1595,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1586,6 +1628,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1617,6 +1661,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1648,6 +1694,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1679,6 +1727,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1710,6 +1760,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -1741,6 +1793,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2005,6 +2059,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2037,6 +2093,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2069,6 +2127,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2101,6 +2161,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2133,6 +2195,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2165,6 +2229,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2197,6 +2263,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2229,6 +2297,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2509,6 +2579,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2542,6 +2614,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2575,6 +2649,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2608,6 +2684,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2641,6 +2719,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2674,6 +2754,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2707,6 +2789,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2740,6 +2824,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -2773,6 +2859,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3069,6 +3157,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3103,6 +3193,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3137,6 +3229,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3171,6 +3265,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3205,6 +3301,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3239,6 +3337,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3273,6 +3373,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3307,6 +3409,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3341,6 +3445,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
@@ -3375,6 +3481,8 @@ protected:
                         } else {
                             return std::nullopt;
                         }
+                    } else {
+                        return std::nullopt;
                     }
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};

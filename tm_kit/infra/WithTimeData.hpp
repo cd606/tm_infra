@@ -1,6 +1,10 @@
 #ifndef TM_KIT_INFRA_WITHTIME_DATA_HPP_
 #define TM_KIT_INFRA_WITHTIME_DATA_HPP_
 
+#ifdef _MSC_VER
+#pragma warning( disable : 4250 )
+#endif
+
 #include <variant>
 #include <memory>
 #include <iostream>
