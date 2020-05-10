@@ -435,8 +435,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionCheckData {
             std::string name;
             int paramCount;
-            std::vector<std::unordered_map<std::string,std::unordered_set<int>>> paramConnectedFrom;
-            std::unordered_map<std::string,std::unordered_set<int>> outputConnectedTo;            
+            std::vector<std::unordered_map<std::string,int>> paramConnectedFrom;
+            std::unordered_map<std::string,int> outputConnectedTo;            
             bool isImporter = false;
             bool isExporter = false;
 
@@ -582,7 +582,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to connect pos "+std::to_string(pos+1)+" of '"+iter->second.name+"' from empty producer"
                 );
             }
-            iter->second.paramConnectedFrom[pos][producer].insert(colorCode);
+            if (iter->second.paramConnectedFrom[pos].find(producer) != iter->second.paramConnectedFrom[pos].end()) {
+                throw MonadRunnerException(
+                    "Attempt to connect pos "+std::to_string(pos+1)+" of '"+iter->second.name+"' from producer '"+producer+"' again"
+                );
+            }
+            iter->second.paramConnectedFrom[pos].insert({producer, colorCode});
             auto reverseIter = reverseLookup_.find(producer);
             if (reverseIter == reverseLookup_.end()) {
                 throw MonadRunnerException(
@@ -595,7 +600,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to connect pos "+std::to_string(pos+1)+" of "+iter->second.name+" from non-registered producer '"+producer+"'"
                 );
             }
-            sourceIter->second.outputConnectedTo[iter->second.name].insert(colorCode);
+            if (sourceIter->second.outputConnectedTo.find(iter->second.name) != sourceIter->second.outputConnectedTo.end()) {
+                throw MonadRunnerException(
+                    "Attempt to connect output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' again"
+                );
+            }
+            sourceIter->second.outputConnectedTo.insert({iter->second.name,colorCode});
         }
         int nextColorCode() {
             int res = nextColorCode_+1;
@@ -1029,21 +1039,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         auto iter1 = reverseLookup_.find(src.first);
                         auto iter2 = nameMap_.find(iter1->second);
                         bool isExternal = iter2->second.isImporter || item.second.isExporter;
-                        for (auto color : src.second) {
-                            if (item.second.paramCount > 1) {
-                                os << "\t action" << m[src.first] << " -> action" << m[item.second.name] << ":arg" << ii;
-                            } else {
-                                os << "\t action" << m[src.first] << " -> action" << m[item.second.name];
-                            }   
-                            if (color != 0 && isExternal && ii == 0) {
-                                os << " [style=dotted,colorscheme=spectral11,color=" << color << "]";
-                            } else if (isExternal && ii == 0) {
-                                os << " [style=dotted]";
-                            } else if (color != 0) {
-                                os << " [style=dashed,colorscheme=spectral11,color=" << color << "]";
-                            }
-                            os << ";\n";
-                        }                       
+                        auto color = src.second;
+                        if (item.second.paramCount > 1) {
+                            os << "\t action" << m[src.first] << " -> action" << m[item.second.name] << ":arg" << ii;
+                        } else {
+                            os << "\t action" << m[src.first] << " -> action" << m[item.second.name];
+                        }   
+                        if (color != 0 && isExternal && ii == 0) {
+                            os << " [style=dotted,colorscheme=spectral11,color=" << color << "]";
+                        } else if (isExternal && ii == 0) {
+                            os << " [style=dotted]";
+                        } else if (color != 0) {
+                            os << " [style=dashed,colorscheme=spectral11,color=" << color << "]";
+                        }
+                        os << ";\n";                      
                     }                                                        
                 }
                 ++counter;
@@ -1091,7 +1100,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 visited.insert(item.second.name);
                 recStack.insert(item.second.name);
                 for (auto const &outputTo : item.second.outputConnectedTo) {
-                    if (!includeFacility && outputTo.second.find(0) == outputTo.second.end()) {
+                    if (!includeFacility && outputTo.second != 0) {
                         continue;
                     }
                     auto iter = reverseLookup_.find(outputTo.first);
