@@ -12,25 +12,27 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
             }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
         }
         return true;
     }
@@ -66,33 +68,37 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
             }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
         }
         return true;
     }
@@ -134,41 +140,47 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
             }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
         }
         return true;
     }
@@ -216,49 +228,57 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), hasData4_(false), a4_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
-            case 4:
+            }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
+        case 4:
+            if (StateT::CheckTime) {
                 if (hasData4_ && data.timedData.timePoint < a4_.timePoint) {
                     return false;
                 }
-                hasData4_ = true;
-                a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 4;
-                break;
             }
+            hasData4_ = true;
+            a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 4;
+            break;
         }
         return true;
     }
@@ -312,57 +332,67 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), hasData4_(false), a4_(), hasData5_(false), a5_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
-            case 4:
+            }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
+        case 4:
+            if (StateT::CheckTime) {
                 if (hasData4_ && data.timedData.timePoint < a4_.timePoint) {
                     return false;
                 }
-                hasData4_ = true;
-                a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 4;
-                break;
-            case 5:
+            }
+            hasData4_ = true;
+            a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 4;
+            break;
+        case 5:
+            if (StateT::CheckTime) {
                 if (hasData5_ && data.timedData.timePoint < a5_.timePoint) {
                     return false;
                 }
-                hasData5_ = true;
-                a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 5;
-                break;
             }
+            hasData5_ = true;
+            a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 5;
+            break;
         }
         return true;
     }
@@ -422,65 +452,77 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), hasData4_(false), a4_(), hasData5_(false), a5_(), hasData6_(false), a6_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
-            case 4:
+            }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
+        case 4:
+            if (StateT::CheckTime) {
                 if (hasData4_ && data.timedData.timePoint < a4_.timePoint) {
                     return false;
                 }
-                hasData4_ = true;
-                a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 4;
-                break;
-            case 5:
+            }
+            hasData4_ = true;
+            a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 4;
+            break;
+        case 5:
+            if (StateT::CheckTime) {
                 if (hasData5_ && data.timedData.timePoint < a5_.timePoint) {
                     return false;
                 }
-                hasData5_ = true;
-                a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 5;
-                break;
-            case 6:
+            }
+            hasData5_ = true;
+            a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 5;
+            break;
+        case 6:
+            if (StateT::CheckTime) {
                 if (hasData6_ && data.timedData.timePoint < a6_.timePoint) {
                     return false;
                 }
-                hasData6_ = true;
-                a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 6;
-                break;
             }
+            hasData6_ = true;
+            a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 6;
+            break;
         }
         return true;
     }
@@ -546,73 +588,87 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), hasData4_(false), a4_(), hasData5_(false), a5_(), hasData6_(false), a6_(), hasData7_(false), a7_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
-            case 4:
+            }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
+        case 4:
+            if (StateT::CheckTime) {
                 if (hasData4_ && data.timedData.timePoint < a4_.timePoint) {
                     return false;
                 }
-                hasData4_ = true;
-                a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 4;
-                break;
-            case 5:
+            }
+            hasData4_ = true;
+            a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 4;
+            break;
+        case 5:
+            if (StateT::CheckTime) {
                 if (hasData5_ && data.timedData.timePoint < a5_.timePoint) {
                     return false;
                 }
-                hasData5_ = true;
-                a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 5;
-                break;
-            case 6:
+            }
+            hasData5_ = true;
+            a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 5;
+            break;
+        case 6:
+            if (StateT::CheckTime) {
                 if (hasData6_ && data.timedData.timePoint < a6_.timePoint) {
                     return false;
                 }
-                hasData6_ = true;
-                a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 6;
-                break;
-            case 7:
+            }
+            hasData6_ = true;
+            a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 6;
+            break;
+        case 7:
+            if (StateT::CheckTime) {
                 if (hasData7_ && data.timedData.timePoint < a7_.timePoint) {
                     return false;
                 }
-                hasData7_ = true;
-                a7_ = {data.timedData.timePoint, std::move(std::get<7>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 7;
-                break;
             }
+            hasData7_ = true;
+            a7_ = {data.timedData.timePoint, std::move(std::get<7>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 7;
+            break;
         }
         return true;
     }
@@ -684,81 +740,97 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), hasData4_(false), a4_(), hasData5_(false), a5_(), hasData6_(false), a6_(), hasData7_(false), a7_(), hasData8_(false), a8_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
-            case 4:
+            }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
+        case 4:
+            if (StateT::CheckTime) {
                 if (hasData4_ && data.timedData.timePoint < a4_.timePoint) {
                     return false;
                 }
-                hasData4_ = true;
-                a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 4;
-                break;
-            case 5:
+            }
+            hasData4_ = true;
+            a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 4;
+            break;
+        case 5:
+            if (StateT::CheckTime) {
                 if (hasData5_ && data.timedData.timePoint < a5_.timePoint) {
                     return false;
                 }
-                hasData5_ = true;
-                a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 5;
-                break;
-            case 6:
+            }
+            hasData5_ = true;
+            a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 5;
+            break;
+        case 6:
+            if (StateT::CheckTime) {
                 if (hasData6_ && data.timedData.timePoint < a6_.timePoint) {
                     return false;
                 }
-                hasData6_ = true;
-                a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 6;
-                break;
-            case 7:
+            }
+            hasData6_ = true;
+            a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 6;
+            break;
+        case 7:
+            if (StateT::CheckTime) {
                 if (hasData7_ && data.timedData.timePoint < a7_.timePoint) {
                     return false;
                 }
-                hasData7_ = true;
-                a7_ = {data.timedData.timePoint, std::move(std::get<7>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 7;
-                break;
-            case 8:
+            }
+            hasData7_ = true;
+            a7_ = {data.timedData.timePoint, std::move(std::get<7>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 7;
+            break;
+        case 8:
+            if (StateT::CheckTime) {
                 if (hasData8_ && data.timedData.timePoint < a8_.timePoint) {
                     return false;
                 }
-                hasData8_ = true;
-                a8_ = {data.timedData.timePoint, std::move(std::get<8>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 8;
-                break;
             }
+            hasData8_ = true;
+            a8_ = {data.timedData.timePoint, std::move(std::get<8>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 8;
+            break;
         }
         return true;
     }
@@ -836,89 +908,107 @@ public:
         requireMask_(requireMask), hasData0_(false), a0_(), hasData1_(false), a1_(), hasData2_(false), a2_(), hasData3_(false), a3_(), hasData4_(false), a4_(), hasData5_(false), a5_(), hasData6_(false), a6_(), hasData7_(false), a7_(), hasData8_(false), a8_(), hasData9_(false), a9_(), lastIdx_(-1)
     {}
     inline bool operator()(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, StateT, typename StateT::TimePointType> &&data) {
-        if (StateT::CheckTime) {
-            switch (data.timedData.value.index()) {
-            case 0:
+        switch (data.timedData.value.index()) {
+        case 0:
+            if (StateT::CheckTime) {
                 if (hasData0_ && data.timedData.timePoint < a0_.timePoint) {
                     return false;
                 }
-                hasData0_ = true;
-                a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 0;
-                break;
-            case 1:
+            }
+            hasData0_ = true;
+            a0_ = {data.timedData.timePoint, std::move(std::get<0>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 0;
+            break;
+        case 1:
+            if (StateT::CheckTime) {
                 if (hasData1_ && data.timedData.timePoint < a1_.timePoint) {
                     return false;
                 }
-                hasData1_ = true;
-                a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 1;
-                break;
-            case 2:
+            }
+            hasData1_ = true;
+            a1_ = {data.timedData.timePoint, std::move(std::get<1>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 1;
+            break;
+        case 2:
+            if (StateT::CheckTime) {
                 if (hasData2_ && data.timedData.timePoint < a2_.timePoint) {
                     return false;
                 }
-                hasData2_ = true;
-                a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 2;
-                break;
-            case 3:
+            }
+            hasData2_ = true;
+            a2_ = {data.timedData.timePoint, std::move(std::get<2>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 2;
+            break;
+        case 3:
+            if (StateT::CheckTime) {
                 if (hasData3_ && data.timedData.timePoint < a3_.timePoint) {
                     return false;
                 }
-                hasData3_ = true;
-                a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 3;
-                break;
-            case 4:
+            }
+            hasData3_ = true;
+            a3_ = {data.timedData.timePoint, std::move(std::get<3>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 3;
+            break;
+        case 4:
+            if (StateT::CheckTime) {
                 if (hasData4_ && data.timedData.timePoint < a4_.timePoint) {
                     return false;
                 }
-                hasData4_ = true;
-                a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 4;
-                break;
-            case 5:
+            }
+            hasData4_ = true;
+            a4_ = {data.timedData.timePoint, std::move(std::get<4>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 4;
+            break;
+        case 5:
+            if (StateT::CheckTime) {
                 if (hasData5_ && data.timedData.timePoint < a5_.timePoint) {
                     return false;
                 }
-                hasData5_ = true;
-                a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 5;
-                break;
-            case 6:
+            }
+            hasData5_ = true;
+            a5_ = {data.timedData.timePoint, std::move(std::get<5>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 5;
+            break;
+        case 6:
+            if (StateT::CheckTime) {
                 if (hasData6_ && data.timedData.timePoint < a6_.timePoint) {
                     return false;
                 }
-                hasData6_ = true;
-                a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 6;
-                break;
-            case 7:
+            }
+            hasData6_ = true;
+            a6_ = {data.timedData.timePoint, std::move(std::get<6>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 6;
+            break;
+        case 7:
+            if (StateT::CheckTime) {
                 if (hasData7_ && data.timedData.timePoint < a7_.timePoint) {
                     return false;
                 }
-                hasData7_ = true;
-                a7_ = {data.timedData.timePoint, std::move(std::get<7>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 7;
-                break;
-            case 8:
+            }
+            hasData7_ = true;
+            a7_ = {data.timedData.timePoint, std::move(std::get<7>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 7;
+            break;
+        case 8:
+            if (StateT::CheckTime) {
                 if (hasData8_ && data.timedData.timePoint < a8_.timePoint) {
                     return false;
                 }
-                hasData8_ = true;
-                a8_ = {data.timedData.timePoint, std::move(std::get<8>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 8;
-                break;
-            case 9:
+            }
+            hasData8_ = true;
+            a8_ = {data.timedData.timePoint, std::move(std::get<8>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 8;
+            break;
+        case 9:
+            if (StateT::CheckTime) {
                 if (hasData9_ && data.timedData.timePoint < a9_.timePoint) {
                     return false;
                 }
-                hasData9_ = true;
-                a9_ = {data.timedData.timePoint, std::move(std::get<9>(data.timedData.value)), data.timedData.finalFlag};
-                lastIdx_ = 9;
-                break;
             }
+            hasData9_ = true;
+            a9_ = {data.timedData.timePoint, std::move(std::get<9>(data.timedData.value)), data.timedData.finalFlag};
+            lastIdx_ = 9;
+            break;
         }
         return true;
     }

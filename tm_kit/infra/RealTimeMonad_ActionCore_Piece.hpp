@@ -3,6 +3,9 @@ class ActionCore<std::variant<A0,A1>, B, true> : public RealTimeMonadComponents<
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()));
@@ -57,6 +60,9 @@ class ActionCore<std::variant<A0,A1,A2>, B, true> : public RealTimeMonadComponen
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()));
@@ -117,6 +123,9 @@ class ActionCore<std::variant<A0,A1,A2,A3>, B, true> : public RealTimeMonadCompo
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()));
@@ -183,6 +192,9 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true> : public RealTimeMonadCo
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()));
@@ -255,6 +267,9 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true> : public RealTimeMona
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()));
@@ -333,6 +348,9 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true> : public RealTimeM
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()));
@@ -417,6 +435,9 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true> : public RealTi
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()), withtime_utils::makeCopy(tc.get7()));
@@ -507,6 +528,9 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true> : public Rea
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()), withtime_utils::makeCopy(tc.get7()), withtime_utils::makeCopy(tc.get8()));
@@ -603,6 +627,9 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true> : public 
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        if (!this->timeCheckGood(std::move(data))) {
+            return;
+        }
         auto const &tc = this->timeChecker();
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()), withtime_utils::makeCopy(tc.get7()), withtime_utils::makeCopy(tc.get8()), withtime_utils::makeCopy(tc.get9()));

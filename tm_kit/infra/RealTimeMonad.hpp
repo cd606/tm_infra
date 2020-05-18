@@ -45,9 +45,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (hasData_ && data.timedData.timePoint < lastTime_) {
                         return false;
                     }
-                    hasData_ = true;
-                    lastTime_ = data.timedData.timePoint;
                 }
+                hasData_ = true;
+                lastTime_ = data.timedData.timePoint;
                 return true;
             }
             inline bool good() const {
@@ -97,6 +97,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         protected:
             bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> const &data) {
                 return timeChecker_(data);
+            }
+            bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
+                return timeChecker_(std::move(data));
             }
             virtual void actuallyHandle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
         public:
