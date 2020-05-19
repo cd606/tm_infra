@@ -908,7 +908,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         template <class T, class F>
-        static std::shared_ptr<Importer<T>> simpleImporter(F &&f) {
+        static std::shared_ptr<Importer<T>> simpleImporter(F &&f, bool suggestThreaded=false) {
             return std::make_shared<Importer<T>>(new SimpleImporter<T,F>(std::move(f)));
         }
     
@@ -975,9 +975,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f) {
+        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, bool suggestThreaded=false) {
             return std::make_shared<Exporter<T>>(new SimpleExporter<T,F>(std::move(f)));
         }
+        template <class T, class F>
+        static std::shared_ptr<Exporter<T>> pureExporter(F &&f, bool suggestThreaded=false) {
+            auto wrapper = [f=std::move(f)](InnerData<T> &&d) {
+                f(std::move(d.timedData.value));
+            };
+            return simpleExporter<T>(std::move(wrapper), suggestThreaded);
+        }
+        template <class T>
+        static std::shared_ptr<Exporter<T>> trivialExporter() {
+            return simpleExporter<T>([](InnerData<T> &&) {}, false);
+        }        
 
     public:
         template <class T1, class T2>

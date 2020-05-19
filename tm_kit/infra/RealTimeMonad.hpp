@@ -978,6 +978,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F,false>>(std::move(f)));
             }            
         }
+        template <class T, class F>
+        static std::shared_ptr<Exporter<T>> pureExporter(F &&f, bool threaded=false) {
+            auto wrapper = [f=std::move(f)](InnerData<T> &&d) {
+                f(std::move(d.timedData.value));
+            };
+            return simpleExporter<T>(std::move(wrapper), threaded);
+        }
+        template <class T>
+        static std::shared_ptr<Exporter<T>> trivialExporter() {
+            return simpleExporter<T>([](InnerData<T> &&) {}, false);
+        }
 
     public:
         template <class T1, class T2>
