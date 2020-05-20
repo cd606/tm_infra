@@ -918,6 +918,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> importer(AbstractImporter<T> *p) {
             return std::make_shared<Importer<T>>(p);
         }
+        template <class T>
+        static std::shared_ptr<Importer<T>> vacuousImporter() {
+            class LocalI final : public AbstractImporter<T> {
+            public:
+                virtual void start(StateT *env) override final {
+                    throw std::runtime_error("Vacuous importer called");
+                }
+            };
+            return std::make_shared<Importer<T>>(new LocalI());
+        }
         template <class T, class F>
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, bool threaded=false) {
             return std::make_shared<Importer<T>>(std::make_unique<SimpleImporter<T,F>>(std::move(f), threaded));

@@ -333,6 +333,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         using Exporter = std::function<void(InnerData<T> &&)>;
 
+        template <class T>
+        static std::shared_ptr<Importer<T>> vacuousImporter() {
+            return std::make_shared<Importer<T>>(
+                [](StateT * const) -> InnerData<T> {
+                    throw std::runtime_error("Vacuous Importer called");
+                }
+            );
+        }
         template <class T, class F>
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, bool suggestThreaded=false) {
             return std::make_shared<Importer<T>>( std::move(f) );
