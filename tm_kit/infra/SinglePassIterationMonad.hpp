@@ -492,18 +492,39 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     private:
+        using DelaySimulatorType = typename LiftParameters<TimePoint>::DelaySimulatorType;
+
+        template <class T>
+        static inline Data<T> applyDelaySimulator(int which, InnerData<T> &&input, DelaySimulatorType const &delaySimulator) {
+            if (delaySimulator) {
+                auto delay = (*delaySimulator)(which, input.timedData.timePoint);
+                input.timedData.timePoint += delay;
+            } 
+            return Data<T> {std::move(input)};
+        }
+        template <class T>
+        static inline Data<T> applyDelaySimulatorForKleisli(int which, Data<T> &&input, DelaySimulatorType const &delaySimulator) {
+            if (delaySimulator) {
+                if (input) {
+                    auto delay = (*delaySimulator)(which, input->timedData.timePoint);
+                    input->timedData.timePoint += delay;
+                }  
+            } 
+            return std::move(input);
+        }
         template <class A, class B, class F>
         class PureActionCore final : public ActionCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         protected:
             virtual Data<B> handle(InnerData<A> &&a) override final {
-                return {
+                return applyDelaySimulator<B>(0, {
                     pureInnerDataLift<A>(f_, std::move(a))
-                };
+                }, delaySimulator_);
             }
         public:
-            PureActionCore(F &&f) : ActionCore<A,B>(), f_(std::move(f)) {
+            PureActionCore(F &&f, DelaySimulatorType const &delaySimulator) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~PureActionCore() {}
         };
@@ -511,20 +532,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class MaybeActionCore final : public ActionCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         protected:
             virtual Data<B> handle(InnerData<A> &&a) override final {
                 std::optional<B> y = f_(std::move(a.timedData.value));
                 if (!y) {
                     return std::nullopt;
                 } else {
-                    return pureInnerData<B>(
+                    return applyDelaySimulator<B>(0, pureInnerData<B>(
                         a.environment,
                         {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
-                    );
+                    ), delaySimulator_);
                 }
             }
         public:
-            MaybeActionCore(F &&f) : ActionCore<A,B>(), f_(std::move(f)) {
+            MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~MaybeActionCore() {}
         };
@@ -532,20 +554,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class EnhancedMaybeActionCore final : public ActionCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         protected:
             virtual Data<B> handle(InnerData<A> &&a) override final {
                 std::optional<B> y = f_(std::tuple<TimePoint, A> {a.timedData.timePoint, std::move(a.timedData.value)});
                 if (!y) {
                     return std::nullopt;
                 } else {
-                    return pureInnerData<B>(
+                    return applyDelaySimulator<B>(0, pureInnerData<B>(
                         a.environment,
                         {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
-                    );
+                    ), delaySimulator_);
                 }
             }
         public:
-            EnhancedMaybeActionCore(F &&f) : ActionCore<A,B>(), f_(std::move(f)) {
+            EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~EnhancedMaybeActionCore() {}
         };
@@ -553,12 +576,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliActionCore final : public ActionCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         protected:
             virtual Data<B> handle(InnerData<A> &&a) override final {
-                return f_(std::move(a));
+                return applyDelaySimulatorForKleisli<B>(0, f_(std::move(a)), delaySimulator_);
             }
         public:
-            KleisliActionCore(F &&f) : ActionCore<A,B>(), f_(std::move(f)) {
+            KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~KleisliActionCore() {}
         };
@@ -574,22 +598,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, decltype(f(A()))>> {
-            return std::make_shared<Action<A, decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F>(std::move(f)));
+            return std::make_shared<Action<A, decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
         static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f)));
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
         static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f)));
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
         static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
-            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f)));
+            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f), liftParam.delaySimulator));
         }
     
     private:
@@ -735,14 +759,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class PureOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
         private:
             F f_; 
+            DelaySimulatorType delaySimulator_;
         public:
-            PureOnOrderFacilityCore(F &&f) : OnOrderFacilityCore<A,B>(), f_(std::move(f)) {
+            PureOnOrderFacilityCore(F &&f, DelaySimulatorType const &delaySimulator) : OnOrderFacilityCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~PureOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
-                auto resp = pureInnerDataLift([this](Key<A> &&k) {
+                auto resp = *applyDelaySimulator<Key<B>>(0, pureInnerDataLift([this](Key<A> &&k) {
                     return withtime_utils::apply(f_, std::move(k));
-                }, std::move(input));
+                }, std::move(input)), delaySimulator_);
                 resp.timedData.finalFlag = true; 
                 this->publishResponse(std::move(resp));
             }
@@ -751,15 +776,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class MaybeOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         public:
-            MaybeOnOrderFacilityCore(F &&f) : OnOrderFacilityCore<A,B>(), f_(std::move(f)) {
+            MaybeOnOrderFacilityCore(F &&f, DelaySimulatorType const &delaySimulator) : OnOrderFacilityCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~MaybeOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
                 typename StateT::IDType id = input.timedData.value.id();
                 std::optional<B> x = f_(std::move(input.timedData.value.key()));
                 if (x) {
-                    this->publishResponse(pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}));
+                    this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
                 } 
             }
         };
@@ -767,15 +793,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class EnhancedMaybeOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         public:
-            EnhancedMaybeOnOrderFacilityCore(F &&f) : OnOrderFacilityCore<A,B>(), f_(std::move(f)) {
+            EnhancedMaybeOnOrderFacilityCore(F &&f, DelaySimulatorType const &delaySimulator) : OnOrderFacilityCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~EnhancedMaybeOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
                 typename StateT::IDType id = input.timedData.value.id();
                 std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
                 if (x) {
-                    this->publishResponse(pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}));
+                    this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
                 } 
             }
         };
@@ -783,8 +810,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
         public:
-            KleisliOnOrderFacilityCore(F &&f) : OnOrderFacilityCore<A,B>(), f_(std::move(f)) {
+            KleisliOnOrderFacilityCore(F &&f, DelaySimulatorType const &delaySimulator) : OnOrderFacilityCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
             virtual ~KleisliOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
@@ -795,33 +823,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 Data<B> y = f_(std::move(x));
                 if (y) {
                     y->timedData.finalFlag = true;
-                    this->publishResponse(pureInnerDataLift<B>(
+                    this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerDataLift<B>(
                         [id=std::move(id)](B &&b) -> Key<B> {
                             return {id, std::move(b)};
-                        }, std::move(*y)));
+                        }, std::move(*y)), delaySimulator_));
                 }
             }
         };
     public:
         template <class A, class F>
-        static auto liftPureOnOrderFacility(F &&f) 
+        static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
-            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F>(std::move(f)));
+            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
-        static auto liftMaybeOnOrderFacility(F &&f) 
+        static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F>(std::move(f)));
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
-        static auto enhancedMaybeOnOrderFacility(F &&f) 
+        static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f)));
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
-        static auto kleisliOnOrderFacility(F &&f) 
+        static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliOnOrderFacilityCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f)));
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliOnOrderFacilityCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class B>
         static auto fromAbstractOnOrderFacility(OnOrderFacilityCore<A,B> *p)
@@ -895,14 +923,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class SimpleImporter final : public AbstractImporterCore<T> {
         private:
             F f_;
+            DelaySimulatorType delaySimulator_;
             StateT *environment_;
         public:
-            SimpleImporter(F &&f) : AbstractImporterCore<T>(), f_(std::move(f)), environment_(nullptr) {}
+            SimpleImporter(F &&f, DelaySimulatorType const &delaySimulator) : AbstractImporterCore<T>(), f_(std::move(f)), environment_(nullptr) {}
             virtual void start(StateT *environment) override final {
                 environment_ = environment;
             }
             virtual InnerData<T> generate() override final {
-                return f_(environment_);
+                return *applyDelaySimulator<T>(0, f_(environment_), delaySimulator_);
             }
         };
 
@@ -922,7 +951,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T, class F>
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
-            return std::make_shared<Importer<T>>(new SimpleImporter<T,F>(std::move(f)));
+            return std::make_shared<Importer<T>>(new SimpleImporter<T,F>(std::move(f), liftParam.delaySimulator));
         }
     
     public:
@@ -987,6 +1016,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     public:
+        //We ignore the liftParam for exporters because the time point is actually being destroyed
+        //by the exporting action and we don't need to apply any delay
         template <class T, class F>
         static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Exporter<T>>(new SimpleExporter<T,F>(std::move(f)));

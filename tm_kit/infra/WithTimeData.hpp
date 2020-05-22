@@ -45,7 +45,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         bool suggestThreaded = false;
         //This is only relevant in single-pass iteration monad, it adds an artificial
         //delay to denote the time needed for the logic 
-        std::optional<std::function<decltype(T()-T())(T const &)>> delaySimulator = std::nullopt;
+        //The "int" parameter denotes which input (0-indexed) is coming in, since the
+        //delay might be different for different parameters
+        using DelaySimulatorType = std::optional<std::function<decltype(T()-T())(int, T const &)>>;
+        DelaySimulatorType delaySimulator = std::nullopt;
 
         LiftParameters &RequireMask(FanInParamMask m) {
             requireMask = m;
@@ -55,7 +58,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             suggestThreaded = s;
             return *this;
         }
-        LiftParameters &DelaySimulator(std::optional<std::function<decltype(T()-T())(T const &)>> const &d) {
+        LiftParameters &DelaySimulator(DelaySimulatorType const &d) {
             delaySimulator = d;
             return *this;
         }

@@ -5,7 +5,7 @@ static std::shared_ptr<Action<std::variant<A0,A1>,std::tuple<A0,A1>>> merge2(Lif
     };
     return std::make_shared<Action<std::variant<A0,A1>,std::tuple<A0,A1>>>(
         new PureActionCore<std::variant<A0,A1>,std::tuple<A0,A1>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -16,7 +16,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>>> merg
     };
     return std::make_shared<Action<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>>>(
         new PureActionCore<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -27,7 +27,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>>
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -38,7 +38,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -49,7 +49,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -60,7 +60,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -71,7 +71,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -82,7 +82,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tupl
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }
@@ -93,7 +93,7 @@ static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::t
     };
     return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>>(
         new PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,decltype(f)>(
-            std::move(f), liftParam.requireMask
+            std::move(f), liftParam
         )
     );
 }

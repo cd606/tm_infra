@@ -94,6 +94,7 @@ template <class A0, class A1, class B, class F>
 class PureActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
         TimePoint tp;
@@ -108,17 +109,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -126,6 +127,7 @@ template <class A0, class A1, class B, class F>
 class MaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
         TimePoint tp;
@@ -143,17 +145,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -161,6 +163,7 @@ template <class A0, class A1, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
         TimePoint tp;
@@ -178,17 +181,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -196,12 +199,13 @@ template <class A0, class A1, class B, class F>
 class KleisliActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -338,6 +342,7 @@ template <class A0, class A1, class A2, class B, class F>
 class PureActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
         TimePoint tp;
@@ -355,17 +360,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -373,6 +378,7 @@ template <class A0, class A1, class A2, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
         TimePoint tp;
@@ -393,17 +399,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -411,6 +417,7 @@ template <class A0, class A1, class A2, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
         TimePoint tp;
@@ -431,17 +438,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -449,12 +456,13 @@ template <class A0, class A1, class A2, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -630,6 +638,7 @@ template <class A0, class A1, class A2, class A3, class B, class F>
 class PureActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
         TimePoint tp;
@@ -650,17 +659,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -668,6 +677,7 @@ template <class A0, class A1, class A2, class A3, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
         TimePoint tp;
@@ -691,17 +701,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -709,6 +719,7 @@ template <class A0, class A1, class A2, class A3, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
         TimePoint tp;
@@ -732,17 +743,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -750,12 +761,13 @@ template <class A0, class A1, class A2, class A3, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -972,6 +984,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class PureActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
         TimePoint tp;
@@ -995,17 +1008,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -1013,6 +1026,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
         TimePoint tp;
@@ -1039,17 +1053,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -1057,6 +1071,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
         TimePoint tp;
@@ -1083,17 +1098,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -1101,12 +1116,13 @@ template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -1366,6 +1382,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B, c
 class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
         TimePoint tp;
@@ -1392,17 +1409,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -1410,6 +1427,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B, c
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
         TimePoint tp;
@@ -1439,17 +1457,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -1457,6 +1475,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B, c
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
         TimePoint tp;
@@ -1486,17 +1505,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -1504,12 +1523,13 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B, c
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -1814,6 +1834,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
         TimePoint tp;
@@ -1843,17 +1864,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -1861,6 +1882,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
         TimePoint tp;
@@ -1893,17 +1915,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -1911,6 +1933,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
         TimePoint tp;
@@ -1943,17 +1966,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -1961,12 +1984,13 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -2318,6 +2342,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
         TimePoint tp;
@@ -2350,17 +2375,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -2368,6 +2393,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
         TimePoint tp;
@@ -2403,17 +2429,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -2421,6 +2447,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
         TimePoint tp;
@@ -2456,17 +2483,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -2474,12 +2501,13 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -2880,6 +2908,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
         TimePoint tp;
@@ -2915,17 +2944,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -2933,6 +2962,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
         TimePoint tp;
@@ -2971,17 +3001,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -2989,6 +3019,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
         TimePoint tp;
@@ -3027,17 +3058,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -3045,12 +3076,13 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -3502,6 +3534,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
         TimePoint tp;
@@ -3540,17 +3573,17 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value), std::move(a9.value));
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(requireMask), f_(std::move(f)) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~PureActionCore() {}
 };
@@ -3558,6 +3591,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
         TimePoint tp;
@@ -3599,17 +3633,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    MaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(requireMask), f_(std::move(f)) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -3617,6 +3651,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
         TimePoint tp;
@@ -3658,17 +3693,17 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return pureInnerData<B>(
+        return applyDelaySimulator<B>(which, pureInnerData<B>(
             env
             , {
                 tp
                 , std::move(*b)
                 , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
             }
-        );
+        ), delaySimulator_);
     }
 public:
-    EnhancedMaybeActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(requireMask), f_(std::move(f)) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -3676,12 +3711,13 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
     F f_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
-        return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) });
+        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
     }
 public:
-    KleisliActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(requireMask), f_(std::move(f)) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
     }
     virtual ~KleisliActionCore() {}
 };
