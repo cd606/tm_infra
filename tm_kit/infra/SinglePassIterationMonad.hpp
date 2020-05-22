@@ -572,22 +572,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         template <class A, class F>
-        static auto liftPure(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+        static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, decltype(f(A()))>> {
             return std::make_shared<Action<A, decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F>(std::move(f)));
         }
         template <class A, class F>
-        static auto liftMaybe(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+        static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f)));
         }
         template <class A, class F>
-        static auto enhancedMaybe(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+        static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f)));
         }
         template <class A, class F>
-        static auto kleisli(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+        static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f)));
         }
@@ -921,7 +921,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Importer<T>>(new LocalI());
         }
         template <class T, class F>
-        static std::shared_ptr<Importer<T>> simpleImporter(F &&f, bool suggestThreaded=false) {
+        static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>(new SimpleImporter<T,F>(std::move(f)));
         }
     
@@ -988,15 +988,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, bool suggestThreaded=false) {
+        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Exporter<T>>(new SimpleExporter<T,F>(std::move(f)));
         }
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> pureExporter(F &&f, bool suggestThreaded=false) {
+        static std::shared_ptr<Exporter<T>> pureExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             auto wrapper = [f=std::move(f)](InnerData<T> &&d) {
                 f(std::move(d.timedData.value));
             };
-            return simpleExporter<T>(std::move(wrapper), suggestThreaded);
+            return simpleExporter<T>(std::move(wrapper), liftParam);
         }
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {

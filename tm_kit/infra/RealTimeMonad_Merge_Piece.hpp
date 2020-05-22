@@ -18,8 +18,8 @@ private:
     };
 public:
     template <class A0, class A1>
-    static std::shared_ptr<Action<std::variant<A0,A1>,std::tuple<A0,A1>>> merge2(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1>,std::tuple<A0,A1>>> ( new Merge2<A0,A1>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1>,std::tuple<A0,A1>>> merge2(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1>,std::tuple<A0,A1>>> ( new Merge2<A0,A1>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2>
@@ -43,8 +43,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>>> merge3(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>>> ( new Merge3<A0,A1,A2>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>>> merge3(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>>> ( new Merge3<A0,A1,A2>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3>
@@ -70,8 +70,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>>> merge4(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>>> ( new Merge4<A0,A1,A2,A3>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>>> merge4(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>>> ( new Merge4<A0,A1,A2,A3>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4>
@@ -99,8 +99,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>>> merge5(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>>> ( new Merge5<A0,A1,A2,A3,A4>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>>> merge5(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>>> ( new Merge5<A0,A1,A2,A3,A4>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5>
@@ -130,8 +130,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>>> merge6(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>>> ( new Merge6<A0,A1,A2,A3,A4,A5>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>>> merge6(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>>> ( new Merge6<A0,A1,A2,A3,A4,A5>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
@@ -163,8 +163,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>>> merge7(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>>> ( new Merge7<A0,A1,A2,A3,A4,A5,A6>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>>> merge7(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>>> ( new Merge7<A0,A1,A2,A3,A4,A5,A6>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
@@ -198,8 +198,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>>> merge8(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>>> ( new Merge8<A0,A1,A2,A3,A4,A5,A6,A7>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>>> merge8(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>>> ( new Merge8<A0,A1,A2,A3,A4,A5,A6,A7>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
@@ -235,8 +235,8 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>>> merge9(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>>> ( new Merge9<A0,A1,A2,A3,A4,A5,A6,A7,A8>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>>> merge9(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>>> ( new Merge9<A0,A1,A2,A3,A4,A5,A6,A7,A8>(liftParam.requireMask) );
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
@@ -274,6 +274,6 @@ private:
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
-    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>> merge10(FanInParamMask const &requireMask=FanInParamMask()) {
-        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>> ( new Merge10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>(requireMask) );
+    static std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>> merge10(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>> ( new Merge10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>(liftParam.requireMask) );
     }
