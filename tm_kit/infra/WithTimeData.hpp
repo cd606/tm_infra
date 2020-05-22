@@ -35,6 +35,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     constexpr std::size_t MAX_FAN_IN_BRANCH_COUNT = 10;   
     using FanInParamMask = std::bitset<MAX_FAN_IN_BRANCH_COUNT>;
 
+    template <class T>
+    struct LiftParameters {
+        //This is only relevant in multi-input lifts, it specifies which ones are
+        //required before the logic can apply
+        FanInParamMask requireMask = FanInParamMask();
+        //This is only relevant in real-time monad, it specifies whether the logic
+        //shall be executed in its own thread
+        bool suggestThreaded = false;
+        //This is only relevant in single-pass iteration monad, it adds an artificial
+        //delay to denote the time needed for the logic 
+        std::optional<std::function<decltype(T()-T())(T const &)>> delaySimulator = std::nullopt;
+
+        LiftParameters &RequireMask(FanInParamMask m) {
+            requireMask = m;
+            return *this;
+        }
+        LiftParameters &SuggestThreaded(bool s) {
+            suggestThreaded = s;
+            return *this;
+        }
+        LiftParameters &DelaySimulator(std::optional<std::function<decltype(T()-T())(T const &)>> const &d) {
+            delaySimulator = d;
+            return *this;
+        }
+    };
+
     template <class T, class Env>
     class Key {
     private:

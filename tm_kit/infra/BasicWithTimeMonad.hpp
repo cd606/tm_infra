@@ -84,7 +84,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         //This lifts A->B to Action<A,B>
         template <class A, class F>
-        static auto liftPure_(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+        static auto liftPure_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> Action<A, decltype(f(A()))> {
             return [f=std::move(f)](InnerData<A> &&d) -> Data<decltype(f(A()))> {
                 return {
@@ -94,7 +94,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //This lifts A->optional<B> to Action<A,B>
         template <class A, class F>
-        static auto liftMaybe_(F &&f, bool suggestThreaded=false) 
+        static auto liftMaybe_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> Action<A, typename decltype(f(A()))::value_type> {
             return [f=std::move(f)](InnerData<A> &&d) -> Data<typename decltype(f(A()))::value_type> {
                 auto x = f(std::move(d.timedData.value));
@@ -109,7 +109,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //This lifts (time,A)->optional<B> to Action<A,B>
         template <class A, class F>
-        static auto enhancedMaybe_(F &&f, bool suggestThreaded=false) 
+        static auto enhancedMaybe_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type> {
             return [f=std::move(f)](InnerData<A> &&d) -> Data<typename decltype(f(std::tuple<TimePoint, A>()))::value_type> {
                 auto x = f(std::tuple<TimePoint, A> {d.timedData.timePoint, std::move(d.timedData.value)});
@@ -124,7 +124,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
-        static auto kleisli_(F &&f, bool suggestThreaded=false) 
+        static auto kleisli_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> Action<A, typename decltype(f(pureInnerData(nullptr,A())))::ValueType> {
             return [f=std::move(f)](InnerData<A> &&d) -> decltype(f(std::move(d))) {
                 return f(std::move(d));
@@ -132,7 +132,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //this lifts A->B to OnOrderFacility<A,B>
         template <class A, class F>
-        static auto liftPureOnOrderFacility_(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
+        static auto liftPureOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> OnOrderFacility<A, decltype(f(A()))> {
             return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,decltype(f(A()))>> {
                 return {
@@ -144,7 +144,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //this lifts A->optional<B> to OnOrderFacility<A,B>
         template <class A, class F>
-        static auto liftMaybeOnOrderFacility_(F &&f, bool suggestThreaded=false) 
+        static auto liftMaybeOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> OnOrderFacility<A, typename decltype(f(A()))::value_type> {
             return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,typename decltype(f(A()))::value_type>> {
                 Key<A> keyCopy = d.timedData.value;
@@ -160,7 +160,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
         template <class A, class F>
-        static auto enhancedMaybeOnOrderFacility_(F &&f, bool suggestThreaded=false) 
+        static auto enhancedMaybeOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type> {
             return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
                 Key<A> keyCopy = d.timedData.value;
@@ -176,7 +176,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
-        static auto kleisliOnOrderFacility_(F &&f, bool suggestThreaded=false) 
+        static auto kleisliOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType> {
             using B = typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType;
             return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,B>> {                
@@ -226,66 +226,66 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         //This lifts A->B to Action<A,B>
         template <class A, class F>
-        static auto liftPure(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
-            -> std::shared_ptr<decltype(liftPure_<A,F>(std::move(f), suggestThreaded, notUsed))> {
-            return std::make_shared<decltype(liftPure_<A,F>(std::move(f), suggestThreaded, notUsed))>(
-                liftPure_<A,F>(std::move(f), suggestThreaded, notUsed)
+        static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(liftPure_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(liftPure_<A,F>(std::move(f), liftParam))>(
+                liftPure_<A,F>(std::move(f), liftParam)
             );
         }
         //This lifts A->optional<B> to Action<A,B>
         template <class A, class F>
-        static auto liftMaybe(F &&f, bool suggestThreaded=false) 
-            -> std::shared_ptr<decltype(liftMaybe_<A,F>(std::move(f), suggestThreaded))> {
-            return std::make_shared<decltype(liftMaybe_<A,F>(std::move(f), suggestThreaded))>(
-                liftMaybe_<A,F>(std::move(f), suggestThreaded)
+        static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(liftMaybe_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(liftMaybe_<A,F>(std::move(f), liftParam))>(
+                liftMaybe_<A,F>(std::move(f), liftParam)
             );
         }
         //This lifts (time,A)->optional<B> to Action<A,B>
         template <class A, class F>
-        static auto enhancedMaybe(F &&f, bool suggestThreaded=false) 
-            -> std::shared_ptr<decltype(enhancedMaybe_<A,F>(std::move(f), suggestThreaded))> {
-            return std::make_shared<decltype(enhancedMaybe_<A,F>(std::move(f), suggestThreaded))>(
-                enhancedMaybe_<A,F>(std::move(f), suggestThreaded)
+        static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(enhancedMaybe_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(enhancedMaybe_<A,F>(std::move(f), liftParam))>(
+                enhancedMaybe_<A,F>(std::move(f), liftParam)
             );
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
-        static auto kleisli(F &&f, bool suggestThreaded=false) 
-            -> std::shared_ptr<decltype(kleisli_<A,F>(std::move(f), suggestThreaded))> {
-            return std::make_shared<decltype(kleisli_<A,F>(std::move(f), suggestThreaded))>(
-                kleisli_<A,F>(std::move(f), suggestThreaded)
+        static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(kleisli_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(kleisli_<A,F>(std::move(f), liftParam))>(
+                kleisli_<A,F>(std::move(f), liftParam)
             );
         }
         //this lifts A->B to OnOrderFacility<A,B>
         template <class A, class F>
-        static auto liftPureOnOrderFacility(F &&f, bool suggestThreaded=false, FanInParamMask const &notUsed=FanInParamMask()) 
-            -> std::shared_ptr<decltype(liftPureOnOrderFacility_<A,F>(std::move(f), suggestThreaded, notUsed))> {
-            return std::make_shared<decltype(liftPureOnOrderFacility_<A,F>(std::move(f), suggestThreaded, notUsed))>(
-                liftPureOnOrderFacility_<A,F>(std::move(f), suggestThreaded, notUsed)
+        static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(liftPureOnOrderFacility_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(liftPureOnOrderFacility_<A,F>(std::move(f), liftParam))>(
+                liftPureOnOrderFacility_<A,F>(std::move(f), liftParam)
             );
         }
         //this lifts A->optional<B> to OnOrderFacility<A,B>
         template <class A, class F>
-        static auto liftMaybeOnOrderFacility(F &&f, bool suggestThreaded=false) 
-            -> std::shared_ptr<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))> {
-            return std::make_shared<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))>(
-                liftMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded)
+        static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))>(
+                liftMaybeOnOrderFacility_<A,F>(std::move(f), liftParam)
             );
         }
         //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
         template <class A, class F>
-        static auto enhancedMaybeOnOrderFacility(F &&f, bool suggestThreaded=false) 
-            -> std::shared_ptr<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))> {
-            return std::make_shared<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded))>(
-                enhancedMaybeOnOrderFacility_<A,F>(std::move(f), suggestThreaded)
+        static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))>(
+                enhancedMaybeOnOrderFacility_<A,F>(std::move(f), liftParam)
             );
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
-        static auto kleisliOnOrderFacility(F &&f, bool suggestThreaded=false) 
-            -> std::shared_ptr<decltype(kleisliOnOrderFacility_<A,F>(std::move(f), suggestThreaded))> {
-            return std::make_shared<decltype(kleisliOnOrderFacility_<A,F>(std::move(f), suggestThreaded))>(
-                kleisliOnOrderFacility_<A,F>(std::move(f), suggestThreaded)
+        static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<decltype(kleisliOnOrderFacility_<A,F>(std::move(f), liftParam))> {
+            return std::make_shared<decltype(kleisliOnOrderFacility_<A,F>(std::move(f), liftParam))>(
+                kleisliOnOrderFacility_<A,F>(std::move(f), liftParam)
             );
         }
 
@@ -342,23 +342,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
         template <class T, class F>
-        static std::shared_ptr<Importer<T>> simpleImporter(F &&f, bool suggestThreaded=false) {
+        static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>( std::move(f) );
         }
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, bool suggestThreaded=false) {
+        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Exporter<T>>( std::move(f) );
         }
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> pureExporter(F &&f, bool suggestThreaded=false) {
+        static std::shared_ptr<Exporter<T>> pureExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             auto wrapper = [f=std::move(f)](InnerData<T> &&d) {
                 f(std::move(d.timedData.value));
             };
-            return simpleExporter<T>(std::move(wrapper), suggestThreaded);
+            return simpleExporter<T>(std::move(wrapper), liftParam);
         }
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {
-            return simpleExporter<T>([](InnerData<T> &&) {}, false);
+            return simpleExporter<T>([](InnerData<T> &&) {});
         }          
         
     private:
