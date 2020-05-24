@@ -5,13 +5,7 @@
 #include <tm_kit/infra/WithTimeData.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
-
-    enum class BasicWithTimeMonadRunMode {
-        TypeCheckOnly
-        , MinimalTestRun
-    };
-
-    template <class StateT, BasicWithTimeMonadRunMode RunMode=BasicWithTimeMonadRunMode::TypeCheckOnly>
+    template <class StateT>
     class BasicWithTimeMonad {
     private:
         friend class MonadRunner<BasicWithTimeMonad>;
@@ -64,237 +58,64 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         using OnOrderFacility = TimedMonadModelKleisli<Key<A>,KeyedData<A,B>,StateT>;
 
-    private:
-        template <class A, class B>
-        static Data<B> apply(Action<A,B> const &action, Data<A> &&x) {
-            return withtime_utils::timedMonadApply(action, std::move(x));
-        }
-        template <class A, class B>
-        static Data<KeyedData<A,B>> applyAtOnOrderFacility(OnOrderFacility<A,B> const &action, Data<Key<A>> &&x) {
-            return withtime_utils::timedMonadApply(action, std::move(x));
-        }
-
-    private:
-        template <class T1, class T2, class T3>
-        static Action<T1,T3> compose_(Action<T1,T2> &&f1, Action<T2,T3> &&f2) {
-            return [f1=std::move(f1),f2=std::move(f2)](InnerData<T1> &&t) {
-                return apply(f2, f1(std::move(t)));
-            };
-        }
-
-        //This lifts A->B to Action<A,B>
-        template <class A, class F>
-        static auto liftPure_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> Action<A, decltype(f(A()))> {
-            return [f=std::move(f)](InnerData<A> &&d) -> Data<decltype(f(A()))> {
-                return {
-                    pureInnerDataLift(f, std::move(d))
-                };
-            };
-        }
-        //This lifts A->optional<B> to Action<A,B>
-        template <class A, class F>
-        static auto liftMaybe_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> Action<A, typename decltype(f(A()))::value_type> {
-            return [f=std::move(f)](InnerData<A> &&d) -> Data<typename decltype(f(A()))::value_type> {
-                auto x = f(std::move(d.timedData.value));
-                if (x) {
-                    return {
-                        pureInnerData<typename decltype(f(A()))::value_type>(d.environment, {d.timedData.timePoint, std::move(*x), d.timedData.finalFlag})
-                    };
-                } else {
-                    return {std::nullopt};
-                }
-            };
-        }
-        //This lifts (time,A)->optional<B> to Action<A,B>
-        template <class A, class F>
-        static auto enhancedMaybe_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type> {
-            return [f=std::move(f)](InnerData<A> &&d) -> Data<typename decltype(f(std::tuple<TimePoint, A>()))::value_type> {
-                auto x = f(std::tuple<TimePoint, A> {d.timedData.timePoint, std::move(d.timedData.value)});
-                if (x) {
-                    return {
-                        pureInnerData<typename decltype(f(std::tuple<TimePoint,A>()))::value_type>(d.environment, {d.timedData.timePoint, std::move(*x), d.timedData.finalFlag})
-                    };
-                } else {
-                    return {std::nullopt};
-                }
-            };
-        }
-        //This lifts InnerData<A>->Data<B> to Action<A,B>
-        template <class A, class F>
-        static auto kleisli_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> Action<A, typename decltype(f(pureInnerData(nullptr,A())))::ValueType> {
-            return [f=std::move(f)](InnerData<A> &&d) -> decltype(f(std::move(d))) {
-                return f(std::move(d));
-            };
-        }
-        //this lifts A->B to OnOrderFacility<A,B>
-        template <class A, class F>
-        static auto liftPureOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> OnOrderFacility<A, decltype(f(A()))> {
-            return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,decltype(f(A()))>> {
-                return {
-                    pureInnerDataLift([f=std::move(f)](Key<A> &&k) {
-                        return withtime_utils::keyedDataFromKey(f, std::move(k));
-                    }, std::move(d))
-                };
-            };
-        }
-        //this lifts A->optional<B> to OnOrderFacility<A,B>
-        template <class A, class F>
-        static auto liftMaybeOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> OnOrderFacility<A, typename decltype(f(A()))::value_type> {
-            return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,typename decltype(f(A()))::value_type>> {
-                Key<A> keyCopy = d.timedData.value;
-                auto x = f(std::move(d.timedData.value.key()));
-                if (x) {
-                    return {
-                        pureInnerData<KeyedData<A,typename decltype(f(A()))::value_type>>(d.environment, {d.timedData.timePoint, {keyCopy, std::move(*x)}, d.timedData.finalFlag})
-                    };
-                } else {
-                    return std::nullopt;
-                }
-            };
-        }
-        //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
-        template <class A, class F>
-        static auto enhancedMaybeOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type> {
-            return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-                Key<A> keyCopy = d.timedData.value;
-                auto x = f(std::tuple<TimePoint,A> {d.timedData.timePoint, std::move(d.timedData.value.key())});
-                if (x) {
-                    return {
-                        pureInnerData<KeyedData<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(d.environment, {d.timedData.timePoint, {keyCopy, std::move(*x)}, d.timedData.finalFlag})
-                    };
-                } else {
-                    return std::nullopt;
-                }
-            };
-        }
-        //This lifts InnerData<A>->Data<B> to Action<A,B>
-        template <class A, class F>
-        static auto kleisliOnOrderFacility_(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType> {
-            using B = typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType;
-            return [f=std::move(f)](InnerData<Key<A>> &&d) -> Data<KeyedData<A,B>> {                
-                Key<A> keyCopy = d.timedData.value;
-                InnerData<A> x = pureInnerDataLift([](Key<A> &&k) -> A {
-                    return k.key();
-                }, std::move(d));
-                Data<B> y = f(std::move(x));
-                if (!y) {
-                    return std::nullopt;
-                }
-                return pureInnerDataLift([keyCopy=std::move(keyCopy)](B &&b) -> KeyedData<A,B> {
-                    return {std::move(keyCopy), std::move(b)};
-                }, std::move(*y));
-            };
-        }
-
-        template <class I0, class O0, class I1, class O1>
-        static OnOrderFacility<I0,O0> wrappedOnOrderFacility_(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
-            return [toWrap=std::move(toWrap),inputT=std::move(inputT),outputT=std::move(outputT)](InnerData<Key<I0>> &&x) -> Data<KeyedData<I0,O0>> {
-                Key<I0> keyCopy = x.timedData.value;
-                Data<Key<I1>> i1 = inputT(std::move(x));
-                if (i1) {
-                    Data<KeyedData<I1,O1>> o1WithKey = toWrap(std::move(*i1));
-                    if (o1WithKey) {
-                        InnerData<Key<O1>> o1 = pureInnerDataLift([](KeyedData<I1,O1> &&a) -> Key<O1> {
-                            return {a.key.id(), std::move(a.data)};
-                        }, std::move(*o1WithKey));
-                        Data<Key<O0>> o0 = outputT(std::move(o1));
-                        if (o0) {
-                            return {
-                                pureInnerDataLift([keyCopy](Key<O0> &&a) -> KeyedData<I0,O0> {
-                                    return {keyCopy, std::move(a.key())};
-                                }, std::move(*o0))
-                            };
-                        } 
-                    }
-                }
-                return std::nullopt;
-            };
-        }
-    public:
         template <class T1, class T2, class T3>
         static std::shared_ptr<Action<T1,T3>> compose(Action<T1,T2> &&f1, Action<T2,T3> &&f2) {
-            return std::make_shared<Action<T1,T3>>(compose_<T1,T2,T3>(std::move(f1), std::move(f2)));
+            return std::make_shared<Action<T1,T3>>();
         }
 
         //This lifts A->B to Action<A,B>
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(liftPure_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(liftPure_<A,F>(std::move(f), liftParam))>(
-                liftPure_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<Action<A, decltype(f(A()))>> {
+            return std::make_shared<Action<A, decltype(f(A()))>>();
         }
         //This lifts A->optional<B> to Action<A,B>
         template <class A, class F>
         static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(liftMaybe_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(liftMaybe_<A,F>(std::move(f), liftParam))>(
-                liftMaybe_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>();
         }
         //This lifts (time,A)->optional<B> to Action<A,B>
         template <class A, class F>
         static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(enhancedMaybe_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(enhancedMaybe_<A,F>(std::move(f), liftParam))>(
-                enhancedMaybe_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
         static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(kleisli_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(kleisli_<A,F>(std::move(f), liftParam))>(
-                kleisli_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
+            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>();
         }
         //this lifts A->B to OnOrderFacility<A,B>
         template <class A, class F>
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(liftPureOnOrderFacility_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(liftPureOnOrderFacility_<A,F>(std::move(f), liftParam))>(
-                liftPureOnOrderFacility_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
+            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>();
         }
         //this lifts A->optional<B> to OnOrderFacility<A,B>
         template <class A, class F>
         static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(liftMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))>(
-                liftMaybeOnOrderFacility_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>();
         }
         //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
         template <class A, class F>
         static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(enhancedMaybeOnOrderFacility_<A,F>(std::move(f), liftParam))>(
-                enhancedMaybeOnOrderFacility_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
         }
         //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
         static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<decltype(kleisliOnOrderFacility_<A,F>(std::move(f), liftParam))> {
-            return std::make_shared<decltype(kleisliOnOrderFacility_<A,F>(std::move(f), liftParam))>(
-                kleisliOnOrderFacility_<A,F>(std::move(f), liftParam)
-            );
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>();
         }
 
         template <class I0, class O0, class I1, class O1>
         static auto wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) 
-            -> std::shared_ptr<decltype(wrappedOnOrderFacility_<I0,O0,I1,O1>(std::move(toWrap), std::move(inputT), std::move(outputT)))> {
-            return std::make_shared<decltype(wrappedOnOrderFacility_<I0,O0,I1,O1>(std::move(toWrap), std::move(inputT), std::move(outputT)))>(
-                wrappedOnOrderFacility_<I0,O0,I1,O1>(std::move(toWrap), std::move(inputT), std::move(outputT))
-            );
+            -> std::shared_ptr<OnOrderFacility<I0,O0>> {
+            return std::make_shared<OnOrderFacility<I0,O0>>();
         }
     
     #include <tm_kit/infra/BasicWithTimeMonad_VariantAndMerge_Piece.hpp>
@@ -335,61 +156,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T>
         static std::shared_ptr<Importer<T>> vacuousImporter() {
-            return std::make_shared<Importer<T>>(
-                [](StateT * const) -> InnerData<T> {
-                    throw std::runtime_error("Vacuous Importer called");
-                }
-            );
+            return std::make_shared<Importer<T>>();
         }
         template <class T, class F>
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
-            return std::make_shared<Importer<T>>( std::move(f) );
+            return std::make_shared<Importer<T>>();
         }
         template <class T, class F>
         static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
-            return std::make_shared<Exporter<T>>( std::move(f) );
+            return std::make_shared<Exporter<T>>();
         }
         template <class T, class F>
         static std::shared_ptr<Exporter<T>> pureExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
-            auto wrapper = [f=std::move(f)](InnerData<T> &&d) {
-                f(std::move(d.timedData.value));
-            };
-            return simpleExporter<T>(std::move(wrapper), liftParam);
+            return std::make_shared<Exporter<T>>();
         }
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {
-            return simpleExporter<T>([](InnerData<T> &&) {});
+            return std::make_shared<Exporter<T>>();
         }          
-        
-    private:
-        template <class T1, class T2>
-        static Importer<T2> composeImporter_(Importer<T1> &&orig, Action<T1,T2> &&post) {
-            return [orig=std::move(orig),post=std::move(post)](StateT * const env) -> Data<T2> {
-                auto d = orig(env);
-                if (d) {
-                    return post(std::move(*d));
-                } else {
-                    return std::nullopt;
-                }
-            };
-        }
-        template <class T1, class T2>
-        static Exporter<T1> composeExporter_(Action<T1,T2> &&pre, Exporter<T2> &&orig) {
-            return [pre=std::move(pre),orig=std::move(orig)](InnerData<T1> &&t1) {
-                auto t2 = pre(std::move(t1));
-                if (t2) {
-                    orig(std::move(*t2));
-                }
-            };
-        }
-    public:
+
         template <class T1, class T2>
         static std::shared_ptr<Importer<T2>> composeImporter(Importer<T1> &&orig, Action<T1,T2> &&post) {
-            return std::make_shared<Importer<T2>>(composeImporter_<T1,T2>(std::move(orig), std::move(post)));
+            return std::make_shared<Importer<T2>>();
         }
         template <class T1, class T2>
         static std::shared_ptr<Exporter<T1>> composeExporter(Action<T1,T2> &&pre, Exporter<T2> &&orig) {
-            return std::make_shared<Exporter<T1>>(composeExporter_<T1,T2>(std::move(pre), std::move(orig)));
+            return std::make_shared<Exporter<T1>>();
         }
     
     public:
@@ -403,167 +195,61 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<LocalOnOrderFacility<A,B,C>> localOnOrderFacility(
             OnOrderFacility<A,B> &&facility, Exporter<C> &&exporter
         ) {
-            return std::make_shared<LocalOnOrderFacility<A,B,C>>(LocalOnOrderFacility<A,B,C> {std::move(facility), std::move(exporter)});
+            return std::make_shared<LocalOnOrderFacility<A,B,C>>();
         }
         
         template <class I0, class O0, class I1, class O1, class C>
         static std::shared_ptr<LocalOnOrderFacility<I0,O0,C>> wrappedLocalOnOrderFacility(LocalOnOrderFacility<I1,O1,C> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
-            return std::make_shared<LocalOnOrderFacility<I0,O0,C>>(LocalOnOrderFacility<I0,O0,C> {
-                std::move(*wrappedOnOrderFacility(std::move(toWrap.facility), std::move(inputT), std::move(outputT)))
-                , std::move(toWrap.exporter)
-            });
+            return std::make_shared<LocalOnOrderFacility<I0,O0,C>>();
         }
    
     private:
         template <class T>
         Source<T> importerAsSource(StateT *env, Importer<T> &importer) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                return {};
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                return {importer(env)};
-            default:
-                return {};
-            } 
+            return {};
         }
         template <class A, class B>
         Source<B> actionAsSource(StateT *env, Action<A,B> &action) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                return {};
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                return {action(pureInnerData(env, A()))};
-            default:
-                return {};
-            }
+            return {};
         }
         template <class A, class B>
         Source<B> execute(Action<A,B> &action, Source<A> &&variable) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                return {};
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                return {apply(action, std::move(variable.data))};
-            default:
-                return {};
-            }
+            return {};
         }
 
         #include <tm_kit/infra/BasicWithTimeMonad_ExecuteAction_Piece.hpp> 
 
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                return {};
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                return Sink<T> {
-                    [&exporter](Source<T> &&src) {
-                        if (src.data) {
-                            exporter(std::move(*(src.data)));
-                        }
-                    }
-                };
-            default:
-                return {};
-            }
+            return {};
         }
         template <class A, class B>
         Sink<A> actionAsSink(Action<A,B> &action) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                return {};
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                return Sink<A> {
-                    [this,&action](Source<A> &&src) {
-                        execute(action, std::move(src));
-                    }
-                };
-            default:
-                return {};
-            }
+            return {};
         }
 
         #include <tm_kit/infra/BasicWithTimeMonad_VariantSink_Piece.hpp>
 
         template <class A, class B>
         void placeOrderWithFacility(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility, Sink<KeyedData<A,B>> const &sink) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                break;
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                sink.action(applyAtOnOrderFacility(facility, std::move(input.data)));
-                break;
-            default:
-                break;
-            }
         }  
         template <class A, class B>
         void placeOrderWithFacilityAndForget(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                break;
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                applyAtOnOrderFacility(facility, std::move(input.data));
-                break;
-            default:
-                break;
-            }
         }  
 
         template <class A, class B, class C>
         void placeOrderWithLocalFacility(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility, Sink<KeyedData<A,B>> const &sink) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                break;
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                sink.action(applyAtOnOrderFacility(facility.facility, std::move(input.data)));
-                break;
-            default:
-                break;
-            }
         } 
         template <class A, class B, class C>
         void placeOrderWithLocalFacilityAndForget(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                break;
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                applyAtOnOrderFacility(facility.facility, std::move(input.data));
-                break;
-            default:
-                break;
-            }
         } 
         template <class A, class B, class C>
         Sink<C> localFacilityAsSink(LocalOnOrderFacility<A,B,C> &facility) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                return {};
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                return Sink<C> {
-                    [&facility](Source<C> &&src) {
-                        if (src.data) {
-                            facility.exporter(std::move(*(src.data)));
-                        }
-                    }
-                };
-            default:
-                return {};
-            }
+            return {};
         }
 
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
-            switch (RunMode) {
-            case BasicWithTimeMonadRunMode::TypeCheckOnly:
-                break;
-            case BasicWithTimeMonadRunMode::MinimalTestRun:
-                sink.action(std::move(src));
-                break;
-            default:
-                break;
-            }
         }
 
         std::function<void(StateT *)> finalize() {   
