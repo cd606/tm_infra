@@ -7,8 +7,8 @@
 //The reason these utilities are introduced is that, although we
 //call RealTimeMonad and SinglePassIterationMonad "monads", they 
 //are not exactly monads. To be more precise, their Action's are 
-//kind of co-Kleisli arrows, something like
-// Stream a -> b
+//kind of applicative arrows, something like
+// Stream a -> Stream b
 //And this is why, while we might easily decorate a Kleisli arrow of
 // InnerData a -> Data b
 //into
