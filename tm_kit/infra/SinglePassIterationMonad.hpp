@@ -469,6 +469,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         class ActionCore : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual BufferedProvider<B> {
+        private:
+            bool hasA_;
+            TimePoint aTime_;
         protected:
             virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
                 Certificate<A> t { this->source()->poll() };
@@ -476,19 +479,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
                 auto tp = fetchTimePointUnsafe(t);
-                auto produce = [t=std::move(t),this]() -> Data<B> {
-                    Certificate<A> t1 {std::move(t)};
-                    auto input = this->source()->next(std::move(t1));
-                    if (!input) {
+                auto produce = [tp,t=std::move(t),this]() -> Data<B> {
+                    if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
+                        hasA_ = true;
+                        aTime_ = tp;
+                        Certificate<A> t1 {std::move(t)};
+                        auto input = this->source()->next(std::move(t1));
+                        if (!input) {
+                            return std::nullopt;
+                        }
+                        return handle(std::move(*input));
+                    } else {
                         return std::nullopt;
-                    }
-                    return handle(std::move(*input));
+                    }    
                 };
                 return std::tuple<TimePoint, std::function<Data<B>()>> {tp, produce};
             }       
             virtual Data<B> handle(InnerData<A> &&) = 0;
         public:
-            ActionCore() : Provider<B>(), Consumer<A>() {}           
+            ActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_() {}           
         };
 
     private:
@@ -959,6 +968,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
         private:
             Certificate<T> sourceCert_;
+            bool hasT_;
+            TimePoint tTime_;
         public:
             virtual void handle(InnerData<T> &&) = 0;
             virtual Certificate<SpecialOutputDataTypeForExporters> poll() override final {
@@ -978,6 +989,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 auto env = input->environment;
                 auto tp = input->timedData.timePoint;
                 auto flag = input->timedData.finalFlag;
+                if (!StateT::CheckTime || !hasT_ || tp >= tTime_) {
+                    hasT_ = true;
+                    tTime_ = tp;
+                } else {
+                    return std::nullopt;
+                }
                 handle(std::move(*input));
                 return { pureInnerData<SpecialOutputDataTypeForExporters>(
                     env,
@@ -988,7 +1005,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 ) };
             }
-            AbstractExporterCore() : Consumer<T>(), sourceCert_() {}
+            AbstractExporterCore() : Consumer<T>(), sourceCert_(), hasT_(false), tTime_() {}
         };
 
         template <class T>

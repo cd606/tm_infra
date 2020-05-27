@@ -962,7 +962,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, class F>
         class SimpleExporter<T,F,false> final : public virtual AbstractExporter<T> {
         private:
-            F f_;     
+            F f_;    
+            typename RealTimeMonadComponents<StateT>::template TimeChecker<T> timeChecker_; 
         public:
         #ifdef _MSC_VER
             SimpleExporter(F &&f) : f_(std::move(f)) {}
@@ -971,7 +972,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #endif
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {
-                f_(std::move(d));
+                if (timeChecker_(d)) {
+                    f_(std::move(d));
+                }
             } 
             virtual void start(StateT *) override final {}
         };
