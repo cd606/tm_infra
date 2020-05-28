@@ -255,36 +255,48 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     namespace withtime_utils {
         template <class A>
-        inline A makeValueCopy(A const &a) {
-            return a;
-        }
-        template <class A>
-        inline std::unique_ptr<A> makeValueCopy(std::unique_ptr<A> const &a) {
-            if (a) {
-                return std::make_unique<A>(*a);
-            } else {
-                return std::unique_ptr<A>();
+        struct ValueCopier {
+            inline static A copy(A const &a) {
+                return a;
             }
+        };
+        template <class A>
+        struct ValueCopier<std::unique_ptr<A>> {
+            inline static std::unique_ptr<A> copy(std::unique_ptr<A> const &a) {
+                if (a) {
+                    return std::make_unique<A>(*a);
+                } else {
+                    return std::unique_ptr<A>();
+                }
+            }
+        };
+        template <class A, class B>
+        struct ValueCopier<std::tuple<A,B>> {
+            inline static std::tuple<A,B> copy(std::tuple<A,B> const &x) {
+                return std::tuple<A,B> {ValueCopier<A>::copy(std::get<0>(x)), ValueCopier<B>::copy(std::get<1>(x))};
+            }
+        };
+        template <class A, class Env>
+        struct ValueCopier<Key<A,Env>> {
+            inline static Key<A,Env> copy(Key<A,Env> const &x) {
+                return Key<A,Env> {x.id(), ValueCopier<A>::copy(x.key())};
+            }
+        };
+        template <class A, class B, class Env>
+        struct ValueCopier<KeyedData<A,B,Env>> {
+            inline static KeyedData<A,B,Env> copy(KeyedData<A,B,Env> const &x) {
+                return KeyedData<A,B,Env> {ValueCopier<Key<A,Env>>::copy(x.key), ValueCopier<B>::copy(x.data)};
+            }
+        };
+
+        template <class A>
+        inline A makeValueCopy(A const &a) {
+            return ValueCopier<A>::copy(a);
         }
+
         template <class TimePoint, class A>
         inline WithTime<A, TimePoint> makeCopy(WithTime<A, TimePoint> const &a) {
-            return WithTime<A, TimePoint> {a};
-        }
-        template <class TimePoint, class A>
-        inline WithTime<std::unique_ptr<A>, TimePoint> makeCopy(WithTime<std::unique_ptr<A>, TimePoint> const &a) {
-            if (a.value) {
-                return WithTime<std::unique_ptr<A>, TimePoint> {
-                    a.timePoint,
-                    std::make_unique<A>(*(a.value)),
-                    a.finalFlag
-                };
-            } else {
-                return WithTime<std::unique_ptr<A>, TimePoint> {
-                    a.timePoint,
-                    std::unique_ptr<A>(),
-                    a.finalFlag
-                };
-            }
+            return WithTime<A, TimePoint> {a.timePoint, ValueCopier<A>::copy(a.value), a.finalFlag};
         }
 
         #include <tm_kit/infra/WithTimeData_TupleCopy_Piece.hpp>
