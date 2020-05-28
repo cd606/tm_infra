@@ -33,14 +33,48 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~IHandler() {}
             virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
         };
+
+        template <bool MutexProtected, class T>
+        class TimeChecker {};
         template <class T>
-        class TimeChecker {
+        class TimeChecker<false, T> {
         private:
             bool hasData_;
             typename StateT::TimePointType lastTime_;
+            VersionChecker<T> versionChecker_;
         public:
-            TimeChecker(FanInParamMask const &notUsed=FanInParamMask()) : hasData_(false), lastTime_() {}
+            TimeChecker(FanInParamMask const &notUsed=FanInParamMask()) : hasData_(false), lastTime_(), versionChecker_() {}
             inline bool operator()(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> const &data) {
+                if (!versionChecker_.checkVersion(data.timedData.value)) {
+                    return false;
+                }
+                if (StateT::CheckTime) {
+                    if (hasData_ && data.timedData.timePoint < lastTime_) {
+                        return false;
+                    }
+                }
+                hasData_ = true;
+                lastTime_ = data.timedData.timePoint;
+                return true;
+            }
+            inline bool good() const {
+                return hasData_;
+            }
+        };
+        template <class T>
+        class TimeChecker<true, T> {
+        private:
+            std::atomic<bool> hasData_;
+            std::mutex mutex_;
+            typename StateT::TimePointType lastTime_;
+            VersionChecker<T> versionChecker_;
+        public:
+            TimeChecker(FanInParamMask const &notUsed=FanInParamMask()) : hasData_(false), mutex_(), lastTime_(), versionChecker_() {}
+            inline bool operator()(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> const &data) {
+                std::lock_guard<std::mutex> _(mutex_);
+                if (!versionChecker_.checkVersion(data.timedData.value)) {
+                    return false;
+                }
                 if (StateT::CheckTime) {
                     if (hasData_ && data.timedData.timePoint < lastTime_) {
                         return false;
@@ -61,7 +95,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class ThreadedHandlerBase {
         private:
-            TimeChecker<T> timeChecker_;
+            TimeChecker<false, T> timeChecker_;
             std::mutex mutex_;
             std::condition_variable cond_;
             std::thread th_;
@@ -121,7 +155,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     cond_.notify_one();
                 }                    
             }
-            TimeChecker<T> const &timeChecker() const {
+            TimeChecker<false, T> const &timeChecker() const {
                 return timeChecker_;
             }
         };
@@ -539,7 +573,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         class ActionCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
         private:
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<A> timeChecker_;
+            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
         public:
             ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask) {
             }
@@ -641,7 +675,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void actuallyHandle(InnerData<Key<A>> &&data) override final {  
                 if (!this->timeCheckGood(data)) {
                     return;
-                }              
+                }    
                 auto id = data.timedData.value.id();
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                 auto res = this->action(data.environment, std::move(a));
@@ -662,7 +696,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         class OnOrderFacilityCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B> {
         private:
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<Key<A>> timeChecker_;
+            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, Key<A>> timeChecker_;
         public:
             OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_(requireMask) {
             }
@@ -963,12 +997,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class SimpleExporter<T,F,false> final : public virtual AbstractExporter<T> {
         private:
             F f_;    
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<T> timeChecker_; 
+            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, T> timeChecker_; 
         public:
         #ifdef _MSC_VER
-            SimpleExporter(F &&f) : f_(std::move(f)) {}
+            SimpleExporter(F &&f) : f_(std::move(f)), timeChecker_() {}
         #else
-            SimpleExporter(F &&f) : AbstractExporter<T>(), f_(std::move(f)) {}
+            SimpleExporter(F &&f) : AbstractExporter<T>(), f_(std::move(f)), timeChecker_() {}
         #endif
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {

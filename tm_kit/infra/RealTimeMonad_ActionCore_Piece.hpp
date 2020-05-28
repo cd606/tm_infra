@@ -23,7 +23,7 @@ public:
 template <class A0, class A1, class B>
 class ActionCore<std::variant<A0,A1>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) {
@@ -80,7 +80,7 @@ public:
 template <class A0, class A1, class A2, class B>
 class ActionCore<std::variant<A0,A1,A2>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) {
@@ -143,7 +143,7 @@ public:
 template <class A0, class A1, class A2, class A3, class B>
 class ActionCore<std::variant<A0,A1,A2,A3>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
@@ -212,7 +212,7 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3,A4>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
@@ -287,7 +287,7 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3,A4,A5>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
@@ -368,7 +368,7 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3,A4,A5,A6>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
@@ -455,7 +455,7 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
@@ -548,7 +548,7 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
@@ -647,7 +647,7 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> timeChecker_;
+    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> timeChecker_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {

@@ -34,6 +34,7 @@ tm_infra_headers = [
     , 'ChronoUtils.hpp'
     , 'IntIDComponent.hpp'
     , 'KleisliUtils.hpp'
+    , 'VersionedData.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')

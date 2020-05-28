@@ -29,6 +29,7 @@
 
 #include <tm_kit/infra/ChronoUtils.hpp>
 #include <tm_kit/infra/LogLevel.hpp>
+#include <tm_kit/infra/VersionedData.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -116,6 +117,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class T, class Env>
     class Key<std::unique_ptr<T>, Env> {};  //not allowing the holding of an unique pointer as key
     template <class T, class Env>
+    class Key<std::shared_ptr<T>, Env> {};  //not allowing the holding of an shared pointer as key
+    template <class T, class Env>
     class Key<Key<T,Env>, Env> {};  //not allowing duplicate keys
 
     template <class T>
@@ -192,6 +195,27 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     }
 
+    template <class A, class Env>
+    class VersionChecker<Key<A,Env>> {
+    private:
+        VersionChecker<A> a_;
+    public:
+        VersionChecker() : a_() {}
+        bool checkVersion(Key<A,Env> const &t) {
+            return (a_.checkVersion(t.key()));
+        }
+    };
+    template <class A, class B, class Env>
+    class VersionChecker<KeyedData<A,B,Env>> {
+    private:
+        VersionChecker<B> b_;
+    public:
+        VersionChecker() : b_() {}
+        bool checkVersion(KeyedData<A,B,Env> const &t) {
+            return (b_.checkVersion(t.data));
+        }
+    };
+
     //The final flag indicates that this is the last update that the 
     //sender will ever send (if an action or importer) or will ever send for the 
     //corresponding request (if an on-order facility). The way to deal with 
@@ -260,6 +284,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return a;
             }
         };
+        //only unique_ptr is specialized, shared_ptr is not, because 
+        //shared_ptr is copiable.
         template <class A>
         struct ValueCopier<std::unique_ptr<A>> {
             inline static std::unique_ptr<A> copy(std::unique_ptr<A> const &a) {
@@ -286,6 +312,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ValueCopier<KeyedData<A,B,Env>> {
             inline static KeyedData<A,B,Env> copy(KeyedData<A,B,Env> const &x) {
                 return KeyedData<A,B,Env> {ValueCopier<Key<A,Env>>::copy(x.key), ValueCopier<B>::copy(x.data)};
+            }
+        };
+        template <class VersionType, class DataType, class Cmp>
+        struct ValueCopier<VersionedData<VersionType,DataType,Cmp>> {
+            inline static VersionedData<VersionType,DataType,Cmp> copy(VersionedData<VersionType,DataType,Cmp> const &x) {
+                return VersionedData<VersionType,DataType,Cmp> {
+                    ValueCopier<VersionType>::copy(x.version)
+                    , ValueCopier<DataType>::copy(x.data)
+                };
             }
         };
 
@@ -1280,6 +1315,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         os << '}';
         return os;
     }  
+
+    template <class T>
+    inline std::ostream &operator<<(std::ostream &os, WithTime<std::shared_ptr<T>, std::chrono::system_clock::time_point> const &x) {
+        os << "{timePoint=" << withtime_utils::localTimeString(x.timePoint) << ",value=shared_ptr[";
+        if (x.value) {
+            os << x.value.get() << "," << *(x.value);
+        } else {
+            os << "null";
+        }
+        os << "]";
+        if (x.finalFlag) {
+            os << " [F]";
+        }
+        os << '}';
+        return os;
+    } 
 
 }}}}
 

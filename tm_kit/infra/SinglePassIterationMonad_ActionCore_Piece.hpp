@@ -3,8 +3,10 @@ class ActionCore<std::variant<A0,A1>,B> : public virtual AbstractActionCore<std:
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -30,6 +32,9 @@ protected:
                     Certificate<A0> cert0_copy = std::move(cert0);
                     auto x0 = this->Consumer<A0>::source()->next(std::move(cert0_copy));
                     if (!x0) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
@@ -60,6 +65,9 @@ protected:
                     if (!x1) {
                         return std::nullopt;
                     }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
                         a1_ = std::move(x1->timedData);
                         hasA1_ = true;
@@ -87,7 +95,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class B, class F>
@@ -214,10 +222,13 @@ class ActionCore<std::variant<A0,A1,A2>,B> : public virtual AbstractActionCore<s
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -249,6 +260,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -276,6 +290,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -307,6 +324,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -335,7 +355,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class B, class F>
@@ -471,12 +491,16 @@ class ActionCore<std::variant<A0,A1,A2,A3>,B> : public virtual AbstractActionCor
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -512,6 +536,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -540,6 +567,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -572,6 +602,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -600,6 +633,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -631,7 +667,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
@@ -776,14 +812,19 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4>,B> : public virtual AbstractAction
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     WithTime<A4,TimePoint> a4_;
     bool hasA4_;
+    VersionChecker<A4> versionChecker4_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -823,6 +864,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -852,6 +896,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -885,6 +932,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -914,6 +964,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -947,6 +1000,9 @@ protected:
                     if (!x4) {
                         return std::nullopt;
                     }
+                    if (!versionChecker4_.checkVersion(x4->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
                         a4_ = std::move(x4->timedData);
                         hasA4_ = true;
@@ -977,7 +1033,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), a4_(), hasA4_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
@@ -1131,16 +1187,22 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> : public virtual AbstractAct
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     WithTime<A4,TimePoint> a4_;
     bool hasA4_;
+    VersionChecker<A4> versionChecker4_;
     WithTime<A5,TimePoint> a5_;
     bool hasA5_;
+    VersionChecker<A5> versionChecker5_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -1184,6 +1246,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -1214,6 +1279,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -1248,6 +1316,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -1278,6 +1349,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -1312,6 +1386,9 @@ protected:
                     if (!x4) {
                         return std::nullopt;
                     }
+                    if (!versionChecker4_.checkVersion(x4->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
                         a4_ = std::move(x4->timedData);
                         hasA4_ = true;
@@ -1342,6 +1419,9 @@ protected:
                     Certificate<A5> cert5_copy = std::move(cert5);
                     auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
                     if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
@@ -1375,7 +1455,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), a4_(), hasA4_(false), a5_(), hasA5_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
@@ -1538,18 +1618,25 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> : public virtual Abstract
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     WithTime<A4,TimePoint> a4_;
     bool hasA4_;
+    VersionChecker<A4> versionChecker4_;
     WithTime<A5,TimePoint> a5_;
     bool hasA5_;
+    VersionChecker<A5> versionChecker5_;
     WithTime<A6,TimePoint> a6_;
     bool hasA6_;
+    VersionChecker<A6> versionChecker6_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -1597,6 +1684,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -1628,6 +1718,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -1663,6 +1756,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -1694,6 +1790,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -1729,6 +1828,9 @@ protected:
                     if (!x4) {
                         return std::nullopt;
                     }
+                    if (!versionChecker4_.checkVersion(x4->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
                         a4_ = std::move(x4->timedData);
                         hasA4_ = true;
@@ -1760,6 +1862,9 @@ protected:
                     Certificate<A5> cert5_copy = std::move(cert5);
                     auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
                     if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
@@ -1795,6 +1900,9 @@ protected:
                     if (!x6) {
                         return std::nullopt;
                     }
+                    if (!versionChecker6_.checkVersion(x6->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
                         a6_ = std::move(x6->timedData);
                         hasA6_ = true;
@@ -1827,7 +1935,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), a4_(), hasA4_(false), a5_(), hasA5_(false), a6_(), hasA6_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
@@ -1999,20 +2107,28 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> : public virtual Abstr
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     WithTime<A4,TimePoint> a4_;
     bool hasA4_;
+    VersionChecker<A4> versionChecker4_;
     WithTime<A5,TimePoint> a5_;
     bool hasA5_;
+    VersionChecker<A5> versionChecker5_;
     WithTime<A6,TimePoint> a6_;
     bool hasA6_;
+    VersionChecker<A6> versionChecker6_;
     WithTime<A7,TimePoint> a7_;
     bool hasA7_;
+    VersionChecker<A7> versionChecker7_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -2064,6 +2180,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -2096,6 +2215,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -2132,6 +2254,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -2164,6 +2289,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -2200,6 +2328,9 @@ protected:
                     if (!x4) {
                         return std::nullopt;
                     }
+                    if (!versionChecker4_.checkVersion(x4->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
                         a4_ = std::move(x4->timedData);
                         hasA4_ = true;
@@ -2232,6 +2363,9 @@ protected:
                     Certificate<A5> cert5_copy = std::move(cert5);
                     auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
                     if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
@@ -2268,6 +2402,9 @@ protected:
                     if (!x6) {
                         return std::nullopt;
                     }
+                    if (!versionChecker6_.checkVersion(x6->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
                         a6_ = std::move(x6->timedData);
                         hasA6_ = true;
@@ -2300,6 +2437,9 @@ protected:
                     Certificate<A7> cert7_copy = std::move(cert7);
                     auto x7 = this->Consumer<A7>::source()->next(std::move(cert7_copy));
                     if (!x7) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
@@ -2335,7 +2475,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), a4_(), hasA4_(false), a5_(), hasA5_(false), a6_(), hasA6_(false), a7_(), hasA7_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
@@ -2516,22 +2656,31 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> : public virtual Ab
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     WithTime<A4,TimePoint> a4_;
     bool hasA4_;
+    VersionChecker<A4> versionChecker4_;
     WithTime<A5,TimePoint> a5_;
     bool hasA5_;
+    VersionChecker<A5> versionChecker5_;
     WithTime<A6,TimePoint> a6_;
     bool hasA6_;
+    VersionChecker<A6> versionChecker6_;
     WithTime<A7,TimePoint> a7_;
     bool hasA7_;
+    VersionChecker<A7> versionChecker7_;
     WithTime<A8,TimePoint> a8_;
     bool hasA8_;
+    VersionChecker<A8> versionChecker8_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -2587,6 +2736,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -2620,6 +2772,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -2657,6 +2812,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -2690,6 +2848,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -2727,6 +2888,9 @@ protected:
                     if (!x4) {
                         return std::nullopt;
                     }
+                    if (!versionChecker4_.checkVersion(x4->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
                         a4_ = std::move(x4->timedData);
                         hasA4_ = true;
@@ -2760,6 +2924,9 @@ protected:
                     Certificate<A5> cert5_copy = std::move(cert5);
                     auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
                     if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
@@ -2797,6 +2964,9 @@ protected:
                     if (!x6) {
                         return std::nullopt;
                     }
+                    if (!versionChecker6_.checkVersion(x6->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
                         a6_ = std::move(x6->timedData);
                         hasA6_ = true;
@@ -2830,6 +3000,9 @@ protected:
                     Certificate<A7> cert7_copy = std::move(cert7);
                     auto x7 = this->Consumer<A7>::source()->next(std::move(cert7_copy));
                     if (!x7) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
@@ -2867,6 +3040,9 @@ protected:
                     if (!x8) {
                         return std::nullopt;
                     }
+                    if (!versionChecker8_.checkVersion(x8->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
                         a8_ = std::move(x8->timedData);
                         hasA8_ = true;
@@ -2901,7 +3077,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), a4_(), hasA4_(false), a5_(), hasA5_(false), a6_(), hasA6_(false), a7_(), hasA7_(false), a8_(), hasA8_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
@@ -3091,24 +3267,34 @@ class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> : public virtual
 private:
     WithTime<A0,TimePoint> a0_;
     bool hasA0_;
+    VersionChecker<A0> versionChecker0_;
     WithTime<A1,TimePoint> a1_;
     bool hasA1_;
+    VersionChecker<A1> versionChecker1_;
     WithTime<A2,TimePoint> a2_;
     bool hasA2_;
+    VersionChecker<A2> versionChecker2_;
     WithTime<A3,TimePoint> a3_;
     bool hasA3_;
+    VersionChecker<A3> versionChecker3_;
     WithTime<A4,TimePoint> a4_;
     bool hasA4_;
+    VersionChecker<A4> versionChecker4_;
     WithTime<A5,TimePoint> a5_;
     bool hasA5_;
+    VersionChecker<A5> versionChecker5_;
     WithTime<A6,TimePoint> a6_;
     bool hasA6_;
+    VersionChecker<A6> versionChecker6_;
     WithTime<A7,TimePoint> a7_;
     bool hasA7_;
+    VersionChecker<A7> versionChecker7_;
     WithTime<A8,TimePoint> a8_;
     bool hasA8_;
+    VersionChecker<A8> versionChecker8_;
     WithTime<A9,TimePoint> a9_;
     bool hasA9_;
+    VersionChecker<A9> versionChecker9_;
     FanInParamMask requireMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
@@ -3168,6 +3354,9 @@ protected:
                     if (!x0) {
                         return std::nullopt;
                     }
+                    if (!versionChecker0_.checkVersion(x0->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
                         a0_ = std::move(x0->timedData);
                         hasA0_ = true;
@@ -3202,6 +3391,9 @@ protected:
                     Certificate<A1> cert1_copy = std::move(cert1);
                     auto x1 = this->Consumer<A1>::source()->next(std::move(cert1_copy));
                     if (!x1) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
@@ -3240,6 +3432,9 @@ protected:
                     if (!x2) {
                         return std::nullopt;
                     }
+                    if (!versionChecker2_.checkVersion(x2->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
                         a2_ = std::move(x2->timedData);
                         hasA2_ = true;
@@ -3274,6 +3469,9 @@ protected:
                     Certificate<A3> cert3_copy = std::move(cert3);
                     auto x3 = this->Consumer<A3>::source()->next(std::move(cert3_copy));
                     if (!x3) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
@@ -3312,6 +3510,9 @@ protected:
                     if (!x4) {
                         return std::nullopt;
                     }
+                    if (!versionChecker4_.checkVersion(x4->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
                         a4_ = std::move(x4->timedData);
                         hasA4_ = true;
@@ -3346,6 +3547,9 @@ protected:
                     Certificate<A5> cert5_copy = std::move(cert5);
                     auto x5 = this->Consumer<A5>::source()->next(std::move(cert5_copy));
                     if (!x5) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
@@ -3384,6 +3588,9 @@ protected:
                     if (!x6) {
                         return std::nullopt;
                     }
+                    if (!versionChecker6_.checkVersion(x6->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
                         a6_ = std::move(x6->timedData);
                         hasA6_ = true;
@@ -3418,6 +3625,9 @@ protected:
                     Certificate<A7> cert7_copy = std::move(cert7);
                     auto x7 = this->Consumer<A7>::source()->next(std::move(cert7_copy));
                     if (!x7) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
@@ -3456,6 +3666,9 @@ protected:
                     if (!x8) {
                         return std::nullopt;
                     }
+                    if (!versionChecker8_.checkVersion(x8->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
                         a8_ = std::move(x8->timedData);
                         hasA8_ = true;
@@ -3490,6 +3703,9 @@ protected:
                     Certificate<A9> cert9_copy = std::move(cert9);
                     auto x9 = this->Consumer<A9>::source()->next(std::move(cert9_copy));
                     if (!x9) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker9_.checkVersion(x9->timedData.value)) {
                         return std::nullopt;
                     }
                     if (!StateT::CheckTime || !hasA9_ || x9->timedData.timePoint >= a9_.timePoint) {
@@ -3527,7 +3743,7 @@ protected:
     }
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&, WithTime<A9,TimePoint> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), a1_(), hasA1_(false), a2_(), hasA2_(false), a3_(), hasA3_(false), a4_(), hasA4_(false), a5_(), hasA5_(false), a6_(), hasA6_(false), a7_(), hasA7_(false), a8_(), hasA8_(false), a9_(), hasA9_(false), requireMask_(requireMask) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), a9_(), hasA9_(false), versionChecker9_(), requireMask_(requireMask) {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>

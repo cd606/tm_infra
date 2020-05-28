@@ -472,6 +472,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             bool hasA_;
             TimePoint aTime_;
+            VersionChecker<A> versionChecker_;
         protected:
             virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
                 Certificate<A> t { this->source()->poll() };
@@ -480,14 +481,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 auto tp = fetchTimePointUnsafe(t);
                 auto produce = [tp,t=std::move(t),this]() -> Data<B> {
+                    Certificate<A> t1 {std::move(t)};
+                    auto input = this->source()->next(std::move(t1));
+                    if (!input) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker_.checkVersion(input->timedData.value)) {
+                        return std::nullopt;
+                    }
                     if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
                         hasA_ = true;
                         aTime_ = tp;
-                        Certificate<A> t1 {std::move(t)};
-                        auto input = this->source()->next(std::move(t1));
-                        if (!input) {
-                            return std::nullopt;
-                        }
                         return handle(std::move(*input));
                     } else {
                         return std::nullopt;
@@ -497,7 +501,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }       
             virtual Data<B> handle(InnerData<A> &&) = 0;
         public:
-            ActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_() {}           
+            ActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
         };
 
     private:
@@ -970,6 +974,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Certificate<T> sourceCert_;
             bool hasT_;
             TimePoint tTime_;
+            VersionChecker<T> versionChecker_;
         public:
             virtual void handle(InnerData<T> &&) = 0;
             virtual Certificate<SpecialOutputDataTypeForExporters> poll() override final {
@@ -984,6 +989,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 cert.consume(this);
                 auto input = this->source()->next(std::move(sourceCert_));
                 if (!input) {
+                    return std::nullopt;
+                }
+                if (!versionChecker_.checkVersion(input->timedData.value)) {
                     return std::nullopt;
                 }
                 auto env = input->environment;
