@@ -31,6 +31,39 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         DataType data;
     };
 
+    template <
+        class GroupIDType
+        , class VersionType
+        , class DataType
+        , class CmpType=std::less<VersionType>
+        , class Enable=void
+    >
+    struct GroupedVersionedData {};
+
+    template <
+        class GroupIDType
+        , class VersionType
+        , class DataType
+        , class CmpType
+    >
+    struct GroupedVersionedData<
+        GroupIDType, VersionType, DataType, CmpType
+        , std::enable_if_t<
+            std::is_copy_constructible_v<VersionType> 
+            && std::is_default_constructible_v<VersionType>
+            && std::is_copy_constructible_v<GroupIDType>
+            && std::is_default_constructible_v<GroupIDType>>
+    > {
+        using GroupID = GroupIDType;
+        using Version = VersionType;
+        using Data = DataType;
+        using Cmp = CmpType;
+
+        GroupIDType groupID;
+        VersionType version;
+        DataType data;
+    };
+
     template <class T>
     class VersionChecker {
     public:
@@ -52,6 +85,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } else {
                 return false;
             }
+        }
+    };
+    template <class GroupIDType, class VersionType, class DataType, class CmpType>
+    class VersionChecker<GroupedVersionedData<GroupIDType, VersionType, DataType, CmpType>> {
+    private:
+        std::unordered_map<GroupIDType, VersionType> lastVersion_;
+        CmpType cmp_;
+    public:
+        VersionChecker() : lastVersion_(), cmp_() {}
+        bool checkVersion(GroupedVersionedData<GroupIDType, VersionType,DataType,CmpType> const &t) {
+            auto iter = lastVersion_.find(t.groupID);
+            if (iter == lastVersion_.end()) {
+                lastVersion_.insert({t.groupID, t.version});
+                return true;
+            }
+            if (cmp_(iter->second, t.version)) {
+                iter->second = t.version;
+                return true;
+            }
+            return false;
         }
     };
     template <class A>
