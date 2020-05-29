@@ -3,7 +3,6 @@
 
 #include <optional>
 #include <functional>
-#include <mutex>
 #include <type_traits>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
