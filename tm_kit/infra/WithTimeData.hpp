@@ -564,7 +564,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             {
                 ActionCheckData d {n, 2};
                 d.isImporter = false;
-                d.isExporter = true;
+                d.isExporter = false;
                 return d;
             }
         };
@@ -575,6 +575,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<std::shared_ptr<void>> components_;
         std::unordered_set<std::shared_ptr<void>> otherPreservedPtrs_;
         std::map<std::tuple<std::string,std::string>, std::string> stateSharingRecords_;
+        struct MaxConnectivityLimits {
+            size_t outputLimit = std::numeric_limits<size_t>::max();
+            size_t inputLimits[MAX_FAN_IN_BRANCH_COUNT] = {
+                std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+            };
+        };
+        std::unordered_map<std::string, MaxConnectivityLimits> maxConnectivityLimits_;
         mutable std::mutex mutex_;
 
         template <class A, class B>
@@ -683,6 +699,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             sourceIter->second.outputConnectedTo.insert({iter->second.name,colorCode});
         }
+        void setMaxOutputConnectivity_(std::string const &name, size_t maxOutputConnectivity) {
+            auto iter = maxConnectivityLimits_.find(name);
+            if (iter == maxConnectivityLimits_.end()) {
+                iter = maxConnectivityLimits_.insert({name, MaxConnectivityLimits()}).first;
+            }
+            iter->second.outputLimit = maxOutputConnectivity;
+        }
+        void setMaxInputConnectivity_(std::string const &name, int pos, size_t maxInputConnectivity) {
+            if (pos < 0 || pos >= MAX_FAN_IN_BRANCH_COUNT) {
+                return;
+            }
+            auto iter = maxConnectivityLimits_.find(name);
+            if (iter == maxConnectivityLimits_.end()) {
+                iter = maxConnectivityLimits_.insert({name, MaxConnectivityLimits()}).first;
+            }
+            iter->second.inputLimits[pos] = maxInputConnectivity;
+        }
         int nextColorCode() {
             int res = nextColorCode_+1;
             nextColorCode_ = (nextColorCode_+1)%10;
@@ -693,9 +726,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             MonadRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        MonadRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), mutex_() {}
+        MonadRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), mutex_() {}
         template <class T>
-        MonadRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), mutex_() {}
+        MonadRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), mutex_() {}
         MonadRunner(MonadRunner const &) = delete;
         MonadRunner &operator=(MonadRunner const &) = delete;
         MonadRunner(MonadRunner &&) = default;
@@ -1084,6 +1117,37 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             m_.connect(std::move(source.mSource), sink.mSink);
         }
 
+        template <class T>
+        void setMaxOutputConnectivity(Source<T> &&source, size_t maxOutputConnectivity) {
+            std::lock_guard<std::mutex> _(mutex_);
+            setMaxOutputConnectivity_(source.producer, maxOutputConnectivity);
+        }
+        void setMaxOutputConnectivity(std::string const &source, size_t maxOutputConnectivity) {
+            std::lock_guard<std::mutex> _(mutex_);
+            setMaxOutputConnectivity_(source, maxOutputConnectivity);
+        }
+        template <class F>
+        void setMaxOutputConnectivity(std::shared_ptr<F> const &source, size_t maxOutputConnectivity) {
+            std::lock_guard<std::mutex> _(mutex_);
+            std::string name = checkName_((void *) source.get());
+            setMaxOutputConnectivity_(name, maxOutputConnectivity);
+        }
+        template <class T>
+        void setMaxInputConnectivity(Sink<T> const &sink, size_t maxInputConnectivity) {
+            std::lock_guard<std::mutex> _(mutex_);
+            setMaxInputConnectivity_(sink.consumer, sink.pos, maxInputConnectivity);
+        }
+        void setMaxInputConnectivity(std::string const &sink, int pos, size_t maxInputConnectivity) {
+            std::lock_guard<std::mutex> _(mutex_);
+            setMaxInputConnectivity_(sink, pos, maxInputConnectivity);
+        }
+        template <class F>
+        void setMaxInputConnectivity(std::shared_ptr<F> const &sink, int pos, size_t maxInputConnectivity) {
+            std::lock_guard<std::mutex> _(mutex_);
+            std::string name = checkName_((void *) sink.get());
+            setMaxInputConnectivity_(name, pos, maxInputConnectivity);
+        }
+
         void writeGraphVizDescription(std::ostream &os, std::string const &graphName) const {
             std::lock_guard<std::mutex> _(mutex_);
             os << "digraph " << graphName << "{\n";
@@ -1209,17 +1273,54 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 for (auto const &item : nameMap_) {
+                    auto limitIter = maxConnectivityLimits_.find(item.second.name);
                     for (int ii=0; ii<item.second.paramCount; ++ii) {
                         if (item.second.paramConnectedFrom[ii].empty()) {
                             throw MonadRunnerException(
-                                "Action '"+item.second.name+"''s parameter in position "+std::to_string(ii+1)+" has not been connected!"
+                                "Component '"+item.second.name+"''s parameter in position "+std::to_string(ii)+" has not been connected!"
                             );
+                        }
+                        if (limitIter != maxConnectivityLimits_.end()) {
+                            if (item.second.paramConnectedFrom[ii].size() > limitIter->second.inputLimits[ii]) {
+                                throw MonadRunnerException(
+                                    "Component '"+item.second.name+"''s parameter in position "+std::to_string(ii)
+                                    +" has "+std::to_string(item.second.paramConnectedFrom[ii].size())+" incoming connections, more than the allowed limit of "
+                                    + std::to_string(limitIter->second.inputLimits[ii])+"!"
+                                );
+                            }
+                        }
+                    }
+                    if (limitIter != maxConnectivityLimits_.end()) {
+                        for (int ii=item.second.paramCount; ii<MAX_FAN_IN_BRANCH_COUNT; ++ii) {
+                            if (limitIter->second.inputLimits[ii] < std::numeric_limits<size_t>::max()) {
+                                throw MonadRunnerException(
+                                    "You tried to limit the max input connectivity to Component '"+item.second.name+"''s parameter in position "+std::to_string(ii)
+                                    +", but it only supports "+std::to_string(item.second.paramCount)+" inputs!"
+                                );
+                            }
                         }
                     }
                     if (item.second.outputConnectedTo.empty() && !item.second.isExporter) {
                         throw MonadRunnerException(
-                            "Action '"+item.second.name+"''s output has not been connected!"
+                            "Component '"+item.second.name+"''s output has not been connected!"
                         );
+                    }
+                    if (limitIter != maxConnectivityLimits_.end()) {
+                        if (item.second.isExporter && limitIter->second.outputLimit < std::numeric_limits<size_t>::max()) {
+                            throw MonadRunnerException(
+                                "You tried to limit the max output connectivity of Component '"+item.second.name+"'"
+                                +", but it is an exporter and has no output!"
+                            );
+                        }
+                    }
+                    if (limitIter != maxConnectivityLimits_.end()) {
+                        if (item.second.outputConnectedTo.size() > limitIter->second.outputLimit) {
+                            throw MonadRunnerException(
+                                "Component '"+item.second.name+"''s output"
+                                +" has "+std::to_string(item.second.outputConnectedTo.size())+" outgoing connections, more than the allowed limit of "
+                                + std::to_string(limitIter->second.outputLimit)+"!"
+                            );
+                        }
                     }
                 }
                 auto cycleRet = detectCycle(false);
