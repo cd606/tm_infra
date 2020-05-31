@@ -195,24 +195,52 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     }
 
-    template <class A, class Env>
-    class VersionChecker<Key<A,Env>> {
+    //Since Key is designed to be one-per-id, there is no reason to check for
+    //the version in Key. But we do want to check version for KeyedData per ID.
+    template <class A, class VersionType, class DataType, class Env, class CmpType>
+    class VersionChecker<KeyedData<A,VersionedData<VersionType,DataType,CmpType>,Env>> {
     private:
-        VersionChecker<A> a_;
+        std::unordered_map<typename Env::IDType, VersionType> lastVersion_;
+        CmpType cmp_;
     public:
-        VersionChecker() : a_() {}
-        bool checkVersion(Key<A,Env> const &t) {
-            return (a_.checkVersion(t.key()));
+        VersionChecker() : lastVersion_(), cmp_() {}
+        bool checkVersion(KeyedData<A,VersionedData<VersionType,DataType,CmpType>,Env> const &t) {
+            auto iter = lastVersion_.find(t.key.id());
+            if (iter == lastVersion_.end()) {
+                lastVersion_.insert({t.key.id(), t.data.version});
+                return true;
+            }
+            if (cmp_(iter->second, t.data.version)) {
+                iter->second = t.data.version;
+                return true;
+            }
+            return false;
         }
     };
-    template <class A, class B, class Env>
-    class VersionChecker<KeyedData<A,B,Env>> {
+    template <class A, class GroupIDType, class VersionType, class DataType, class Env, class CmpType>
+    class VersionChecker<KeyedData<A,GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType>,Env>> {
     private:
-        VersionChecker<B> b_;
+        std::unordered_map<typename Env::IDType, 
+            std::unordered_map<GroupIDType, VersionType>
+        > lastVersion_;
+        CmpType cmp_;
     public:
-        VersionChecker() : b_() {}
-        bool checkVersion(KeyedData<A,B,Env> const &t) {
-            return (b_.checkVersion(t.data));
+        VersionChecker() : lastVersion_(), cmp_() {}
+        bool checkVersion(KeyedData<A,GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType>,Env> const &t) {
+            auto iter = lastVersion_.find(t.key.id());
+            if (iter == lastVersion_.end()) {
+                iter = lastVersion_.insert({t.key.id(), std::unordered_map<GroupIDType, VersionType> {}}).first;
+            }
+            auto innerIter = iter->second.find(t.data.groupID);
+            if (innerIter == iter->second.end()) {
+                iter->second.insert({t.data.groupID, t.data.version});
+                return true;
+            }
+            if (cmp_(innerIter->second, t.data.version)) {
+                innerIter->second = t.data.version;
+                return true;
+            }
+            return false;
         }
     };
 
