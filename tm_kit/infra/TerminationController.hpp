@@ -16,7 +16,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         ~TerminateAtTimePoint() {
             auto now = std::chrono::system_clock::now();
             if (tp_ > now) {
-                std::this_thread::sleep_for(tp_-now);
+                std::this_thread::sleep_until(tp_);
             }
         }
     };
