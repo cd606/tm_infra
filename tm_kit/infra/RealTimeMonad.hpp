@@ -430,8 +430,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~OneLevelDownKleisliMixin() {}
             OneLevelDownKleisliMixin(OneLevelDownKleisliMixin const &) = delete;
             OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin const &) = delete;
-            OneLevelDownKleisliMixin(OneLevelDownKleisliMixin &&) = delete;
-            OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin &&) = delete;
+            OneLevelDownKleisliMixin(OneLevelDownKleisliMixin &&) = default;
+            OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin &&) = default;
+        };
+        template <class A, class B, class F, class StartF, class KleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,B>,KleisliImpl>,int> = 0>
+        class OneLevelDownKleisliMixinWithStart : public virtual IExternalComponent, public virtual KleisliImpl, public Main {
+        private:
+            StartF startF_;
+        public:
+            template <typename... Args>
+            OneLevelDownKleisliMixinWithStart(F &&f, StartF &&startF, Args&&... args) 
+                : IExternalComponent(), KleisliImpl(std::move(f)), Main(std::forward<Args>(args)...), startF_(std::move(startF)) {}
+            virtual ~OneLevelDownKleisliMixinWithStart() {}
+            OneLevelDownKleisliMixinWithStart(OneLevelDownKleisliMixinWithStart const &) = delete;
+            OneLevelDownKleisliMixinWithStart &operator=(OneLevelDownKleisliMixinWithStart const &) = delete;
+            OneLevelDownKleisliMixinWithStart(OneLevelDownKleisliMixinWithStart &&) = default;
+            OneLevelDownKleisliMixinWithStart &operator=(OneLevelDownKleisliMixinWithStart &&) = default;
+            virtual void start(StateT *environment) override final {
+                startF_(environment);
+            }
         };
     };
     
@@ -741,6 +758,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                                 >;
+
+        template <class A, class B, class F, class StartF, bool Threaded>
+        using PureOnOrderFacilityCoreWithStart = 
+                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                typename RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B,Threaded>
+                        >;
+        template <class A, class B, class F, class StartF, bool Threaded>
+        using MaybeOnOrderFacilityCoreWithStart = 
+                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                typename RealTimeMonadComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B,Threaded>
+                        >;
+        template <class A, class B, class F, class StartF, bool Threaded>
+        using EnhancedMaybeOnOrderFacilityCoreWithStart = 
+                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                typename RealTimeMonadComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B,Threaded>
+                        >;
+        template <class A, class B, class F, class StartF, bool Threaded>
+        using KleisliOnOrderFacilityCoreWithStart = 
+                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B,Threaded>
+                        >;
     public:
         template <class A, class B>
         using AbstractOnOrderFacility = typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B>;
@@ -784,6 +830,47 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } else {
                 return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
                     new KleisliOnOrderFacilityCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false>(std::move(f))
+                );
+            }
+        }
+
+        template <class A, class F, class StartF>
+        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A,decltype(f(A()))>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(A())),F,StartF,true>(std::move(f), std::move(startF)));
+            } else {
+                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(A())),F,StartF,false>(std::move(f), std::move(startF)));
+            }
+        }     
+        template <class A, class F, class StartF>
+        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(A()))::value_type,F,StartF,true>(std::move(f),std::move(startF)));
+            } else {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(A()))::value_type,F,StartF,false>(std::move(f),std::move(startF)));
+            }
+        }
+        template <class A, class F, class StartF>
+        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,StartF,true>(std::move(f),std::move(startF)));
+            } else {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,StartF,false>(std::move(f),std::move(startF)));
+            }
+        }
+        template <class A, class F, class StartF>
+        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
+                    new KleisliOnOrderFacilityCoreWithStart<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, StartF, true>(std::move(f), std::move(startF))
+                );
+            } else {
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
+                    new KleisliOnOrderFacilityCoreWithStart<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, StartF, false>(std::move(f), std::move(startF))
                 );
             }
         }

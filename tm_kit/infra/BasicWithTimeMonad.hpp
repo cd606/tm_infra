@@ -111,6 +111,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>();
         }
+        //this lifts A->B to OnOrderFacility<A,B>
+        template <class A, class F, class StartF>
+        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
+            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>();
+        }
+        //this lifts A->optional<B> to OnOrderFacility<A,B>
+        template <class A, class F, class StartF>
+        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>();
+        }
+        //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
+        template <class A, class F, class StartF>
+        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
+        }
+        //This lifts InnerData<A>->Data<B> to Action<A,B>
+        template <class A, class F, class StartF>
+        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>();
+        }
 
         template <class I0, class O0, class I1, class O1>
         static auto wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) 

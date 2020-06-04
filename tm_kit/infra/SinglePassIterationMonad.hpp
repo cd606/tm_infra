@@ -664,6 +664,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Action<A,C>>(new ComposeCore<A,B,C>(std::move(x.core_), std::move(y.core_)));
         }
 
+    public:
+        class IExternalComponent {
+        public:
+            virtual ~IExternalComponent() {}
+            virtual void start(StateT *environment) = 0;
+        };
+
     private:
         template <class A, class B>
         class OnOrderFacilityCore {
@@ -843,6 +850,97 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
+        template <class A, class B, class F, class StartF>
+        class PureOnOrderFacilityCoreWithStart final : public virtual IExternalComponent, public OnOrderFacilityCore<A,B> {
+        private:
+            F f_; 
+            StartF startF_;
+            DelaySimulatorType delaySimulator_;
+        public:
+            PureOnOrderFacilityCoreWithStart(F &&f, StartF &&startF, DelaySimulatorType const &delaySimulator) : IExternalComponent(), OnOrderFacilityCore<A,B>(), f_(std::move(f)), startF_(std::move(startF)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~PureOnOrderFacilityCoreWithStart() {}
+            virtual void handle(InnerData<Key<A>> &&input) override final {
+                auto resp = *applyDelaySimulator<Key<B>>(0, pureInnerDataLift([this](Key<A> &&k) {
+                    return withtime_utils::apply(f_, std::move(k));
+                }, std::move(input)), delaySimulator_);
+                resp.timedData.finalFlag = true; 
+                this->publishResponse(std::move(resp));
+            }
+            virtual void start(StateT *environment) override final {
+                startF_(environment);
+            }
+        };
+        template <class A, class B, class F, class StartF>
+        class MaybeOnOrderFacilityCoreWithStart final : public virtual IExternalComponent, public OnOrderFacilityCore<A,B> {
+        private:
+            F f_;
+            StartF startF_;
+            DelaySimulatorType delaySimulator_;
+        public:
+            MaybeOnOrderFacilityCoreWithStart(F &&f, StartF &&startF, DelaySimulatorType const &delaySimulator) : IExternalComponent(), OnOrderFacilityCore<A,B>(), f_(std::move(f)), startF_(std::move(startF)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~MaybeOnOrderFacilityCoreWithStart() {}
+            virtual void handle(InnerData<Key<A>> &&input) override final {
+                typename StateT::IDType id = input.timedData.value.id();
+                std::optional<B> x = f_(std::move(input.timedData.value.key()));
+                if (x) {
+                    this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
+                } 
+            }
+            virtual void start(StateT *environment) override final {
+                startF_(environment);
+            }
+        };
+        template <class A, class B, class F, class StartF>
+        class EnhancedMaybeOnOrderFacilityCoreWithStart final : public virtual IExternalComponent, public OnOrderFacilityCore<A,B> {
+        private:
+            F f_;
+            StartF startF_;
+            DelaySimulatorType delaySimulator_;
+        public:
+            EnhancedMaybeOnOrderFacilityCoreWithStart(F &&f, StartF &&startF, DelaySimulatorType const &delaySimulator) : IExternalComponent(), OnOrderFacilityCore<A,B>(), f_(std::move(f)), startF_(std::move(startF)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~EnhancedMaybeOnOrderFacilityCoreWithStart() {}
+            virtual void handle(InnerData<Key<A>> &&input) override final {
+                typename StateT::IDType id = input.timedData.value.id();
+                std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
+                if (x) {
+                    this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
+                } 
+            }
+            virtual void start(StateT *environment) override final {
+                startF_(environment);
+            }
+        };
+        template <class A, class B, class F, class StartF>
+        class KleisliOnOrderFacilityCoreWithStart final : public virtual IExternalComponent, public OnOrderFacilityCore<A,B> {
+        private:
+            F f_;
+            StartF startF_;
+            DelaySimulatorType delaySimulator_;
+        public:
+            KleisliOnOrderFacilityCoreWithStart(F &&f, StartF &&startF, DelaySimulatorType const &delaySimulator) : IExternalComponent(), OnOrderFacilityCore<A,B>(), f_(std::move(f)), startF_(std::move(startF)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~KleisliOnOrderFacilityCoreWithStart() {}
+            virtual void handle(InnerData<Key<A>> &&input) override final {
+                typename StateT::IDType id = input.timedData.value.id();
+                InnerData<A> x = pureInnerDataLift([](Key<A> &&k) -> A {
+                    return k.key();
+                }, std::move(input));
+                Data<B> y = f_(std::move(x));
+                if (y) {
+                    y->timedData.finalFlag = true;
+                    this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerDataLift<B>(
+                        [id=std::move(id)](B &&b) -> Key<B> {
+                            return {id, std::move(b)};
+                        }, std::move(*y)), delaySimulator_));
+                }
+            }
+            virtual void start(StateT *environment) override final {
+                startF_(environment);
+            }
+        };
     public:
         template <class A, class F>
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
@@ -863,6 +961,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliOnOrderFacilityCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f), liftParam.delaySimulator));
+        }
+        template <class A, class F, class StartF>
+        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
+            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(A())),F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
+        }
+        template <class A, class F, class StartF>
+        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(A()))::value_type,F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
+        }
+        template <class A, class F, class StartF>
+        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
+        }
+        template <class A, class F, class StartF>
+        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliOnOrderFacilityCoreWithStart<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
         }
         template <class A, class B>
         static auto fromAbstractOnOrderFacility(OnOrderFacilityCore<A,B> *p)
@@ -902,11 +1020,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/SinglePassIterationMonad_Pure_Maybe_Kleisli_Piece.hpp>
 
     public:
-        class IExternalComponent {
-        public:
-            virtual ~IExternalComponent() {}
-            virtual void start(StateT *environment) = 0;
-        };
         template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
