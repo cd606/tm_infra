@@ -136,6 +136,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>();
         }
 
+        class IExternalComponent {
+        public:
+            virtual ~IExternalComponent() {}
+            virtual void start(StateT *environment) = 0;
+        };
+
+        template <class A, class B>
+        class AbstractOnOrderFacility {
+        protected:
+            void publish(InnerData<Key<B>> &&response) {
+            }   
+            void publish(StateT *env, Key<B> &&data, bool isFinal) {
+            }  
+        public:
+            virtual void handle(InnerData<Key<A>> &&input) = 0;
+        };
+
+        template <class A, class B>
+        static std::shared_ptr<OnOrderFacility<A,B>> fromAbstractOnOrderFacility(AbstractOnOrderFacility<A,B> *t) {
+            return std::make_shared<OnOrderFacility<A,B>>();
+        }
+
         template <class I0, class O0, class I1, class O1>
         static auto wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) 
             -> std::shared_ptr<OnOrderFacility<I0,O0>> {
