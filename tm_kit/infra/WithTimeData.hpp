@@ -678,6 +678,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nameMap_.insert({p, ActionCheckData::template createForOnOrderFacility<A,B>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
+            setMaxOutputConnectivity_(name, 1);
         }
         template <class A, class B, class C>
         void registerLocalOnOrderFacility_(LocalOnOrderFacilityPtr<A,B,C> const &f, std::string const &name) {
@@ -690,6 +691,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nameMap_.insert({p, ActionCheckData::template createForLocalOnOrderFacility<A,B,C>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
+            setMaxOutputConnectivity_(name, 1);
         }
         std::string checkName_(void *p) {
             auto iter = nameMap_.find(p);
