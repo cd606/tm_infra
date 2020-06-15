@@ -1,6 +1,9 @@
 #ifndef TM_KIT_INFRA_LOG_LEVEL_HPP_
 #define TM_KIT_INFRA_LOG_LEVEL_HPP_
 
+#include <iostream>
+#include <sstream>
+
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     enum class LogLevel {
