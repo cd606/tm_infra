@@ -353,7 +353,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         template <class GroupIDType, class VersionType, class DataType, class Cmp>
         struct ValueCopier<GroupedVersionedData<GroupIDType,VersionType,DataType,Cmp>> {
-            inline static GroupedVersionedData<GroupIDType,VersionType,DataType,Cmp> copy(VersionedData<GroupIDType,VersionType,DataType,Cmp> const &x) {
+            inline static GroupedVersionedData<GroupIDType,VersionType,DataType,Cmp> copy(GroupedVersionedData<GroupIDType,VersionType,DataType,Cmp> const &x) {
                 return GroupedVersionedData<GroupIDType,VersionType,DataType,Cmp> {
                     ValueCopier<GroupIDType>::copy(x.groupID)
                     , ValueCopier<VersionType>::copy(x.version)
