@@ -233,7 +233,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class OnOrderFacilityProducer<KeyedData<A,B>> {
         private:
             std::unordered_map<typename StateT::IDType, std::tuple<Key<A>, IHandler<KeyedData<A,B>> *>, typename StateT::IDHash> theMap_;
-            std::mutex mutex_;
+            std::recursive_mutex mutex_;
         public:
             OnOrderFacilityProducer() : theMap_(), mutex_() {}
             OnOrderFacilityProducer(OnOrderFacilityProducer const &) = delete;
@@ -242,9 +242,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             OnOrderFacilityProducer &operator=(OnOrderFacilityProducer &&) = default;
             virtual ~OnOrderFacilityProducer() {}
             void registerKeyHandler(Key<A> const &k, IHandler<KeyedData<A,B>> *handler) {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 if (handler != nullptr) {
-                    theMap_[k.id()] = {k, handler};
+                    if (theMap_.find(k.id()) == theMap_.end()) {
+                        theMap_.insert(std::make_pair(k.id(), std::tuple<Key<A>, IHandler<KeyedData<A,B>> *> {k, handler}));
+                    }
                 }
             }
             void publish(StateT *env, Key<B> &&data, bool isFinal) {
@@ -252,7 +254,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 publish(std::move(ret));
             }
             void publish(TimedDataWithEnvironment<Key<B>, StateT, typename StateT::TimePointType> &&data) {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 auto iter = theMap_.find(data.timedData.value.id());
                 if (iter == theMap_.end()) {
                     return;
