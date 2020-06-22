@@ -78,6 +78,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         CmpType cmp_;
     public:
         VersionChecker() : lastVersion_(std::nullopt), cmp_() {}
+        VersionChecker(VersionedData<VersionType,DataType,CmpType> const &t) 
+            : lastVersion_(t.version), cmp_() {}
         bool checkVersion(VersionedData<VersionType,DataType,CmpType> const &t) {
             if (!lastVersion_ || cmp_(*lastVersion_, t.version)) {
                 lastVersion_ = t.version;
@@ -94,7 +96,57 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         CmpType cmp_;
     public:
         VersionChecker() : lastVersion_(), cmp_() {}
+        VersionChecker(GroupedVersionedData<GroupIDType, VersionType, DataType, CmpType> const &t) 
+            : lastVersion_({t.groupID, t.version}), cmp_() {}
         bool checkVersion(GroupedVersionedData<GroupIDType, VersionType,DataType,CmpType> const &t) {
+            auto iter = lastVersion_.find(t.groupID);
+            if (iter == lastVersion_.end()) {
+                lastVersion_.insert({t.groupID, t.version});
+                return true;
+            }
+            if (cmp_(iter->second, t.version)) {
+                iter->second = t.version;
+                return true;
+            }
+            return false;
+        }
+    };
+    template <class VersionType, class DataType, class CmpType>
+    class VersionChecker<VersionedData<VersionType, std::optional<DataType>, CmpType>> {
+    private:
+        std::optional<VersionType> lastVersion_;
+        CmpType cmp_;
+    public:
+        VersionChecker() : lastVersion_(std::nullopt), cmp_() {}
+        VersionChecker(VersionedData<VersionType,std::optional<DataType>,CmpType> const &t) 
+            : lastVersion_(t.version), cmp_() {}
+        bool checkVersion(VersionedData<VersionType,std::optional<DataType>,CmpType> const &t) {
+            if (!t.data) {
+                lastVersion_ = std::nullopt;
+                return true;
+            }
+            if (!lastVersion_ || cmp_(*lastVersion_, t.version)) {
+                lastVersion_ = t.version;
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+    template <class GroupIDType, class VersionType, class DataType, class CmpType>
+    class VersionChecker<GroupedVersionedData<GroupIDType, VersionType, std::optional<DataType>, CmpType>> {
+    private:
+        std::unordered_map<GroupIDType, VersionType> lastVersion_;
+        CmpType cmp_;
+    public:
+        VersionChecker() : lastVersion_(), cmp_() {}
+        VersionChecker(GroupedVersionedData<GroupIDType, VersionType, std::optional<DataType>, CmpType> const &t) 
+            : lastVersion_({t.groupID, t.version}), cmp_() {}
+        bool checkVersion(GroupedVersionedData<GroupIDType, VersionType,std::optional<DataType>,CmpType> const &t) {
+            if (!t.data) {
+                lastVersion_.erase(t.groupID);
+                return true;
+            }
             auto iter = lastVersion_.find(t.groupID);
             if (iter == lastVersion_.end()) {
                 lastVersion_.insert({t.groupID, t.version});
@@ -144,6 +196,80 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return (a_.checkVersion(std::get<0>(t)) && b_.checkVersion(std::get<1>(t)));
         }
     };
+
+    template <class T, size_t N>
+    struct FullArrayComparer {
+        bool operator()(std::array<T,N> const &a, std::array<T,N> const &b) const {
+            for (size_t ii=0; ii<N; ++ii) {
+                if (a[ii] < b[ii]) {
+                    return true;
+                }
+                if (a[ii] > b[ii]) {
+                    return false;
+                }
+            }
+            return false;
+        }
+    };
+
+    template <class T, size_t N>
+    struct ArrayComparerWithSkip {
+        bool operator()(std::array<T,N> const &a, std::array<T,N> const &b) const {
+            static const T defaultVal {};
+            for (size_t ii=0; ii<N; ++ii) {
+                if (a[ii] == defaultVal || b[ii] == defaultVal) {
+                    continue;
+                }
+                if (a[ii] < b[ii]) {
+                    return true;
+                }
+                if (a[ii] > b[ii]) {
+                    return false;
+                }
+            }
+            return false;
+        }
+    };
+
+    template <class T, size_t N>
+    struct ArrayComparerWithOptional {
+        bool operator()(std::array<std::optional<T>,N> const &a, std::array<std::optional<T>,N> const &b) const {
+            for (size_t ii=0; ii<N; ++ii) {
+                if (!a[ii] || !b[ii]) {
+                    continue;
+                }
+                if (*(a[ii]) < *(b[ii])) {
+                    return true;
+                }
+                if (*(a[ii]) > *(b[ii])) {
+                    return false;
+                }
+            }
+            return false;
+        }
+    };
+
+    namespace withtime_utils {
+        template <class VersionType, class DataType, class CmpType>
+        inline void updateVersionedData(VersionedData<VersionType,DataType,CmpType> &dest
+                                , VersionedData<VersionType,DataType,CmpType> &&src) {
+            VersionChecker<VersionedData<VersionType,DataType,CmpType>> checker(dest);
+            if (checker.checkVersion(src)) {
+                dest = std::move(src);
+            }
+        }
+        template <class GroupIDType, class VersionType, class DataType, class CmpType>
+        inline void updateVersionedData(GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType> &dest
+                                , VersionedData<VersionType,DataType,CmpType> &&src) {
+            VersionChecker<VersionedData<VersionType,DataType,CmpType>> checker(
+                VersionedData<VersionType,DataType,CmpType> {dest.version, dest.data}
+            );
+            if (checker.checkVersion(src)) {
+                dest.version = std::move(src.version);
+                dest.data = std::move(src.data);
+            }
+        }
+    }
     
 } } } }
 
