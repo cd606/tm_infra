@@ -1046,7 +1046,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             class LocalI final : public AbstractImporter<T> {
             public:
                 virtual void start(StateT *env) override final {
-                    throw std::runtime_error("Vacuous importer called");
                 }
             };
             return std::make_shared<Importer<T>>(new LocalI());

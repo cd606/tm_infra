@@ -4,6 +4,8 @@
 #include <optional>
 #include <functional>
 #include <type_traits>
+#include <array>
+#include <map>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <
@@ -246,6 +248,60 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             return false;
+        }
+    };
+
+    //only map (not unordered_map) is allowed because it maintains ordering between keys
+    template <class Key, class T, class KeyCmp=std::less<Key>>
+    struct MapComparerWithSkip {
+        KeyCmp cmp_;
+        bool operator()(std::map<Key,T,KeyCmp> const &a, std::map<Key,T,KeyCmp> const &b) const {
+            static const T defaultVal {};
+            auto aIter = a.begin();
+            auto bIter = b.begin();
+            while (aIter != a.end() && bIter != b.end()) {
+                if (aIter->second == defaultVal) {
+                    ++aIter;
+                    continue;
+                }
+                if (bIter->second == defaultVal) {
+                    ++bIter;
+                    continue;
+                }
+                //if there is a key that only occurs in one map
+                //, we ignore it in comparison
+                if (cmp_(aIter->first, bIter->first)) {
+                    ++aIter;
+                    continue;
+                }
+                if (cmp_(bIter->first, aIter->first)) {
+                    ++bIter;
+                    continue; 
+                }
+                if (aIter->second < bIter->second) {
+                    return true;
+                }
+                if (aIter->second > bIter->second) {
+                    return false;
+                }
+                ++aIter;
+                ++bIter;
+            }
+            if (aIter == a.end()) {
+                if (bIter == b.end()) {
+                    return false;
+                } else {
+                    while (bIter != b.end()) {
+                        if (bIter->second != defaultVal) {
+                            return true;
+                        }
+                        ++bIter;
+                    }
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
     };
 

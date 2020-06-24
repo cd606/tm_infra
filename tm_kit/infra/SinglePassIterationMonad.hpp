@@ -1023,13 +1023,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
-            //an importer is NEVER idle in this monad
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {
                 auto d = generate();
-                return std::tuple<TimePoint, std::function<Data<T>()>> {d.timedData.timePoint, [d=std::move(d)]() -> Data<T> {return {std::move(d)};}};
+                if (d) {
+                    return std::tuple<TimePoint, std::function<Data<T>()>> {d->timedData.timePoint, [d=std::move(d)]() -> Data<T> {return {std::move(*d)};}};
+                } else {
+                    return std::nullopt;
+                }
             }
         public:           
-            virtual InnerData<T> generate() = 0;
+            virtual Data<T> generate() = 0;
             AbstractImporterCore() : BufferedProvider<T>() {}
         };
 
@@ -1056,8 +1059,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void start(StateT *environment) override final {
                 environment_ = environment;
             }
-            virtual InnerData<T> generate() override final {
-                return *applyDelaySimulator<T>(0, f_(environment_), delaySimulator_);
+            virtual Data<T> generate() override final {
+                auto x = f_(environment_);
+                if (x) {
+                    return *applyDelaySimulator<T>(0, std::move(*x), delaySimulator_);
+                } else {
+                    return std::nullopt;
+                }
             }
         };
 
@@ -1067,10 +1075,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             class LocalI final : public AbstractImporterCore<T> {
             public:
                 virtual void start(StateT *environment) override final {
-                    throw std::runtime_error("Vacuous importer called");
                 }
-                virtual InnerData<T> generate() override final {
-                    throw std::runtime_error("Vacuous importer called");
+                virtual Data<T> generate() override final {
+                    return std::nullopt;
                 }
             };
             return std::make_shared<Importer<T>>(new LocalI());
@@ -1188,13 +1195,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 virtual void start(StateT *environment) override final {
                     orig_.core_->start(environment);
                 }
-                virtual InnerData<T2> generate() override final {
-                    while (true) {
-                        Certificate<T2> cert = post_.core_->poll(); //this can be assumed to always succeed
-                        auto d = post_.core_->next(std::move(cert));
-                        if (d) {
-                            return *d;
-                        }
+                virtual Data<T2> generate() override final {
+                    Certificate<T2> cert = post_.core_->poll();
+                    if (cert.check()) {
+                        return post_.core_->next(std::move(cert));
+                    } else {
+                        return std::nullopt;
                     }
                 }
             };
