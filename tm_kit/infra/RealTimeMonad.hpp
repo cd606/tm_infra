@@ -1263,6 +1263,77 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
     public:
+        //OnOrderFacilityWithExternalEffects is the dual of LocalOnOrderFacility
+        //Basically, it is an importer and an on order facility glued
+        //together. 
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        using OnOrderFacilityWithExternalEffects = ThreeWayHolder<
+            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
+            , AbstractImporter<DataInputType>,DataInputType
+        >;
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
+            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            , AbstractImporter<DataInputType> *i) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(t,i);
+        }
+        
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        class AbstractIntegratedOnOrderFacilityWithExternalEffects 
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractImporter<DataInputType> 
+        {};
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
+            AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType> *p) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(p,p);
+        }
+        
+        template <class Fac, class Imp>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<
+            typename Fac::InputType
+            , typename Fac::OutputType
+            , typename Imp::DataType>> onOrderFacilityWithExternalEffects(
+            Fac &&t, Imp &&i) {
+            auto *p_t = t.core_.get();
+            auto *p_i = i.core_.get();
+            t.release();
+            i.release();
+            return std::make_shared<OnOrderFacilityWithExternalEffects<
+                typename Fac::InputType
+                , typename Fac::OutputType
+                , typename Imp::DataType>>(p_t,p_i);
+        }
+
+        template <class Fac, class Action1, class Action2
+            , std::enable_if_t<std::is_same_v<typename Action1::OutputType::KeyType, typename Fac::InputType>,int> = 0
+            , std::enable_if_t<std::is_same_v<typename Action2::InputType::KeyType, typename Fac::OutputType>,int> = 0
+            >
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<
+            typename Action1::InputType::KeyType
+            , typename Action2::OutputType::KeyType
+            , typename Fac::DataType>> wrappedOnOrderFacilityWithExternalEffects(Fac &&toWrap, Action1 &&inputT, Action2 &&outputT) {
+            auto *t = toWrap.core1_;
+            auto *i = toWrap.core2_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = wrappedOnOrderFacility<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Action1::OutputType::KeyType
+                , typename Action2::InputType::KeyType
+            >(std::move(*fac), std::move(inputT), std::move(outputT));
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<OnOrderFacilityWithExternalEffects<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Fac::DataType>
+            >(
+                p, i
+            );
+        }
+
+    public:
         template <class T>
         class Source {
         private:
@@ -1388,6 +1459,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Sink<C> localFacilityAsSink(LocalOnOrderFacility<A,B,C> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_), 0);
             return {dynamic_cast<IHandler<C> *>(facility.core2_)};
+        }
+
+        template <class A, class B, class C>
+        void placeOrderWithFacilityWithExternalEffects(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility, Sink<KeyedData<A,B>> const &sink) {
+            auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
+            if (p != nullptr) {
+                registerExternalComponent(p, 1);
+            } 
+            innerConnectFacility(input.producer, facility.core1_, sink.consumer);
+         } 
+        template <class A, class B, class C>
+        void placeOrderWithFacilityWithExternalEffectsAndForget(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
+            auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
+            if (p != nullptr) {
+                registerExternalComponent(p, 1);
+            } 
+            innerConnectFacility(input.producer, facility.core1_, (IHandler<KeyedData<A,B>> *) nullptr);
+        } 
+        template <class A, class B, class C>
+        Source<C> facilityWithExternalEffectsAsSource(OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
+            registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_), 0);
+            return {dynamic_cast<Producer<C> *>(facility.core2_)};
         }
 
         template <class T>

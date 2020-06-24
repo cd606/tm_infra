@@ -521,6 +521,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using LocalOnOrderFacility = typename Monad::template LocalOnOrderFacility<A,B,C>;
         template <class A, class B, class C>
         using LocalOnOrderFacilityPtr = std::shared_ptr<LocalOnOrderFacility<A,B,C>>;
+        template <class A, class B, class C>
+        using OnOrderFacilityWithExternalEffects = typename Monad::template OnOrderFacilityWithExternalEffects<A,B,C>;
+        template <class A, class B, class C>
+        using OnOrderFacilityWithExternalEffectsPtr = std::shared_ptr<OnOrderFacilityWithExternalEffects<A,B,C>>;
 
         template <class T>
         class Source {
@@ -601,6 +605,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static ActionCheckData createForLocalOnOrderFacility(LocalOnOrderFacility<A,B,C> *f, std::string const &n)
             {
                 ActionCheckData d {n, 2};
+                d.isImporter = false;
+                d.isExporter = false;
+                return d;
+            }
+            template <class A, class B, class C>
+            static ActionCheckData createForOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<A,B,C> *f, std::string const &n)
+            {
+                ActionCheckData d {n, 1};
                 d.isImporter = false;
                 d.isExporter = false;
                 return d;
@@ -689,6 +701,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             nameMap_.insert({p, ActionCheckData::template createForLocalOnOrderFacility<A,B,C>(f.get(), name)});
+            reverseLookup_.insert({name, p});
+            components_.push_back(std::static_pointer_cast<void>(f));
+            setMaxOutputConnectivity_(name, 1);
+        }
+        template <class A, class B, class C>
+        void registerOnOrderFacilityWithExternalEffects_(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &f, std::string const &name) {
+            void *p = (void *) (f.get());
+            if (nameMap_.find(p) != nameMap_.end()) {
+                throw MonadRunnerException(
+                    "Attempt to re-register an on-order facility with external effects with name '"+name+"'"
+                );
+            }
+            nameMap_.insert({p, ActionCheckData::template createForOnOrderFacilityWithExternalEffects<A,B,C>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
             setMaxOutputConnectivity_(name, 1);
@@ -838,6 +863,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                 , typename withtime_utils::ExporterTypeInfo<Monad,Fac>::DataType>(f, name);
         }
+        template <class Fac>
+        void registerOnOrderFacilityWithExternalEffects(std::shared_ptr<Fac> const &f, std::string const &name) {
+            registerOnOrderFacilityWithExternalEffects_<
+                typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(f, name);
+        }
+        template <class Fac>
+        void registerOnOrderFacilityWithExternalEffects(std::string const &name, std::shared_ptr<Fac> const &f) {
+            registerOnOrderFacilityWithExternalEffects_<
+                typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(f, name);
+        }
         template <class Imp>
         Source<typename withtime_utils::ImporterTypeInfo<Monad,Imp>::DataType> importerAsSource(std::string const &name, std::shared_ptr<Imp> const &importer) {
             {
@@ -980,6 +1019,34 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                             , typename withtime_utils::ExporterTypeInfo<Monad,Fac>::DataType>(*facility)
                      , name, 1 };
+        }
+        template <class Fac>
+        Source<typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType> facilityWithExternalEffectsAsSource(std::string const &name, std::shared_ptr<Fac> const &facility) {
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                registerOnOrderFacilityWithExternalEffects_<
+                    typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(facility, name);
+            }
+            return { m_.template facilityWithExternalEffectsAsSource<
+                            typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                            , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                            , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(*facility)
+                     , name };
+        }
+        template <class Fac>
+        Source<typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType> facilityWithExternalEffectsAsSource(std::shared_ptr<Fac> const &facility) {
+            std::string name;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                name = checkName_((void *) facility.get());
+            }
+            return { m_.template facilityWithExternalEffectsAsSource<
+                            typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                            , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                            , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(*facility)
+                     , name };
         }
 
         #include <tm_kit/infra/WithTimeData_VariantSink_Piece.hpp>
@@ -1141,6 +1208,98 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                 , typename withtime_utils::ExporterTypeInfo<Monad,Fac>::DataType
+                >(std::move(input.mSource), *f);
+        }
+
+        template <class Fac>
+        void placeOrderWithFacilityWithExternalEffects(
+            Source<Key<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::string const &name
+            , std::shared_ptr<Fac> const &f
+            , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType, StateT>> const &sink) {
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                registerOnOrderFacilityWithExternalEffects_<
+                    typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
+                    >(f, name);
+                int color = nextColorCode();
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                auto iter = reverseLookup_.find(sink.consumer);
+                if (iter == reverseLookup_.end()) {
+                    throw MonadRunnerException(
+                        "No such sink '"+sink.consumer+"'"
+                    );
+                }
+                connectAndCheck_(sink.pos, iter->second, name, color);
+            }
+            m_.template placeOrderWithFacilityWithExternalEffects<
+                typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
+                >(std::move(input.mSource), *f, sink.mSink);
+        }
+        template <class Fac>
+        void placeOrderWithFacilityWithExternalEffects(
+            Source<Key<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::shared_ptr<Fac> const &f
+            , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType, StateT>> const &sink) {
+            std::string name;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                name = checkName_((void *) f.get());
+                int color = nextColorCode();
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                auto iter = reverseLookup_.find(sink.consumer);
+                if (iter == reverseLookup_.end()) {
+                    throw MonadRunnerException(
+                        "No such sink '"+sink.consumer+"'"
+                    );
+                }
+                connectAndCheck_(sink.pos, iter->second, name, color);
+            }
+            m_.template placeOrderWithFacilityWithExternalEffects<
+                typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
+                >(std::move(input.mSource), *f, sink.mSink);
+        }
+        template <class Fac>
+        void placeOrderWithFacilityWithExternalEffectsAndForget(
+            Source<Key<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::string const &name
+            , std::shared_ptr<Fac> const &f) {
+            {
+                int color = nextColorCode();
+                std::lock_guard<std::mutex> _(mutex_);
+                registerOnOrderFacilityWithExternalEffects_<
+                    typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
+                    >(f, name);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+            }
+            m_.template placeOrderWithFacilityWithExternalEffectsAndForget<
+                typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
+                >(std::move(input.mSource), *f);
+        }
+        template <class Fac>
+        void placeOrderWithFacilityWithExternalEffectsAndForget(
+            Source<Key<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::shared_ptr<Fac> const &f) {
+            {
+                int color = nextColorCode();
+                std::lock_guard<std::mutex> _(mutex_);
+                checkName_((void *) f.get());
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+            }
+            m_.template placeOrderWithFacilityWithExternalEffectsAndForget<
+                typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
                 >(std::move(input.mSource), *f);
         }
 
@@ -1410,6 +1569,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C>
         using LocalFacilityWrapper =
             std::optional<std::function<void(MonadRunner &, LocalOnOrderFacilityPtr<A,B,C> const &)>>;
+        template <class A, class B, class C>
+        using FacilityWithExternalEffectsWrapper =
+            std::optional<std::function<void(MonadRunner &, OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &)>>;
 
         template <class A, class B>
         static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityPtr<A,B> const &facility) {
@@ -1421,6 +1583,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static FacilitioidConnector<A,B> localFacilityConnector(LocalOnOrderFacilityPtr<A,B,C> const &facility) {
             return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithLocalFacility(std::move(source), facility, sink);
+            };
+        }
+        template <class A, class B, class C>
+        static FacilitioidConnector<A,B> facilityWithExternalEffectsConnector(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithFacilityWithExternalEffects(std::move(source), facility, sink);
             };
         }
     };

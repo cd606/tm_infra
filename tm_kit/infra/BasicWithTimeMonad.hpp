@@ -248,6 +248,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<LocalOnOrderFacility<I0,O0,C>> wrappedLocalOnOrderFacility(LocalOnOrderFacility<I1,O1,C> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
             return std::make_shared<LocalOnOrderFacility<I0,O0,C>>();
         }
+
+        template <class A, class B, class C>
+        struct OnOrderFacilityWithExternalEffects {
+            OnOrderFacility<A,B> facility;
+            Importer<C> importer;
+        };
+
+        template <class A, class B, class C>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<A,B,C>> onOrderFacilityWithExternalEffects(
+            OnOrderFacility<A,B> &&facility, Importer<C> &&importer
+        ) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<A,B,C>>();
+        }
+        
+        template <class I0, class O0, class I1, class O1, class C>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<I0,O0,C>> wrappedOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<I1,O1,C> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<I0,O0,C>>();
+        }
    
     private:
         template <class T>
@@ -294,6 +312,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
 
+        template <class A, class B, class C>
+        void placeOrderWithFacilityWithExternalEffects(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility, Sink<KeyedData<A,B>> const &sink) {
+        } 
+        template <class A, class B, class C>
+        void placeOrderWithFacilityWithExternalEffectsAndForget(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
+        } 
+        template <class A, class B, class C>
+        Source<C> facilityWithExternalEffectsAsSource(OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
+            return {};
+        }
+
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
         }
@@ -319,6 +348,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct GetDataType<LocalOnOrderFacility<A,B,C>> {
             using DataType = C;
         };
+        template <class A, class B, class C>
+        struct GetDataType<OnOrderFacilityWithExternalEffects<A,B,C>> {
+            using DataType = C;
+        };
         template <class X>
         struct GetInputOutputType {
         };
@@ -334,6 +367,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         template <class A, class B, class C>
         struct GetInputOutputType<LocalOnOrderFacility<A,B,C>> {
+            using InputType = A;
+            using OutputType = B;
+        };
+        template <class A, class B, class C>
+        struct GetInputOutputType<OnOrderFacilityWithExternalEffects<A,B,C>> {
             using InputType = A;
             using OutputType = B;
         };
