@@ -460,6 +460,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         friend class MonadRunner<RealTimeMonad>;
 
     public:
+        static constexpr bool PossiblyMultiThreaded = true;
+
         //The data definition part
         //This part is of course best put into a common code, however, 
         //because of template inheritance issues, it is actually easier

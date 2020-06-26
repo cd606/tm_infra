@@ -12,6 +12,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         BasicWithTimeMonad() = default;
         ~BasicWithTimeMonad() = default;
     public:
+        static constexpr bool PossiblyMultiThreaded = false;
+
         using TimePoint = typename StateT::TimePointType;
         using StateType = StateT;
         using EnvironmentType = StateT;

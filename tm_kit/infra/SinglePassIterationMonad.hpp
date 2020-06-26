@@ -16,6 +16,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         friend class MonadRunner<SinglePassIterationMonad>;
     public:
+        static constexpr bool PossiblyMultiThreaded = false;
+
         using TimePoint = typename StateT::TimePointType;
         using StateType = StateT;
         using EnvironmentType = StateT;
