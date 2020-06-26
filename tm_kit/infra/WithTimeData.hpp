@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 #include <map>
+#include <set>
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
@@ -532,7 +533,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             friend class MonadRunner;
             typename Monad::template Source<T> mSource;
             std::string producer;
-            Source(typename Monad::template Source<T> &&s, std::string const &p) : mSource(std::move(s)), producer(p) {}
+            bool useAltOutput;
+            Source(typename Monad::template Source<T> &&s, std::string const &p) : mSource(std::move(s)), producer(p), useAltOutput(false) {}
+            Source(typename Monad::template Source<T> &&s, std::string const &p, bool ao) : mSource(std::move(s)), producer(p), useAltOutput(ao) {}
         public:
             Source<T> clone() const {
                 return {mSource.clone(), producer};
@@ -553,15 +556,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionCheckData {
             std::string name;
             int paramCount;
-            std::vector<std::unordered_map<std::string,int>> paramConnectedFrom;
+            std::vector<std::unordered_map<std::string,std::tuple<int,int>>> paramConnectedFrom;
             std::unordered_map<std::string,int> outputConnectedTo;            
             bool isImporter = false;
             bool isExporter = false;
+            bool hasAltOutput = false;
+            std::unordered_map<std::string,int> altOutputConnectedTo;
 
-            ActionCheckData() : name(), paramCount(0), paramConnectedFrom(), outputConnectedTo(), isImporter(false), isExporter(false)
+            ActionCheckData() : name(), paramCount(0), paramConnectedFrom(), outputConnectedTo(), isImporter(false), isExporter(false), hasAltOutput(false), altOutputConnectedTo()
             {}
 
-            ActionCheckData(std::string const &n, int c) : name(n), paramCount(c), paramConnectedFrom(), outputConnectedTo(), isImporter(false), isExporter(false)
+            ActionCheckData(std::string const &n, int c) : name(n), paramCount(c), paramConnectedFrom(), outputConnectedTo(), isImporter(false), isExporter(false), hasAltOutput(false), altOutputConnectedTo()
             {
                 paramConnectedFrom.resize(c);
             }
@@ -615,6 +620,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ActionCheckData d {n, 1};
                 d.isImporter = false;
                 d.isExporter = false;
+                d.hasAltOutput = true;
                 return d;
             }
         };
@@ -727,7 +733,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return iter->second.name;
         }
-        void connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode=0) {
+        void connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode=0, bool useAltOutput=false) {
             auto iter = nameMap_.find(p);
             if (iter == nameMap_.end()) {
                 throw MonadRunnerException(
@@ -744,7 +750,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to connect pos "+std::to_string(pos+1)+" of '"+iter->second.name+"' from producer '"+producer+"' again"
                 );
             }
-            iter->second.paramConnectedFrom[pos].insert({producer, colorCode});
             auto reverseIter = reverseLookup_.find(producer);
             if (reverseIter == reverseLookup_.end()) {
                 throw MonadRunnerException(
@@ -757,12 +762,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to connect pos "+std::to_string(pos+1)+" of "+iter->second.name+" from non-registered producer '"+producer+"'"
                 );
             }
-            if (sourceIter->second.outputConnectedTo.find(iter->second.name) != sourceIter->second.outputConnectedTo.end()) {
-                throw MonadRunnerException(
-                    "Attempt to connect output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' again"
-                );
+            if (useAltOutput) {
+                if (sourceIter->second.hasAltOutput) {
+                    if (sourceIter->second.altOutputConnectedTo.find(iter->second.name) != sourceIter->second.altOutputConnectedTo.end()) {
+                        throw MonadRunnerException(
+                            "Attempt to connect alternate output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' again"
+                        );
+                    }
+                    sourceIter->second.altOutputConnectedTo.insert({iter->second.name,colorCode});
+                } else {
+                    throw MonadRunnerException(
+                        "Attempt to connect alternate output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' but there is no such alternate output"
+                    );
+                }   
+            } else {
+                if (sourceIter->second.outputConnectedTo.find(iter->second.name) != sourceIter->second.outputConnectedTo.end()) {
+                    throw MonadRunnerException(
+                        "Attempt to connect output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' again"
+                    );
+                }
+                sourceIter->second.outputConnectedTo.insert({iter->second.name,colorCode});
             }
-            sourceIter->second.outputConnectedTo.insert({iter->second.name,colorCode});
+            iter->second.paramConnectedFrom[pos].insert({producer, {colorCode, (useAltOutput?1:(sourceIter->second.hasAltOutput?0:-1))}});
+            
         }
         void setMaxOutputConnectivity_(std::string const &name, size_t maxOutputConnectivity) {
             auto iter = maxConnectivityLimits_.find(name);
@@ -1033,7 +1055,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
                             , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                             , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(*facility)
-                     , name };
+                     , name, true };
         }
         template <class Fac>
         Source<typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType> facilityWithExternalEffectsAsSource(std::shared_ptr<Fac> const &facility) {
@@ -1046,7 +1068,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
                             , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                             , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(*facility)
-                     , name };
+                     , name, true };
         }
 
         #include <tm_kit/infra/WithTimeData_VariantSink_Piece.hpp>
@@ -1312,7 +1334,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "No such sink '"+sink.consumer+"'"
                 );
             }
-            connectAndCheck_(sink.pos, iter->second, source.producer);
+            connectAndCheck_(sink.pos, iter->second, source.producer, 0, source.useAltOutput);
             m_.connect(std::move(source.mSource), sink.mSink);
         }
 
@@ -1355,7 +1377,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             for (auto const &item : nameMap_) {
                 m[item.second.name] = counter;
                 os << "\t action" << counter << " [";
-                if (item.second.paramCount > 1) {
+                if (item.second.hasAltOutput) {
+                    os << "label=\"{";
+                    os << std::regex_replace(item.second.name, std::regex(">"), "\\>");
+                    os << "|{<out0> out0|<out1> out1}}\",shape=record";
+                } else if (item.second.paramCount > 1) {
                     os << "label=\"{{";
                     for (int ii=0; ii<item.second.paramCount; ++ii) {
                         if (ii > 0) {
@@ -1378,11 +1404,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         auto iter1 = reverseLookup_.find(src.first);
                         auto iter2 = nameMap_.find(iter1->second);
                         bool isExternal = iter2->second.isImporter || item.second.isExporter;
-                        auto color = src.second;
-                        if (item.second.paramCount > 1) {
-                            os << "\t action" << m[src.first] << " -> action" << m[item.second.name] << ":arg" << ii;
+                        auto color = std::get<0>(src.second);
+                        auto srcConnector = std::get<1>(src.second);
+                        std::string srcConnectorStr;
+                        if (srcConnector < 0) {
+                            srcConnectorStr = "";
                         } else {
-                            os << "\t action" << m[src.first] << " -> action" << m[item.second.name];
+                            srcConnectorStr = std::string(":out")+std::to_string(srcConnector);
+                        }
+                        if (item.second.paramCount > 1) {
+                            os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name] << ":arg" << ii;
+                        } else {
+                            os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name];
                         }   
                         if (color != 0 && isExternal && ii == 0) {
                             os << " [style=dotted,colorscheme=spectral11,color=" << color << "]";
@@ -1413,17 +1446,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             for (auto const &item : stateNames) {
                 os << "\t state" << item.second << " [label=\"" << item.first << "\",shape=house];\n";
             }
+            std::set<std::tuple<int,int>> nameStateSet, nameNameSet;
             for (auto const &sharing : stateSharingRecords_) {
                 if (sharing.second != "") {
                     auto stateIdx = stateNames[sharing.second];
                     auto name1Idx = m[std::get<0>(sharing.first)];
                     auto name2Idx = m[std::get<1>(sharing.first)];
-                    os << "\t action" << name1Idx << " -> state" << stateIdx << " [dir=none,style=bold];\n";
-                    os << "\t action" << name2Idx << " -> state" << stateIdx << " [dir=none,style=bold];\n";
+                    auto nameState = std::make_tuple(name1Idx, stateIdx);
+                    if (nameStateSet.find(nameState) == nameStateSet.end()) {
+                        os << "\t action" << name1Idx << " -> state" << stateIdx << " [dir=none,style=bold];\n";
+                        nameStateSet.insert(nameState);
+                    }
+                    nameState = std::make_tuple(name2Idx, stateIdx);
+                    if (nameStateSet.find(nameState) == nameStateSet.end()) {
+                        os << "\t action" << name2Idx << " -> state" << stateIdx << " [dir=none,style=bold];\n";
+                        nameStateSet.insert(nameState);
+                    }
                 } else {
                     auto name1Idx = m[std::get<0>(sharing.first)];
                     auto name2Idx = m[std::get<1>(sharing.first)];
-                    os << "\t action" << name1Idx << " -> action" << name2Idx << " [dir=none,style=bold];\n";
+                    auto nameName1 = std::make_tuple(name1Idx, name2Idx);
+                    auto nameName2 = std::make_tuple(name2Idx, name1Idx);
+                    if (nameNameSet.find(nameName1) == nameNameSet.end() && nameNameSet.find(nameName2) == nameNameSet.end()) {
+                        os << "\t action" << name1Idx << " -> action" << name2Idx << " [dir=none,style=bold];\n";
+                        nameNameSet.insert(nameName1);
+                        nameNameSet.insert(nameName2);
+                    }
                 }
             }
             os << "}\n";
@@ -1450,6 +1498,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return item.second.name;
                     } else if (recStack.find(outputTo.first) != recStack.end()) {
                         return item.second.name;
+                    }
+                }
+                if (item.second.hasAltOutput) {
+                    for (auto const &outputTo : item.second.altOutputConnectedTo) {
+                        if (!includeFacility && outputTo.second != 0) {
+                            continue;
+                        }
+                        auto iter = reverseLookup_.find(outputTo.first);
+                        auto iter2 = nameMap_.find(iter->second);
+                        if (visited.find(outputTo.first) == visited.end()
+                            && isCyclic(*iter2, visited, recStack, includeFacility)
+                        ) {
+                            return item.second.name;
+                        } else if (recStack.find(outputTo.first) != recStack.end()) {
+                            return item.second.name;
+                        }
                     }
                 }
             }
@@ -1502,6 +1566,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (item.second.outputConnectedTo.empty() && !item.second.isExporter) {
                         throw MonadRunnerException(
                             "Component '"+item.second.name+"''s output has not been connected!"
+                        );
+                    }
+                    if (item.second.hasAltOutput && item.second.altOutputConnectedTo.empty()) {
+                        throw MonadRunnerException(
+                            "Component '"+item.second.name+"''s alternate output has not been connected!"
                         );
                     }
                     if (limitIter != maxConnectivityLimits_.end()) {
