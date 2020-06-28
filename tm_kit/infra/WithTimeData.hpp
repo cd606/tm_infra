@@ -538,7 +538,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Source(typename Monad::template Source<T> &&s, std::string const &p, bool ao) : mSource(std::move(s)), producer(p), useAltOutput(ao) {}
         public:
             Source<T> clone() const {
-                return {mSource.clone(), producer};
+                return {mSource.clone(), producer, useAltOutput};
             }
         };
         template <class T>
