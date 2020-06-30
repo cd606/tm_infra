@@ -201,47 +201,37 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class A, class VersionType, class DataType, class Env, class CmpType>
     class VersionChecker<KeyedData<A,VersionedData<VersionType,DataType,CmpType>,Env>> {
     private:
-        std::unordered_map<typename Env::IDType, VersionType> lastVersion_;
-        CmpType cmp_;
+        std::unordered_map<
+            typename Env::IDType
+            , VersionChecker<VersionedData<VersionType,DataType,CmpType>>
+            , typename Env::IDHash
+        > checkers_;
     public:
-        VersionChecker() : lastVersion_(), cmp_() {}
+        VersionChecker() : checkers_() {}
         bool checkVersion(KeyedData<A,VersionedData<VersionType,DataType,CmpType>,Env> const &t) {
-            auto iter = lastVersion_.find(t.key.id());
-            if (iter == lastVersion_.end()) {
-                lastVersion_.insert({t.key.id(), t.data.version});
-                return true;
+            auto iter = checkers_.find(t.key.id());
+            if (iter == checkers_.end()) {
+                iter = checkers_.insert({t.key.id(), VersionChecker<VersionedData<VersionType,DataType,CmpType>> {}}).first;
             }
-            if (cmp_(iter->second, t.data.version)) {
-                iter->second = t.data.version;
-                return true;
-            }
-            return false;
+            return iter->second.checkVersion(t.data);
         }
     };
     template <class A, class GroupIDType, class VersionType, class DataType, class Env, class CmpType>
     class VersionChecker<KeyedData<A,GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType>,Env>> {
     private:
-        std::unordered_map<typename Env::IDType, 
-            std::unordered_map<GroupIDType, VersionType>
-        > lastVersion_;
-        CmpType cmp_;
+        std::unordered_map<
+            typename Env::IDType
+            , VersionChecker<GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType>>
+            , typename Env::IDHash
+        > checkers_;
     public:
-        VersionChecker() : lastVersion_(), cmp_() {}
+        VersionChecker() : checkers_() {}
         bool checkVersion(KeyedData<A,GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType>,Env> const &t) {
-            auto iter = lastVersion_.find(t.key.id());
-            if (iter == lastVersion_.end()) {
-                iter = lastVersion_.insert({t.key.id(), std::unordered_map<GroupIDType, VersionType> {}}).first;
+            auto iter = checkers_.find(t.key.id());
+            if (iter == checkers_.end()) {
+                iter = checkers_.insert({t.key.id(), VersionChecker<GroupedVersionedData<GroupIDType,VersionType,DataType,CmpType>> {}}).first;
             }
-            auto innerIter = iter->second.find(t.data.groupID);
-            if (innerIter == iter->second.end()) {
-                iter->second.insert({t.data.groupID, t.data.version});
-                return true;
-            }
-            if (cmp_(innerIter->second, t.data.version)) {
-                innerIter->second = t.data.version;
-                return true;
-            }
-            return false;
+            return iter->second.checkVersion(t.data);
         }
     };
 
