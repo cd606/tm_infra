@@ -442,6 +442,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class A, class B, class Environment, class TimePoint=typename Environment::TimePointType>
     using TimedMonadModelKleisli = std::function<TimedMonadData<B, Environment, TimePoint>(TimedDataWithEnvironment<A, Environment, TimePoint> &&)>;
 
+    template <class T, class Environment, class TimePoint=typename Environment::TimePointType>
+    using TimedMonadMultiData = std::optional<TimedDataWithEnvironment<std::vector<T>, Environment, TimePoint>>;
+
     namespace withtime_utils {
         template <class T, class Environment, class TimePoint=typename Environment::TimePointType>
         inline TimedMonadData<T,Environment,TimePoint> clone(TimedMonadData<T,Environment,TimePoint> const &data) {

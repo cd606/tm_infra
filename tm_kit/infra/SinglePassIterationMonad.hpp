@@ -55,6 +55,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         using Data = TimedMonadData<T,StateT>;
 
+        template <class T>
+        using MultiData = TimedMonadMultiData<T,StateT>;
+
         struct SpecialOutputDataTypeForExporters {};
 
         class ProviderBase {
@@ -506,6 +509,114 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
         };
 
+        template <class B>
+        class MultiBufferedProvider : public virtual Provider<B> {
+        protected:
+            using CheckAndProduceResult =
+                std::optional<
+                    std::tuple<TimePoint, std::function<MultiData<B>()>>
+                >;
+            virtual CheckAndProduceResult checkAndProduce() = 0;
+        private:
+            MultiData<B> latestBFrame_;
+            std::deque<B> latestBs_;
+            CheckAndProduceResult buffer_; 
+            void fillBuffer() {
+                if (latestBFrame_) {
+                    return;
+                }
+                if (buffer_) {
+                    return;
+                }
+                buffer_ = checkAndProduce();
+            }
+        public:
+            virtual Certificate<B> poll() override final {
+                if (latestBFrame_) {
+                    return Certificate<B> { latestBFrame_->timedData.timePoint, this };
+                }
+                if (!buffer_) {
+                    fillBuffer();
+                }
+                if (!buffer_) {
+                    return Certificate<B> { std::nullopt , this };
+                } else {
+                    return Certificate<B> { std::get<0>(*buffer_) , this };
+                }
+            }
+            virtual Data<B> next(Certificate<B> &&cert) override final {
+                cert.consume(this);
+                if (!latestBFrame_) {
+                    std::tuple<TimePoint, std::function<MultiData<B>()>> ret = std::move(*buffer_);
+                    buffer_ = std::nullopt;
+                    latestBFrame_ = std::get<1>(ret)();
+                    if (!latestBFrame_) {
+                        return std::nullopt;
+                    }
+                    if (latestBFrame_->timedData.value.empty()) {
+                        latestBFrame_ = std::nullopt;
+                        return std::nullopt;
+                    }
+                    for (auto &&item : latestBFrame_->timedData.value) {
+                        latestBs_.push_back(std::move(item));
+                    }
+                    latestBFrame_->timedData.value.clear();
+                }
+                InnerData<B> retData = InnerData<B> {
+                    latestBFrame_->environment
+                    , {
+                        latestBFrame_->timedData.timePoint
+                        , std::move(latestBs_.front())
+                        , latestBFrame_->timedData.finalFlag
+                    }
+                };
+                latestBs_.pop_front();
+                if (!latestBs_.empty()) {
+                    retData.timedData.finalFlag = false;
+                } else {
+                    latestBFrame_ = std::nullopt;
+                }
+                return retData;
+            }
+        };
+
+        template <class A, class B>
+        class MultiActionCore : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual MultiBufferedProvider<B> {
+        private:
+            bool hasA_;
+            TimePoint aTime_;
+            VersionChecker<A> versionChecker_;
+        protected:
+            virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
+                Certificate<A> t { this->source()->poll() };
+                if (!t.check()) {
+                    return std::nullopt;
+                }
+                auto tp = fetchTimePointUnsafe(t);
+                auto produce = [tp,t=std::move(t),this]() -> MultiData<B> {
+                    Certificate<A> t1 {std::move(t)};
+                    auto input = this->source()->next(std::move(t1));
+                    if (!input) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker_.checkVersion(input->timedData.value)) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
+                        hasA_ = true;
+                        aTime_ = tp;
+                        return handle(std::move(*input));
+                    } else {
+                        return std::nullopt;
+                    }    
+                };
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp, produce};
+            }       
+            virtual MultiData<B> handle(InnerData<A> &&) = 0;
+        public:
+            MultiActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
+        };
+
     private:
         using DelaySimulatorType = typename LiftParameters<TimePoint>::DelaySimulatorType;
 
@@ -629,6 +740,71 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f), liftParam.delaySimulator));
+        }
+    private:
+        template <class A, class B, class F>
+        class PureMultiActionCore final : public MultiActionCore<A,B> {
+        private:
+            F f_;
+            DelaySimulatorType delaySimulator_;
+        protected:
+            virtual MultiData<B> handle(InnerData<A> &&a) override final {
+                return applyDelaySimulator<std::vector<B>>(0, {
+                    pureInnerDataLift<A>(f_, std::move(a))
+                }, delaySimulator_);
+            }
+        public:
+            PureMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~PureMultiActionCore() {}
+        };
+        template <class A, class B, class F>
+        class EnhancedPureMultiActionCore final : public MultiActionCore<A,B> {
+        private:
+            F f_;
+            DelaySimulatorType delaySimulator_;
+        protected:
+            virtual MultiData<B> handle(InnerData<A> &&a) override final {
+                std::vector<B> y = f_(std::tuple<TimePoint, A> {a.timedData.timePoint, std::move(a.timedData.value)});
+                return applyDelaySimulator<std::vector<B>>(0, pureInnerData<std::vector<B>>(
+                    a.environment,
+                    {a.timedData.timePoint, std::move(y), a.timedData.finalFlag}
+                ), delaySimulator_);
+            }
+        public:
+            EnhancedPureMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~EnhancedPureMultiActionCore() {}
+        };
+        template <class A, class B, class F>
+        class KleisliMultiActionCore final : public MultiActionCore<A,B> {
+        private:
+            F f_;
+            DelaySimulatorType delaySimulator_;
+        protected:
+            virtual MultiData<B> handle(InnerData<A> &&a) override final {
+                return applyDelaySimulatorForKleisli<std::vector<B>>(0, f_(std::move(a)), delaySimulator_);
+            }
+        public:
+            KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
+            }
+            virtual ~KleisliMultiActionCore() {}
+        };
+    public:
+        template <class A, class F>
+        static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new PureMultiActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f), liftParam.delaySimulator));
+        }
+        template <class A, class F>
+        static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedPureMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
+        }
+        template <class A, class F>
+        static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>(new KleisliMultiActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
     
     private:

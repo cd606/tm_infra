@@ -89,6 +89,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>();
         }
+        //This lifts A->[B] to Action<A,B>
+        template <class A, class F>
+        static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>();
+        }
+        //This lifts (time,A)->[B] to Action<A,B>
+        template <class A, class F>
+        static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
+        }
+        //This lifts InnerData<A>->Data<[B]> to Action<A,B>
+        template <class A, class F>
+        static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>> {
+            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>();
+        }
         //this lifts A->B to OnOrderFacility<A,B>
         template <class A, class F>
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 

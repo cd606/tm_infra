@@ -327,7 +327,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             F f_;
             virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
-                if (ForceFinal) {
+                if constexpr (ForceFinal) {
                     auto ret = withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                     ret.timedData.finalFlag = true;
                     return ret;
@@ -342,6 +342,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             PureOneLevelDownKleisli(PureOneLevelDownKleisli &&) = default;
             PureOneLevelDownKleisli &operator=(PureOneLevelDownKleisli &&) = default;
             virtual ~PureOneLevelDownKleisli() {}
+        };
+        //This is only used for multi action. For regular action
+        //, if the "enhanced" input data is needed, just use EnhancedMaybe
+        template <class A, class B, class F, bool ForceFinal>
+        class EnhancedPureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
+        private:
+            F f_;
+            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+                auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
+                return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
+                    data.timePoint,
+                    std::move(b),
+                    (ForceFinal?true:data.finalFlag)
+                });
+            }
+        public:
+            EnhancedPureOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
+            EnhancedPureOneLevelDownKleisli(EnhancedPureOneLevelDownKleisli const &) = delete;
+            EnhancedPureOneLevelDownKleisli &operator=(EnhancedPureOneLevelDownKleisli const &) = delete;
+            EnhancedPureOneLevelDownKleisli(EnhancedPureOneLevelDownKleisli &&) = default;
+            EnhancedPureOneLevelDownKleisli &operator=(EnhancedPureOneLevelDownKleisli &&) = default;
+            virtual ~EnhancedPureOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
         class MaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
@@ -452,6 +474,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 startF_(environment);
             }
         };
+        template <class A, class B, class F, class MultiKleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,std::vector<B>>,MultiKleisliImpl>,int> = 0>
+        class OneLevelDownMultiKleisliMixin : public virtual MultiKleisliImpl, public Main {
+        public:
+            template <typename... Args>
+            OneLevelDownMultiKleisliMixin(F &&f, Args&&... args) 
+                : MultiKleisliImpl(std::move(f)), Main(std::forward<Args>(args)...) {}
+            virtual ~OneLevelDownMultiKleisliMixin() {}
+            OneLevelDownMultiKleisliMixin(OneLevelDownMultiKleisliMixin const &) = delete;
+            OneLevelDownMultiKleisliMixin &operator=(OneLevelDownMultiKleisliMixin const &) = delete;
+            OneLevelDownMultiKleisliMixin(OneLevelDownMultiKleisliMixin &&) = default;
+            OneLevelDownMultiKleisliMixin &operator=(OneLevelDownMultiKleisliMixin &&) = default;
+        };
     };
     
     template <class StateT>
@@ -509,6 +543,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T>
         using Data = TimedMonadData<T,StateT>;
+
+        template <class T>
+        using MultiData = TimedMonadMultiData<T,StateT>;
     
     private:
         template <class T, class Input, class Output>
@@ -684,6 +721,116 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } else {
                 return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
                     new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false>(std::move(f))
+                );
+            }
+        }
+    private:
+        template <class A, class B, bool Threaded>
+        class MultiActionCore {};
+        template <class A, class B>
+        class MultiActionCore<A,B,true> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<A> {
+        protected:
+            virtual void actuallyHandle(InnerData<A> &&data) override final {
+                if (!this->timeCheckGood(data)) {
+                    return;
+                }
+                auto res = this->action(data.environment, std::move(data.timedData));
+                if (res && !res->timedData.value.empty()) {
+                    size_t l = res->timedData.value.size();
+                    size_t ii = l-1;
+                    for (auto &&item : res->timedData.value) {
+                        Producer<B>::publish(InnerData<B> {
+                            res->environment
+                            , {
+                                res->timedData.timePoint
+                                , std::move(item)
+                                , ((ii==0)?res->timedData.finalFlag:false)
+                            }
+                        });
+                        --ii;
+                    }
+                }
+            }
+        public:
+            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask) {
+            }
+            virtual ~MultiActionCore() {
+            }
+        };
+        template <class A, class B>
+        class MultiActionCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
+        private:
+            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
+        public:
+            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask) {
+            }
+            virtual ~MultiActionCore() {
+            }
+            virtual void handle(InnerData<A> &&data) override final {
+                if (timeChecker_(data)) {
+                    auto res = this->action(data.environment, std::move(data.timedData));
+                    if (res && !res->timedData.value.empty()) {
+                        size_t l = res->timedData.value.size();
+                        size_t ii = l-1;
+                        for (auto &&item : res->timedData.value) {
+                            Producer<B>::publish(InnerData<B> {
+                                res->environment
+                                , {
+                                    res->timedData.timePoint
+                                    , std::move(item)
+                                    , ((ii==0)?res->timedData.finalFlag:false)
+                                }
+                            });
+                            --ii;
+                        }
+                    }
+                }
+            }
+        };
+        template <class A, class B, class F, bool Threaded>
+        using SimpleMultiActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownMultiKleisliMixin<
+                                A, B, F,
+                                typename RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                MultiActionCore<A,B,Threaded>
+                                >;
+        template <class A, class B, class F, bool Threaded>
+        using EnhancedMultiActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownMultiKleisliMixin<
+                                A, B, F,
+                                typename RealTimeMonadComponents<StateT>::template EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                MultiActionCore<A,B,Threaded>
+                                >;
+        template <class A, class B, class F, bool Threaded>
+        using KleisliMultiActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownMultiKleisliMixin<
+                                A, B, F,
+                                typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                MultiActionCore<A,B,Threaded>
+                                >;
+    public:
+        template <class A, class F>
+        static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f), liftParam.requireMask));
+            } else {
+                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f), liftParam.requireMask));
+            }
+        }     
+        template <class A, class F>
+        static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f)));
+            } else {
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f)));
+            }
+        }
+        template <class A, class F>
+        static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>> {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
+                    new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true>(std::move(f))
+                );
+            } else {
+                return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
+                    new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false>(std::move(f))
                 );
             }
         }
