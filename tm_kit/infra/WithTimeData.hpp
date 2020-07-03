@@ -551,6 +551,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool isImporter = false;
             bool isExporter = false;
             bool hasAltOutput = false;
+            bool isFacility = false;
             std::unordered_map<std::string,int> altOutputConnectedTo;
 
             ActionCheckData() : name(), paramCount(0), paramConnectedFrom(), outputConnectedTo(), isImporter(false), isExporter(false), hasAltOutput(false), altOutputConnectedTo()
@@ -594,6 +595,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ActionCheckData d {n, 1};
                 d.isImporter = false;
                 d.isExporter = false;
+                d.isFacility = true;
                 return d;
             }
             template <class A, class B, class C>
@@ -602,6 +604,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ActionCheckData d {n, 2};
                 d.isImporter = false;
                 d.isExporter = false;
+                d.isFacility = true;
                 return d;
             }
             template <class A, class B, class C>
@@ -611,6 +614,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 d.isImporter = false;
                 d.isExporter = false;
                 d.hasAltOutput = true;
+                d.isFacility = true;
                 return d;
             }
         };
@@ -1553,12 +1557,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             }
                         }
                     }
-                    if (item.second.outputConnectedTo.empty() && !item.second.isExporter) {
+                    if (item.second.outputConnectedTo.empty() && !item.second.isExporter && !item.second.isFacility) {
                         throw MonadRunnerException(
                             "Component '"+item.second.name+"''s output has not been connected!"
                         );
                     }
                     if (item.second.hasAltOutput && item.second.altOutputConnectedTo.empty()) {
+                        //Please note that for the only case with alt output (OnOrderFacilityWithExternalEffects)
+                        //the alt output actually has to be connected, while the main output (from facility)
+                        //does not have to be connected
                         throw MonadRunnerException(
                             "Component '"+item.second.name+"''s alternate output has not been connected!"
                         );
