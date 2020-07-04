@@ -487,6 +487,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using InputType = typename Monad::template GetInputOutputType<OnOrderFacility>::InputType;
             using OutputType = typename Monad::template GetInputOutputType<OnOrderFacility>::OutputType;
         };
+        template <class Monad, class VIEOnOrderFacility>
+        struct VIEOnOrderFacilityTypeInfo {
+            using InputType = typename Monad::template GetInputOutputType<VIEOnOrderFacility>::InputType;
+            using OutputType = typename Monad::template GetInputOutputType<VIEOnOrderFacility>::OutputType;
+            using ExtraInputType = typename Monad::template GetExtraInputOutputType<VIEOnOrderFacility>::ExtraInputType;
+            using ExtraOutputType = typename Monad::template GetExtraInputOutputType<VIEOnOrderFacility>::ExtraOutputType;
+        };
     }
 
     template <class Monad>
@@ -519,6 +526,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using OnOrderFacilityWithExternalEffects = typename Monad::template OnOrderFacilityWithExternalEffects<A,B,C>;
         template <class A, class B, class C>
         using OnOrderFacilityWithExternalEffectsPtr = std::shared_ptr<OnOrderFacilityWithExternalEffects<A,B,C>>;
+        template <class A, class B, class C, class D>
+        using VIEOnOrderFacility = typename Monad::template VIEOnOrderFacility<A,B,C,D>;
+        template <class A, class B, class C, class D>
+        using VIEOnOrderFacilityPtr = std::shared_ptr<VIEOnOrderFacility<A,B,C,D>>;
 
         template <class T>
         class Source {
@@ -614,6 +625,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static ActionCheckData createForOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<A,B,C> *f, std::string const &n)
             {
                 ActionCheckData d {n, 1};
+                d.isImporter = false;
+                d.isExporter = false;
+                d.hasAltOutput = true;
+                d.isFacility = true;
+                return d;
+            }
+            template <class A, class B, class C, class D>
+            static ActionCheckData createForVIEOnOrderFacility(VIEOnOrderFacility<A,B,C,D> *f, std::string const &n)
+            {
+                ActionCheckData d {n, 2};
                 d.isImporter = false;
                 d.isExporter = false;
                 d.hasAltOutput = true;
@@ -717,6 +738,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             nameMap_.insert({p, ActionCheckData::template createForOnOrderFacilityWithExternalEffects<A,B,C>(f.get(), name)});
+            reverseLookup_.insert({name, p});
+            components_.push_back(std::static_pointer_cast<void>(f));
+            setMaxOutputConnectivity_(name, 1);
+        }
+        template <class A, class B, class C, class D>
+        void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
+            void *p = (void *) (f.get());
+            if (nameMap_.find(p) != nameMap_.end()) {
+                throw MonadRunnerException(
+                    "Attempt to re-register a VIE on-order facility with name '"+name+"'"
+                );
+            }
+            nameMap_.insert({p, ActionCheckData::template createForVIEOnOrderFacility<A,B,C,D>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
             setMaxOutputConnectivity_(name, 1);
@@ -896,6 +930,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                 , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(f, name);
         }
+        template <class Fac>
+        void registerVIEOnOrderFacility(std::shared_ptr<Fac> const &f, std::string const &name) {
+            registerVIEOnOrderFacility_<
+                typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(f, name);
+        }
+        template <class Fac>
+        void registerVIEOnOrderFacility(std::string const &name, std::shared_ptr<Fac> const &f) {
+            registerVIEOnOrderFacility_<
+                typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(f, name);
+        }
         template <class Imp>
         Source<typename withtime_utils::ImporterTypeInfo<Monad,Imp>::DataType> importerAsSource(std::string const &name, std::shared_ptr<Imp> const &importer) {
             {
@@ -1040,6 +1090,37 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                      , name, 1 };
         }
         template <class Fac>
+        Sink<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType> vieFacilityAsSink(std::string const &name, std::shared_ptr<Fac> const &facility) {
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                registerVIEOnOrderFacility_<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(facility, name);
+            }
+            return { m_.template vieFacilityAsSink<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(*facility)
+                     , name, 1 };
+        }
+        template <class Fac>
+        Sink<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType> vieFacilityAsSink(std::shared_ptr<Fac> const &facility) {
+            std::string name;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                name = checkName_((void *) facility.get());
+            }
+            return { m_.template vieFacilityAsSink<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(*facility)
+                     , name, 1 };
+        }
+        template <class Fac>
         Source<typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType> facilityWithExternalEffectsAsSource(std::string const &name, std::shared_ptr<Fac> const &facility) {
             {
                 std::lock_guard<std::mutex> _(mutex_);
@@ -1065,6 +1146,37 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
                             , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                             , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType>(*facility)
+                     , name, true };
+        }
+        template <class Fac>
+        Source<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType> vieFacilityAsSource(std::string const &name, std::shared_ptr<Fac> const &facility) {
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                registerVIEOnOrderFacility_<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(facility, name);
+            }
+            return { m_.template vieFacilityAsSource<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(*facility)
+                     , name, true };
+        }
+        template <class Fac>
+        Source<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType> vieFacilityAsSource(std::shared_ptr<Fac> const &facility) {
+            std::string name;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                name = checkName_((void *) facility.get());
+            }
+            return { m_.template vieFacilityAsSource<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType>(*facility)
                      , name, true };
         }
 
@@ -1319,6 +1431,104 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                 , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
+                >(std::move(input.mSource), *f);
+        }
+
+        template <class Fac>
+        void placeOrderWithVIEFacility(
+            Source<Key<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::string const &name
+            , std::shared_ptr<Fac> const &f
+            , Sink<KeyedData<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType, StateT>> const &sink) {
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                registerVIEOnOrderFacility_<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
+                    >(f, name);
+                int color = nextColorCode();
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                auto iter = reverseLookup_.find(sink.consumer);
+                if (iter == reverseLookup_.end()) {
+                    throw MonadRunnerException(
+                        "No such sink '"+sink.consumer+"'"
+                    );
+                }
+                connectAndCheck_(sink.pos, iter->second, name, color);
+            }
+            m_.template placeOrderWithVIEFacility<
+                typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
+                >(std::move(input.mSource), *f, sink.mSink);
+        }
+        template <class Fac>
+        void placeOrderWithVIEFacility(
+            Source<Key<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::shared_ptr<Fac> const &f
+            , Sink<KeyedData<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType, StateT>> const &sink) {
+            std::string name;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                name = checkName_((void *) f.get());
+                int color = nextColorCode();
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                auto iter = reverseLookup_.find(sink.consumer);
+                if (iter == reverseLookup_.end()) {
+                    throw MonadRunnerException(
+                        "No such sink '"+sink.consumer+"'"
+                    );
+                }
+                connectAndCheck_(sink.pos, iter->second, name, color);
+            }
+            m_.template placeOrderWithVIEFacility<
+                typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
+                >(std::move(input.mSource), *f, sink.mSink);
+        }
+        template <class Fac>
+        void placeOrderWithVIEFacilityAndForget(
+            Source<Key<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::string const &name
+            , std::shared_ptr<Fac> const &f) {
+            {
+                int color = nextColorCode();
+                std::lock_guard<std::mutex> _(mutex_);
+                registerVIEOnOrderFacility_<
+                    typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                    , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
+                    >(f, name);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+            }
+            m_.template placeOrderWithVIEFacilityAndForget<
+                typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
+                >(std::move(input.mSource), *f);
+        }
+        template <class Fac>
+        void placeOrderWithVIEFacilityAndForget(
+            Source<Key<typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType, StateT>> &&input
+            , std::shared_ptr<Fac> const &f) {
+            {
+                int color = nextColorCode();
+                std::lock_guard<std::mutex> _(mutex_);
+                checkName_((void *) f.get());
+                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+            }
+            m_.template placeOrderWithVIEFacilityAndForget<
+                typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::OutputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
+                , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
                 >(std::move(input.mSource), *f);
         }
 

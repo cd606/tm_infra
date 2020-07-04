@@ -286,6 +286,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<I0,O0,C>> wrappedOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<I1,O1,C> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
             return std::make_shared<OnOrderFacilityWithExternalEffects<I0,O0,C>>();
         }
+
+        template <class A, class B, class C, class D>
+        struct VIEOnOrderFacility {
+            OnOrderFacility<A,B> facility;
+            Exporter<C> exporter;
+            Importer<D> importer;
+        };
+
+        template <class A, class B, class C, class D>
+        static std::shared_ptr<VIEOnOrderFacility<A,B,C,D>> vieOnOrderFacility(
+            OnOrderFacility<A,B> &&facility, Exporter<C> &&exporter, Importer<D> &&importer
+        ) {
+            return std::make_shared<VIEOnOrderFacility<A,B,C,D>>();
+        }
+        
+        template <class I0, class O0, class I1, class O1, class C, class D>
+        static std::shared_ptr<VIEOnOrderFacility<I0,O0,C,D>> wrappedOnOrderFacilityWithExternalEffects(VIEOnOrderFacility<I1,O1,C,D> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
+            return std::make_shared<VIEOnOrderFacility<I0,O0,C,D>>();
+        }
    
     private:
         template <class T>
@@ -343,6 +362,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
 
+        template <class A, class B, class C, class D>
+        void placeOrderWithVIEFacility(Source<Key<A>> &&input, VIEOnOrderFacility<A,B,C,D> &facility, Sink<KeyedData<A,B>> const &sink) {
+        } 
+        template <class A, class B, class C, class D>
+        void placeOrderWithVIEFacilityAndForget(Source<Key<A>> &&input, VIEOnOrderFacility<A,B,C,D> &facility) {
+        } 
+        template <class A, class B, class C, class D>
+        Source<D> vieFacilityAsSource(VIEOnOrderFacility<A,B,C,D> &facility) {
+            return {};
+        }
+        template <class A, class B, class C, class D>
+        Sink<C> vieFacilityAsSink(VIEOnOrderFacility<A,B,C,D> &facility) {
+            return {};
+        }
+
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
         }
@@ -394,6 +428,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct GetInputOutputType<OnOrderFacilityWithExternalEffects<A,B,C>> {
             using InputType = A;
             using OutputType = B;
+        };
+        template <class A, class B, class C, class D>
+        struct GetInputOutputType<VIEOnOrderFacility<A,B,C,D>> {
+            using InputType = A;
+            using OutputType = B;
+        };
+        template <class X>
+        struct GetExtraInputOutputType {
+        };
+        template <class A, class B, class C, class D>
+        struct GetExtraInputOutputType<VIEOnOrderFacility<A,B,C,D>> {
+            using ExtraInputType = C;
+            using ExtraOutputType = D;
         };
     };
 

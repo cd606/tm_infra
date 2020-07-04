@@ -312,9 +312,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         class AbstractOnOrderFacility: public virtual IHandler<Key<A>>, public OnOrderFacilityProducer<KeyedData<A,B>> {
         };
-        template <class A, class B>
-        class AbstractOffShoreFacility : public virtual IExternalComponent, public virtual AbstractOnOrderFacility<A,B> {};
-
+        
         template <class A, class B>
         class OneLevelDownKleisli {
         protected:
@@ -605,6 +603,36 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ThreeWayHolder &operator=(ThreeWayHolder const &) = delete;
             ThreeWayHolder(ThreeWayHolder &&) = default;
             ThreeWayHolder &operator=(ThreeWayHolder &&) = default;
+        };
+        template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
+        class FourWayHolder {
+        private:
+            friend class RealTimeMonad;
+            //The reason why we use raw pointers here is that
+            //the three pointers may well be pointing to the same
+            //object (through different base classes). Therefore
+            //we give up on managing the memory for this special
+            //case
+            T1 *core1_;
+            T2 *core2_;
+            T3 *core3_;
+            void release() {
+                core1_ = nullptr;
+                core2_ = nullptr;
+                core3_ = nullptr;
+            }
+        public:
+            using InputType = Input;
+            using OutputType = Output;
+            using ExtraInputType = ExtraInput;
+            using ExtraOutputType = ExtraOutput;
+
+            template <class A, class B, class C>
+            FourWayHolder(A *p1, B *p2, C *p3) : core1_(static_cast<T1 *>(p1)), core2_(static_cast<T2 *>(p2)), core3_(static_cast<T3 *>(p3)) {}
+            FourWayHolder(FourWayHolder const &) = delete;
+            FourWayHolder &operator=(FourWayHolder const &) = delete;
+            FourWayHolder(FourWayHolder &&) = default;
+            FourWayHolder &operator=(FourWayHolder &&) = default;
         };
     
     private:
@@ -1420,6 +1448,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //OnOrderFacilityWithExternalEffects is the dual of LocalOnOrderFacility
         //Basically, it is an importer and an on order facility glued
         //together. 
+        //The name "DataInputType" is here viewed from outside, it is 
+        //actually the "output" from OnOrderFacilityWithExternalEffects.
+        //The reason this was not changed to "DataOutputType" is to avoid
+        //too many code changes, and also it does make sense to call it
+        //an "input" from outside view anyway.
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         using OnOrderFacilityWithExternalEffects = ThreeWayHolder<
             typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
@@ -1484,6 +1517,88 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename Fac::DataType>
             >(
                 p, i
+            );
+        }
+
+    public:
+        //VIEOnOrderFacility is the combination of LocalOnOrderFacility
+        //and OnOrderFacilityWithExternalEffects. The name "VIE" comes from
+        //the fact that it looks like a local facility but it has complex
+        //offshore linkage
+        //Here the "input" and "output" is viewed from the point of VIEOnOrderFacility
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        using VIEOnOrderFacility = FourWayHolder<
+            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
+            , AbstractExporter<ExtraInputType>,ExtraInputType
+            , AbstractImporter<ExtraOutputType>,ExtraOutputType
+        >;
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
+            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            , AbstractExporter<ExtraInputType> *i
+            , AbstractImporter<ExtraOutputType> *o) {
+            return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(t,i,o);
+        }
+        
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        class AbstractIntegratedVIEOnOrderFacility 
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<ExtraInputType>, public AbstractImporter<ExtraOutputType> 
+        {};
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
+            AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType> *p) {
+            return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(p,p,p);
+        }
+        
+        template <class Fac, class Exp, class Imp>
+        static std::shared_ptr<VIEOnOrderFacility<
+            typename Fac::InputType
+            , typename Fac::OutputType
+            , typename Exp::DataType
+            , typename Imp::DataType>> vieOnOrderFacility(
+            Fac &&t, Exp &&i, Imp &&o) {
+            auto *p_t = t.core_.get();
+            auto *p_i = i.core_.get();
+            auto *p_o = o.core_.get();
+            t.release();
+            i.release();
+            o.release();
+            return std::make_shared<VIEOnOrderFacility<
+                typename Fac::InputType
+                , typename Fac::OutputType
+                , typename Exp::DataType
+                , typename Imp::DataType>>(p_t,p_i,p_o);
+        }
+
+        template <class Fac, class Action1, class Action2
+            , std::enable_if_t<std::is_same_v<typename Action1::OutputType::KeyType, typename Fac::InputType>,int> = 0
+            , std::enable_if_t<std::is_same_v<typename Action2::InputType::KeyType, typename Fac::OutputType>,int> = 0
+            >
+        static std::shared_ptr<VIEOnOrderFacility<
+            typename Action1::InputType::KeyType
+            , typename Action2::OutputType::KeyType
+            , typename Fac::ExtraInputType
+            , typename Fac::ExtraOutputType>> wrappedVIEOnOrderFacility(Fac &&toWrap, Action1 &&inputT, Action2 &&outputT) {
+            auto *t = toWrap.core1_;
+            auto *i = toWrap.core2_;
+            auto *o = toWrap.core3_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = wrappedOnOrderFacility<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Action1::OutputType::KeyType
+                , typename Action2::InputType::KeyType
+            >(std::move(*fac), std::move(inputT), std::move(outputT));
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<VIEOnOrderFacility<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Fac::ExtraInputType
+                , typename Fac::ExtraOutputType>
+            >(
+                p, i, o
             );
         }
 
@@ -1637,6 +1752,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {dynamic_cast<Producer<C> *>(facility.core2_)};
         }
 
+        template <class A, class B, class C, class D>
+        void placeOrderWithVIEFacility(Source<Key<A>> &&input, VIEOnOrderFacility<A,B,C,D> &facility, Sink<KeyedData<A,B>> const &sink) {
+            auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
+            if (p != nullptr) {
+                registerExternalComponent(p, 1);
+            } 
+            innerConnectFacility(input.producer, facility.core1_, sink.consumer);
+         } 
+        template <class A, class B, class C, class D>
+        void placeOrderWithVIEFacilityAndForget(Source<Key<A>> &&input, VIEOnOrderFacility<A,B,C,D> &facility) {
+            auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
+            if (p != nullptr) {
+                registerExternalComponent(p, 1);
+            } 
+            innerConnectFacility(input.producer, facility.core1_, (IHandler<KeyedData<A,B>> *) nullptr);
+        } 
+        template <class A, class B, class C, class D>
+        Source<D> vieFacilityAsSource(VIEOnOrderFacility<A,B,C,D> &facility) {
+            registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core3_), 0);
+            return {dynamic_cast<Producer<D> *>(facility.core3_)};
+        }
+        template <class A, class B, class C, class D>
+        Sink<C> vieFacilityAsSink(VIEOnOrderFacility<A,B,C,D> &facility) {
+            registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_), 0);
+            return {dynamic_cast<IHandler<C> *>(facility.core2_)};
+        }
+
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
             innerConnect(sink.consumer, src.producer);
@@ -1665,6 +1807,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct GetInputOutputType {
             using InputType = typename X::InputType;
             using OutputType = typename X::OutputType;
+        };
+        template <class X>
+        struct GetExtraInputOutputType {
+            using ExtraInputType = typename X::ExtraInputType;
+            using ExtraOutputType = typename X::ExtraOutputType;
         };
     };
 
