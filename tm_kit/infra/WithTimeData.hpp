@@ -764,7 +764,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return iter->second.name;
         }
-        void connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode=0, bool useAltOutput=false) {
+        void connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode, bool useAltOutput) {
             auto iter = nameMap_.find(p);
             if (iter == nameMap_.end()) {
                 throw MonadRunnerException(
@@ -993,7 +993,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 registerAction_(f, name);
-                connectAndCheck_(0, (void *) f.get(), x.producer);
+                connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
             }
             return { m_.execute(*f, std::move(x.mSource)), name };
         }
@@ -1002,7 +1002,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::string name;
             {
                 std::lock_guard<std::mutex> _(mutex_);
-                connectAndCheck_(0, (void *) f.get(), x.producer);
+                connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
                 name = nameMap_[(void *) f.get()].name;
             }
             return { m_.execute(*f, std::move(x.mSource)), name };
@@ -1192,14 +1192,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 registerOnOrderFacility_<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType>(f, name);
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithFacility<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType>(std::move(input.mSource), *f, sink.mSink);
         }
@@ -1213,14 +1213,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithFacility<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType>(std::move(input.mSource), *f, sink.mSink);
         }
@@ -1233,7 +1233,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 int color = nextColorCode();
                 std::lock_guard<std::mutex> _(mutex_);
                 registerOnOrderFacility_<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType>(f, name);
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithFacilityAndForget<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType>(std::move(input.mSource), *f);
         }
@@ -1245,7 +1245,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 int color = nextColorCode();
                 std::lock_guard<std::mutex> _(mutex_);
                 checkName_((void *) f.get());
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithFacilityAndForget<typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType>(std::move(input.mSource), *f);
         }
@@ -1264,14 +1264,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     , typename withtime_utils::ExporterTypeInfo<Monad,Fac>::DataType
                     >(f, name);
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithLocalFacility<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1289,14 +1289,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithLocalFacility<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1317,7 +1317,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                     , typename withtime_utils::ExporterTypeInfo<Monad,Fac>::DataType
                     >(f, name);
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithLocalFacilityAndForget<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1333,7 +1333,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 int color = nextColorCode();
                 std::lock_guard<std::mutex> _(mutex_);
                 checkName_((void *) f.get());
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithLocalFacilityAndForget<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1356,14 +1356,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
                     >(f, name);
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithFacilityWithExternalEffects<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1381,14 +1381,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithFacilityWithExternalEffects<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1409,7 +1409,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     , typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::OutputType
                     , typename withtime_utils::ImporterTypeInfo<Monad,Fac>::DataType
                     >(f, name);
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithFacilityWithExternalEffectsAndForget<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1425,7 +1425,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 int color = nextColorCode();
                 std::lock_guard<std::mutex> _(mutex_);
                 checkName_((void *) f.get());
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithFacilityWithExternalEffectsAndForget<
                 typename withtime_utils::OnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1449,14 +1449,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
                     >(f, name);
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithVIEFacility<
                 typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1475,14 +1475,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
                 auto iter = reverseLookup_.find(sink.consumer);
                 if (iter == reverseLookup_.end()) {
                     throw MonadRunnerException(
                         "No such sink '"+sink.consumer+"'"
                     );
                 }
-                connectAndCheck_(sink.pos, iter->second, name, color);
+                connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
             m_.template placeOrderWithVIEFacility<
                 typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1505,7 +1505,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraInputType
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::ExtraOutputType
                     >(f, name);
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithVIEFacilityAndForget<
                 typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType
@@ -1522,7 +1522,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 int color = nextColorCode();
                 std::lock_guard<std::mutex> _(mutex_);
                 checkName_((void *) f.get());
-                connectAndCheck_(0, (void *) f.get(), input.producer, color);
+                connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
             m_.template placeOrderWithVIEFacilityAndForget<
                 typename withtime_utils::VIEOnOrderFacilityTypeInfo<Monad,Fac>::InputType

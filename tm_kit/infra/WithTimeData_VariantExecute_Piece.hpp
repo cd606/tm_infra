@@ -3,7 +3,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> cons
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -12,7 +12,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> cons
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -21,7 +21,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -31,7 +31,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -41,7 +41,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -50,7 +50,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -59,7 +59,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -68,7 +68,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x) 
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -78,7 +78,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A1> &&x) 
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -88,7 +88,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A2> &&x) 
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -98,7 +98,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -107,7 +107,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -116,7 +116,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -125,7 +125,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -134,7 +134,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -144,7 +144,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A1> &&
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -154,7 +154,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A2> &&
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -164,7 +164,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A3> &&
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -174,7 +174,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -183,7 +183,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -192,7 +192,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -201,7 +201,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -210,7 +210,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -219,7 +219,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0>
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -229,7 +229,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A1>
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -239,7 +239,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A2>
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -249,7 +249,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A3>
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -259,7 +259,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A4>
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -269,7 +269,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -278,7 +278,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -287,7 +287,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -296,7 +296,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -305,7 +305,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -314,7 +314,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -323,7 +323,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -333,7 +333,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -343,7 +343,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -353,7 +353,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -363,7 +363,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -373,7 +373,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -383,7 +383,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -392,7 +392,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -401,7 +401,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -410,7 +410,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -419,7 +419,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -428,7 +428,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -437,7 +437,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -446,7 +446,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -456,7 +456,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -466,7 +466,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -476,7 +476,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -486,7 +486,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -496,7 +496,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -506,7 +506,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -516,7 +516,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -525,7 +525,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -534,7 +534,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -543,7 +543,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -552,7 +552,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -561,7 +561,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -570,7 +570,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -579,7 +579,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(7, (void *) f.get(), x.producer);
+        connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -588,7 +588,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -598,7 +598,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -608,7 +608,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -618,7 +618,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -628,7 +628,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -638,7 +638,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -648,7 +648,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -658,7 +658,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(7, (void *) f.get(), x.producer);
+        connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -668,7 +668,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -677,7 +677,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -686,7 +686,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -695,7 +695,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -704,7 +704,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -713,7 +713,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -722,7 +722,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -731,7 +731,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(7, (void *) f.get(), x.producer);
+        connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -740,7 +740,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(8, (void *) f.get(), x.producer);
+        connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -749,7 +749,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -759,7 +759,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -769,7 +769,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -779,7 +779,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -789,7 +789,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -799,7 +799,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -809,7 +809,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -819,7 +819,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(7, (void *) f.get(), x.producer);
+        connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -829,7 +829,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(8, (void *) f.get(), x.producer);
+        connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -839,7 +839,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -848,7 +848,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -857,7 +857,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -866,7 +866,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -875,7 +875,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -884,7 +884,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -893,7 +893,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -902,7 +902,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(7, (void *) f.get(), x.producer);
+        connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -911,7 +911,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(8, (void *) f.get(), x.producer);
+        connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -920,7 +920,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     {
         std::lock_guard<std::mutex> _(mutex_);
         registerAction_(f, name);
-        connectAndCheck_(9, (void *) f.get(), x.producer);
+        connectAndCheck_(9, (void *) f.get(), x.producer, 0, x.useAltOutput);
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
 }
@@ -929,7 +929,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(0, (void *) f.get(), x.producer);
+        connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -939,7 +939,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(1, (void *) f.get(), x.producer);
+        connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -949,7 +949,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(2, (void *) f.get(), x.producer);
+        connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -959,7 +959,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(3, (void *) f.get(), x.producer);
+        connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -969,7 +969,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(4, (void *) f.get(), x.producer);
+        connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -979,7 +979,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(5, (void *) f.get(), x.producer);
+        connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -989,7 +989,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(6, (void *) f.get(), x.producer);
+        connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -999,7 +999,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(7, (void *) f.get(), x.producer);
+        connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -1009,7 +1009,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(8, (void *) f.get(), x.producer);
+        connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
@@ -1019,7 +1019,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     std::string name;
     {
         std::lock_guard<std::mutex> _(mutex_);
-        connectAndCheck_(9, (void *) f.get(), x.producer);
+        connectAndCheck_(9, (void *) f.get(), x.producer, 0, x.useAltOutput);
         name = nameMap_[(void *) f.get()].name;
     }
     return { m_.execute(*f, std::move(x.mSource)), name };
