@@ -805,6 +805,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,std::vector<B>,F,false>,
                                 MultiActionCore<A,B,Threaded>
                                 >;
+        
+        #include <tm_kit/infra/RealTimeMonad_MultiActionCore_Piece.hpp>
     public:
         template <class A, class F>
         static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
@@ -1146,6 +1148,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     #include <tm_kit/infra/RealTimeMonad_MaybeN_Piece.hpp>  
     #include <tm_kit/infra/RealTimeMonad_EnhancedMaybeN_Piece.hpp>  
     #include <tm_kit/infra/RealTimeMonad_KleisliN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeMonad_MultiN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeMonad_EnhancedMultiN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeMonad_KleisliMultiN_Piece.hpp>  
 
     public:
         template <class T>

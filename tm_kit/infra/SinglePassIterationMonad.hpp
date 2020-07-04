@@ -743,7 +743,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         template <class A, class B, class F>
-        class PureMultiActionCore final : public MultiActionCore<A,B> {
+        class SimpleMultiActionCore final : public MultiActionCore<A,B> {
         private:
             F f_;
             DelaySimulatorType delaySimulator_;
@@ -754,12 +754,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }, delaySimulator_);
             }
         public:
-            PureMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
+            SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
-            virtual ~PureMultiActionCore() {}
+            virtual ~SimpleMultiActionCore() {}
         };
         template <class A, class B, class F>
-        class EnhancedPureMultiActionCore final : public MultiActionCore<A,B> {
+        class EnhancedMultiActionCore final : public MultiActionCore<A,B> {
         private:
             F f_;
             DelaySimulatorType delaySimulator_;
@@ -772,9 +772,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ), delaySimulator_);
             }
         public:
-            EnhancedPureMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
+            EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
             }
-            virtual ~EnhancedPureMultiActionCore() {}
+            virtual ~EnhancedMultiActionCore() {}
         };
         template <class A, class B, class F>
         class KleisliMultiActionCore final : public MultiActionCore<A,B> {
@@ -794,12 +794,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new PureMultiActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f), liftParam.delaySimulator));
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
         static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedPureMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
         static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
