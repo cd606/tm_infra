@@ -1851,6 +1851,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C>
         using FacilityWithExternalEffectsWrapper =
             std::optional<std::function<void(MonadRunner &, OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &)>>;
+        template <class A, class B, class C, class D>
+        using VIEFacilityWrapper =
+            std::optional<std::function<void(MonadRunner &, VIEOnOrderFacilityPtr<A,B,C,D> const &)>>;
 
         template <class A, class B>
         static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityPtr<A,B> const &facility) {
@@ -1868,6 +1871,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static FacilitioidConnector<A,B> facilityWithExternalEffectsConnector(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility) {
             return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithFacilityWithExternalEffects(std::move(source), facility, sink);
+            };
+        }
+        template <class A, class B, class C, class D>
+        static FacilitioidConnector<A,B> vieFacilityConnector(VIEOnOrderFacilityPtr<A,B,C,D> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithVIEFacility(std::move(source), facility, sink);
             };
         }
     };
