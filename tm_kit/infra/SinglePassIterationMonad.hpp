@@ -1294,7 +1294,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>(new SimpleImporter<T,F>(std::move(f), liftParam.delaySimulator));
         }
-    
+        template <class T>
+        static std::shared_ptr<Importer<T>> constFirstPushImporter(T &&t = T()) {
+            return simpleImporter<T>([t=std::move(t)](StateT *env) -> Data<T> {
+                static bool published = false;
+                if (!published) {
+                    published = true;
+                    return InnerData<T> {
+                        env
+                        , {
+                            env->resolveTime()
+                            , std::move(t)
+                            , true
+                        }
+                    };
+                } else {
+                    return std::nullopt;
+                }
+            });
+        }
+        template <class T>
+        static std::shared_ptr<Importer<Key<T>>> constFirstPushKeyImporter(T &&t = T()) {
+            return constFirstPushImporter<Key<T>>(
+                infra::withtime_utils::keyify<T,StateT>(std::move(t))
+            );
+        }
     public:
         template <class T>
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {

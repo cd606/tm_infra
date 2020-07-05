@@ -1236,6 +1236,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>(std::make_unique<SimpleImporter<T,F>>(std::move(f), liftParam.suggestThreaded));
         }
+        template <class T>
+        static std::shared_ptr<Importer<T>> constFirstPushImporter(T &&t = T()) {
+            return simpleImporter<T>([t=std::move(t)](PublisherCall<T> &pub) {
+                T t1 { std::move(t) };
+                pub(std::move(t1));
+            });
+        }
+        template <class T>
+        static std::shared_ptr<Importer<Key<T>>> constFirstPushKeyImporter(T &&t = T()) {
+            return constFirstPushImporter<Key<T>>(
+                infra::withtime_utils::keyify<T,StateT>(std::move(t))
+            );
+        }
     public:
         template <class T>
         using AbstractExporter = typename RealTimeMonadComponents<StateT>::template AbstractExporter<T>;
