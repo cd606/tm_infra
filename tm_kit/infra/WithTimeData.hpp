@@ -1585,9 +1585,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 m[item.second.name] = counter;
                 os << "\t action" << counter << " [";
                 if (item.second.hasAltOutput) {
-                    os << "label=\"{";
-                    os << std::regex_replace(item.second.name, std::regex(">"), "\\>");
-                    os << "|{<out0> out0|<out1> out1}}\",shape=record";
+                    if (item.second.paramCount > 1) {
+                        os << "label=\"{{";
+                        for (int ii=0; ii<item.second.paramCount; ++ii) {
+                            if (ii > 0) {
+                                os << '|';
+                            }
+                            os << "<arg" << ii << "> arg" << ii;
+                        }
+                        os << "}|" << std::regex_replace(item.second.name, std::regex(">"), "\\>");
+                        os << "|{<out0> out0|<out1> out1}}\",shape=record";
+                    } else {
+                        os << "label=\"{";
+                        os << std::regex_replace(item.second.name, std::regex(">"), "\\>");
+                        os << "|{<out0> out0|<out1> out1}}\",shape=record";
+                    }
                 } else if (item.second.paramCount > 1) {
                     os << "label=\"{{";
                     for (int ii=0; ii<item.second.paramCount; ++ii) {
@@ -1877,6 +1889,48 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static FacilitioidConnector<A,B> vieFacilityConnector(VIEOnOrderFacilityPtr<A,B,C,D> const &facility) {
             return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithVIEFacility(std::move(source), facility, sink);
+            };
+        }
+
+        template <class A>
+        using Sourceoid = std::function<void(MonadRunner &, Sink<A> const &)>;
+        template <class A>
+        using Sinkoid = std::function<void(MonadRunner &, Source<A> &&)>;
+
+        template <class A>
+        static Sourceoid<A> sourceAsSourceoid(Source<A> &&src) {
+            return [src=std::move(src)](MonadRunner &r, Sink<A> const &sink) {
+                r.connect(std::move(src), sink);
+            };
+        }
+        template <class A>
+        static Sinkoid<A> sinkAsSinkoid(Sink<A> const &sink) {
+            return [&sink](MonadRunner &r, Source<A> &&src) {
+                r.connect(std::move(src), sink);
+            };
+        }
+        template <class A, class B>
+        static Sinkoid<typename Monad::template Key<A>> facilityAsSinkoid(OnOrderFacilityPtr<A,B> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&src) {
+                r.placeOrderWithFacilityAndForget(std::move(src), facility);
+            };
+        }
+        template <class A, class B, class C>
+        static Sinkoid<typename Monad::template Key<A>> localFacilityAsSinkoid(LocalOnOrderFacilityPtr<A,B,C> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&src) {
+                r.placeOrderWithLocalFacilityAndForget(std::move(src), facility);
+            };
+        }
+        template <class A, class B, class C>
+        static Sinkoid<typename Monad::template Key<A>> facilityWithExternalEffectsAsSinkoid(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&src) {
+                r.placeOrderWithFacilityWithExternalEffectsAndForget(std::move(src), facility);
+            };
+        }
+        template <class A, class B, class C, class D>
+        static Sinkoid<typename Monad::template Key<A>> vieFacilityAsSinkoid(VIEOnOrderFacilityPtr<A,B,C,D> const &facility) {
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&src) {
+                r.placeOrderWithVIEFacilityAndForget(std::move(src), facility);
             };
         }
     };
