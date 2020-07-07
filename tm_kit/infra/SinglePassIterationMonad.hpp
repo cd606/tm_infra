@@ -1408,7 +1408,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {
-            return simpleExporter<T>([](InnerData<T> &&) {}, false);
+            return simpleExporter<T>([](InnerData<T> &&) {}, LiftParameters<TimePoint> {});
         }        
 
     public:
