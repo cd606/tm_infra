@@ -1899,13 +1899,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A>
         static Sourceoid<A> sourceAsSourceoid(Source<A> &&src) {
-            return [src=std::move(src)](MonadRunner &r, Sink<A> const &sink) {
-                r.connect(std::move(src), sink);
+            Source<A> src1 = src.clone();
+            return [src1](MonadRunner &r, Sink<A> const &sink) {
+                r.connect(src1.clone(), sink);
             };
         }
         template <class A>
         static Sinkoid<A> sinkAsSinkoid(Sink<A> const &sink) {
-            return [&sink](MonadRunner &r, Source<A> &&src) {
+            return [sink](MonadRunner &r, Source<A> &&src) {
                 r.connect(std::move(src), sink);
             };
         }
