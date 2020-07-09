@@ -1576,6 +1576,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             setMaxInputConnectivity_(name, pos, maxInputConnectivity);
         }
 
+        template <class F>
+        std::string getRegisteredName(std::shared_ptr<F> const &p) {
+            std::lock_guard<std::mutex> _(mutex_);
+            return checkName_((void *) p.get());
+        }
+
         void writeGraphVizDescription(std::ostream &os, std::string const &graphName) const {
             std::lock_guard<std::mutex> _(mutex_);
             os << "digraph " << graphName << "{\n";
