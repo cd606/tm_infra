@@ -1859,7 +1859,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         
         template <class A, class B>
         using FacilitioidConnector =
-            std::function<void(MonadRunner &, Source<typename Monad::template Key<A>> &&, Sink<typename Monad::template KeyedData<A,B>> const &)>;
+            std::function<void(MonadRunner &, Source<typename Monad::template Key<A>> &&, std::optional<Sink<typename Monad::template KeyedData<A,B>>> const &)>;
         template <class A, class B>
         using FacilityWrapper =
             std::optional<std::function<void(MonadRunner &, OnOrderFacilityPtr<A,B> const &)>>;
@@ -1875,26 +1875,42 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityPtr<A,B> const &facility) {
-            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
-                r.placeOrderWithFacility(std::move(source), facility, sink);
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, std::optional<Sink<typename Monad::template KeyedData<A,B>>> const &sink) {
+                if (sink) {
+                    r.placeOrderWithFacility(std::move(source), facility, *sink);
+                } else {
+                    r.placeOrderWithFacilityAndForget(std::move(source), facility);
+                }
             };
         }
         template <class A, class B, class C>
         static FacilitioidConnector<A,B> localFacilityConnector(LocalOnOrderFacilityPtr<A,B,C> const &facility) {
-            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
-                r.placeOrderWithLocalFacility(std::move(source), facility, sink);
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, std::optional<Sink<typename Monad::template KeyedData<A,B>>> const &sink) {
+                if (sink) {
+                    r.placeOrderWithLocalFacility(std::move(source), facility, *sink);
+                } else {
+                    r.placeOrderWithLocalFacilityAndForget(std::move(source), facility);
+                }
             };
         }
         template <class A, class B, class C>
         static FacilitioidConnector<A,B> facilityWithExternalEffectsConnector(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility) {
-            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
-                r.placeOrderWithFacilityWithExternalEffects(std::move(source), facility, sink);
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, std::optional<Sink<typename Monad::template KeyedData<A,B>>> const &sink) {
+                if (sink) {
+                    r.placeOrderWithFacilityWithExternalEffects(std::move(source), facility, *sink);
+                } else {
+                    r.placeOrderWithFacilityWithExternalEffectsAndForget(std::move(source), facility);
+                }
             };
         }
         template <class A, class B, class C, class D>
         static FacilitioidConnector<A,B> vieFacilityConnector(VIEOnOrderFacilityPtr<A,B,C,D> const &facility) {
-            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, Sink<typename Monad::template KeyedData<A,B>> const &sink) {
-                r.placeOrderWithVIEFacility(std::move(source), facility, sink);
+            return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&source, std::optional<Sink<typename Monad::template KeyedData<A,B>>> const &sink) {
+                if (sink) {
+                    r.placeOrderWithVIEFacility(std::move(source), facility, *sink);
+                } else {
+                    r.placeOrderWithVIEFacilityAndForget(std::move(source), facility);
+                }
             };
         }
 
@@ -1938,6 +1954,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static Sinkoid<typename Monad::template Key<A>> vieFacilityAsSinkoid(VIEOnOrderFacilityPtr<A,B,C,D> const &facility) {
             return [facility](MonadRunner &r, Source<typename Monad::template Key<A>> &&src) {
                 r.placeOrderWithVIEFacilityAndForget(std::move(src), facility);
+            };
+        }
+        template <class A, class B>
+        static Sinkoid<typename Monad::template Key<A>> facilitioidConnectorAsSinkoid(FacilitioidConnector<A,B> const &f) {
+            return [f](MonadRunner &r, Source<typename Monad::template Key<A>> &&src) {
+                f(r, std::move(src), std::nullopt);
             };
         }
     };
