@@ -17,6 +17,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         friend class MonadRunner<SinglePassIterationMonad>;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
+        static constexpr bool CannotHaveLoopEvenWithFacilities = false;
 
         using TimePoint = typename StateT::TimePointType;
         using StateType = StateT;
@@ -1990,7 +1991,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (s.hasSource()) {
                     finalMultiplexer.addSource(&s);
                 }
-                while (true) {
+                while (env->running()) {
                     auto cert = finalMultiplexer.poll();
                     if (cert.check()) {
                         auto d = finalMultiplexer.next(std::move(cert));

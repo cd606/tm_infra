@@ -13,6 +13,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         ~BasicWithTimeMonad() = default;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
+        static constexpr bool CannotHaveLoopEvenWithFacilities = false;
 
         using TimePoint = typename StateT::TimePointType;
         using StateType = StateT;

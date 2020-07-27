@@ -493,6 +493,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         static constexpr bool PossiblyMultiThreaded = true;
+        static constexpr bool CannotHaveLoopEvenWithFacilities = false;
 
         //The data definition part
         //This part is of course best put into a common code, however, 

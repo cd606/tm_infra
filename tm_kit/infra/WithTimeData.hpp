@@ -1827,9 +1827,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 cycleRet = detectCycle(true);
                 if (cycleRet) {
-                    env_->log(LogLevel::Warning,
-                        "There is a circle involving on-order facility starting from '" + (*cycleRet) + "'"
-                    );
+                    if constexpr (Monad::CannotHaveLoopEvenWithFacilities) {
+                        throw MonadRunnerException(
+                            "There is a circle involving on-order facility starting from '"+(*cycleRet)+"', this monad prohibits this kind of loop too"
+                        );
+                    } else {
+                        env_->log(LogLevel::Warning,
+                            "There is a circle involving on-order facility starting from '" + (*cycleRet) + "'"
+                        );
+                    }
                 }
             }
             m_.finalize()(env_);

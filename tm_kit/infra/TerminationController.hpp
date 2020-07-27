@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <thread>
+#include <functional>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     
@@ -39,10 +40,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     };
 
     class RunForever {
+    private:
+        std::function<bool()> runningCheck_;
     public:
-        RunForever() = default;
+        RunForever(std::function<bool()> const &runningCheck = []() {return true;}) 
+            : runningCheck_(runningCheck) {}
+        template <class Env>
+        RunForever(Env *env) 
+            : runningCheck_([env]() {return env->running();}) {}
         ~RunForever() {
-            while (true) {
+            while (runningCheck_()) {
                 std::this_thread::sleep_for(std::chrono::seconds(100));
             }
         }
