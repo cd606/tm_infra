@@ -42,15 +42,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class RunForever {
     private:
         std::function<bool()> runningCheck_;
+        std::chrono::system_clock::duration duration_;
     public:
-        RunForever(std::function<bool()> const &runningCheck = []() {return true;}) 
-            : runningCheck_(runningCheck) {}
+        RunForever(std::function<bool()> const &runningCheck = []() {return true;}, std::chrono::system_clock::duration duration=std::chrono::seconds(100)) 
+            : runningCheck_(runningCheck), duration_(duration) {}
         template <class Env>
-        RunForever(Env *env) 
-            : runningCheck_([env]() {return env->running();}) {}
+        RunForever(Env *env, std::chrono::system_clock::duration duration=std::chrono::seconds(100)) 
+            : runningCheck_([env]() {return env->running();}), duration_(duration) {}
         ~RunForever() {
             while (runningCheck_()) {
-                std::this_thread::sleep_for(std::chrono::seconds(100));
+                std::this_thread::sleep_for(duration_);
             }
         }
     };
