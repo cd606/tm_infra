@@ -158,6 +158,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TimeChecker<false, T> const &timeChecker() const {
                 return timeChecker_;
             }
+            void stop() {
+                stopThread();
+            }
         };
 
     public:
@@ -641,18 +644,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class ActionCore {};
         template <class A, class B>
         class ActionCore<A,B,true> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<A> {
+        private:
+            bool fireOnceOnly_;
+            bool done_;
         protected:
             virtual void actuallyHandle(InnerData<A> &&data) override final {
+                if (fireOnceOnly_) {
+                    if (done_) {
+                        return;
+                    }
+                }
                 if (!this->timeCheckGood(data)) {
                     return;
                 }
                 auto res = this->action(data.environment, std::move(data.timedData));
                 if (res) {
+                    if (fireOnceOnly_) {
+                        res->timedData.finalFlag = true;
+                    }
                     Producer<B>::publish(std::move(*res));
+                    if (fireOnceOnly_) {
+                        done_ = true;
+                        this->stop();
+                    }
                 }
             }
         public:
-            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask) {
+            ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~ActionCore() {
             }
@@ -661,16 +679,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class ActionCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
         private:
             typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
+            bool fireOnceOnly_;
+            std::atomic<bool> done_;
         public:
-            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask) {
+            ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~ActionCore() {
             }
             virtual void handle(InnerData<A> &&data) override final {
+                if (fireOnceOnly_) {
+                    if (done_) {
+                        return;
+                    }
+                }
                 if (timeChecker_(data)) {
                     auto res = this->action(data.environment, std::move(data.timedData));
                     if (res) {
+                        if (fireOnceOnly_) {
+                            res->timedData.finalFlag = true;
+                        }
                         Producer<B>::publish(std::move(*res));
+                        if (fireOnceOnly_) {
+                            done_ = true;
+                        }
                     }
                 }
             }
@@ -679,7 +710,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class F, bool Threaded>
         class PureActionCore final : public virtual RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>, public ActionCore<A,B,Threaded> {
         public:
-            PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded>(requireMask) {}
+            PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded>(requireMask, fireOnceOnly) {}
             PureActionCore(PureActionCore const &) = delete;
             PureActionCore &operator=(PureActionCore const &) = delete;
             PureActionCore(PureActionCore &&) = default;
@@ -720,36 +751,36 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true>(std::move(f), liftParam.requireMask));
+                return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             } else {
-                return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false>(std::move(f), liftParam.requireMask));
+                return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             }
         }     
         template <class A, class F>
         static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f)));
+                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             } else {
-                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f)));
+                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             }
         }
         template <class A, class F>
         static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f)));
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             } else {
-                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f)));
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             }
         }
         template <class A, class F>
         static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
             if (liftParam.suggestThreaded) {
                 return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
-                    new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true>(std::move(f))
+                    new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly)
                 );
             } else {
                 return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
-                    new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false>(std::move(f))
+                    new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly)
                 );
             }
         }
@@ -758,47 +789,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class MultiActionCore {};
         template <class A, class B>
         class MultiActionCore<A,B,true> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<A> {
+        private:
+            bool fireOnceOnly_;
+            bool done_;
         protected:
             virtual void actuallyHandle(InnerData<A> &&data) override final {
+                if (fireOnceOnly_) {
+                    if (done_) {
+                        return;
+                    }
+                }
                 if (!this->timeCheckGood(data)) {
                     return;
                 }
                 auto res = this->action(data.environment, std::move(data.timedData));
                 if (res && !res->timedData.value.empty()) {
-                    size_t l = res->timedData.value.size();
-                    size_t ii = l-1;
-                    for (auto &&item : res->timedData.value) {
+                    if (fireOnceOnly_) {
                         Producer<B>::publish(InnerData<B> {
                             res->environment
                             , {
                                 res->timedData.timePoint
-                                , std::move(item)
-                                , ((ii==0)?res->timedData.finalFlag:false)
+                                , std::move(res->timedData.value[0])
+                                , true
                             }
                         });
-                        --ii;
-                    }
-                }
-            }
-        public:
-            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask) {
-            }
-            virtual ~MultiActionCore() {
-            }
-        };
-        template <class A, class B>
-        class MultiActionCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
-        private:
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
-        public:
-            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask) {
-            }
-            virtual ~MultiActionCore() {
-            }
-            virtual void handle(InnerData<A> &&data) override final {
-                if (timeChecker_(data)) {
-                    auto res = this->action(data.environment, std::move(data.timedData));
-                    if (res && !res->timedData.value.empty()) {
+                        done_ = true;
+                        this->stop();
+                    } else {
                         size_t l = res->timedData.value.size();
                         size_t ii = l-1;
                         for (auto &&item : res->timedData.value) {
@@ -811,6 +828,60 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 }
                             });
                             --ii;
+                        }
+                    }
+                }
+            }
+        public:
+            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+            }
+            virtual ~MultiActionCore() {
+            }
+        };
+        template <class A, class B>
+        class MultiActionCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
+        private:
+            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
+            bool fireOnceOnly_;
+            std::atomic<bool> done_;
+        public:
+            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+            }
+            virtual ~MultiActionCore() {
+            }
+            virtual void handle(InnerData<A> &&data) override final {
+                if (fireOnceOnly_) {
+                    if (done_) {
+                        return;
+                    }
+                }
+                if (timeChecker_(data)) {
+                    auto res = this->action(data.environment, std::move(data.timedData));
+                    if (res && !res->timedData.value.empty()) {
+                        if (fireOnceOnly_) {
+                            Producer<B>::publish(InnerData<B> {
+                                res->environment
+                                , {
+                                    res->timedData.timePoint
+                                    , std::move(res->timedData.value[0])
+                                    , true
+                                }
+                            });
+                            done_ = true;
+                        } else {
+                            size_t l = res->timedData.value.size();
+                            size_t ii = l-1;
+                            for (auto &&item : res->timedData.value) {
+                                Producer<B>::publish(InnerData<B> {
+                                    res->environment
+                                    , {
+                                        res->timedData.timePoint
+                                        , std::move(item)
+                                        , ((ii==0)?res->timedData.finalFlag:false)
+                                    }
+                                });
+                                --ii;
+                            }
                         }
                     }
                 }
@@ -840,28 +911,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f), liftParam.requireMask));
+                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             } else {
-                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f), liftParam.requireMask));
+                return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             }
         }     
         template <class A, class F>
         static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f)));
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             } else {
-                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f)));
+                return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly));
             }
         }
         template <class A, class F>
         static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>> {
             if (liftParam.suggestThreaded) {
                 return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
-                    new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true>(std::move(f))
+                    new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly)
                 );
             } else {
                 return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
-                    new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false>(std::move(f))
+                    new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly)
                 );
             }
         }

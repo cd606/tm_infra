@@ -51,6 +51,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //delay might be different for different parameters
         using DelaySimulatorType = std::optional<std::function<decltype(T()-T())(int, T const &)>>;
         DelaySimulatorType delaySimulator = std::nullopt;
+        //This, if true, means that the lifted action shall only run until 
+        //it has produced its first output. 
+        //This only applies to actions, not to on-order facilities
+        bool fireOnceOnly = false;
 
         LiftParameters &RequireMask(FanInParamMask m) {
             requireMask = m;
@@ -62,6 +66,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         LiftParameters &DelaySimulator(DelaySimulatorType const &d) {
             delaySimulator = d;
+            return *this;
+        }
+        LiftParameters &FireOnceOnly(bool f) {
+            fireOnceOnly = f;
             return *this;
         }
     };

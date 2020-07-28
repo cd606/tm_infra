@@ -203,8 +203,15 @@ class PureActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::var
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -217,17 +224,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -236,8 +259,15 @@ class MaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::va
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -253,17 +283,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -272,8 +318,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -289,17 +342,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -308,12 +377,26 @@ class KleisliActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -322,8 +405,15 @@ class SimpleMultiActionCore<std::variant<A0,A1>,B,F> final : public MultiActionC
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -339,17 +429,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -358,8 +465,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1>,B,F> final : public MultiActio
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -375,17 +489,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -394,12 +525,27 @@ class KleisliMultiActionCore<std::variant<A0,A1>,B,F> final : public MultiAction
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -690,8 +836,15 @@ class PureActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -707,17 +860,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -726,8 +895,15 @@ class MaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std:
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -746,17 +922,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -765,8 +957,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionC
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -785,17 +984,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -804,12 +1019,26 @@ class KleisliActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<st
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -818,8 +1047,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2>,B,F> final : public MultiActi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -838,17 +1074,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -857,8 +1110,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2>,B,F> final : public MultiAc
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -877,17 +1137,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -896,12 +1173,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2>,B,F> final : public MultiAct
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -1278,8 +1570,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<st
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -1298,17 +1597,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -1317,8 +1632,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<s
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -1340,17 +1662,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -1359,8 +1697,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public Acti
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -1382,17 +1727,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -1401,12 +1762,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -1415,8 +1790,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public MultiA
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -1438,17 +1820,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -1457,8 +1856,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public Mult
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -1480,17 +1886,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -1499,12 +1922,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public Multi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -1971,8 +2409,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -1994,17 +2439,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -2013,8 +2474,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCor
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2039,17 +2507,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -2058,8 +2542,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public A
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2084,17 +2575,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -2103,12 +2610,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionC
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -2117,8 +2638,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public Mul
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2143,17 +2671,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -2162,8 +2707,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public M
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2188,17 +2740,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -2207,12 +2776,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public Mu
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -2773,8 +3357,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionC
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2799,17 +3390,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -2818,8 +3425,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public Action
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2847,17 +3461,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -2866,8 +3496,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : publi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2895,17 +3532,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -2914,12 +3567,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public Acti
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -2928,8 +3595,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public 
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -2957,17 +3631,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -2976,8 +3667,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : publi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -3005,17 +3703,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -3024,12 +3739,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -3688,8 +4418,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public Acti
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -3717,17 +4454,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -3736,8 +4489,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public Act
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -3768,17 +4528,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -3787,8 +4563,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : pu
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -3819,17 +4602,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -3838,12 +4637,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public A
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -3852,8 +4665,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : publ
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -3884,17 +4704,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -3903,8 +4740,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : pu
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -3935,17 +4779,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -3954,12 +4815,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : pub
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -4720,8 +5596,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public A
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -4752,17 +5635,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -4771,8 +5670,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public 
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -4806,17 +5712,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -4825,8 +5747,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final :
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -4860,17 +5789,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -4879,12 +5824,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : publi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -4893,8 +5852,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : p
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -4928,17 +5894,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -4947,8 +5930,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final :
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -4982,17 +5972,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -5001,12 +6008,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : 
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -5873,8 +6895,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : publi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -5908,17 +6937,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -5927,8 +6972,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : publ
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -5965,17 +7017,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -5984,8 +7052,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> fina
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -6022,17 +7097,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -6041,12 +7132,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : pu
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -6055,8 +7160,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final 
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -6093,17 +7205,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -6112,8 +7241,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> fina
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -6150,17 +7286,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -6169,12 +7322,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
@@ -7151,8 +8319,15 @@ class PureActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : pu
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -7189,17 +8364,33 @@ protected:
             return std::nullopt;
         }
         B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value), std::move(a9.value));
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
 };
@@ -7208,8 +8399,15 @@ class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : p
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -7249,17 +8447,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
 };
@@ -7268,8 +8482,15 @@ class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> f
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -7309,17 +8530,33 @@ protected:
         if (!b) {
             return std::nullopt;
         }
-        return applyDelaySimulator<B>(which, pureInnerData<B>(
-            env
-            , {
-                tp
-                , std::move(*b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , true
+                }
+            ), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<B>(which, pureInnerData<B>(
+                env
+                , {
+                    tp
+                    , std::move(*b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
 };
@@ -7328,12 +8565,26 @@ class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final :
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
-        return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+            if (x) {
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+        }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
 };
@@ -7342,8 +8593,15 @@ class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> fin
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -7383,17 +8641,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
 };
@@ -7402,8 +8677,15 @@ class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> f
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+        }
         TimePoint tp;
         switch (which) {
         case 0:
@@ -7443,17 +8725,34 @@ protected:
         if (b.empty()) {
             return std::nullopt;
         }
-        return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
-            env
-            , {
-                tp
-                , std::move(b)
-                , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+        if (fireOnceOnly_) {
+            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
             }
-        ), delaySimulator_);
+            return x;
+        } else {
+            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+                env
+                , {
+                    tp
+                    , std::move(b)
+                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                }
+            ), delaySimulator_);
+        }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
 };
@@ -7462,12 +8761,27 @@ class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> fi
 private:
     F f_;
     DelaySimulatorType delaySimulator_;
+    bool fireOnceOnly_;
+    bool done_;
 protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
-        return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+        if (fireOnceOnly_) {
+            if (done_) {
+                return std::nullopt;
+            }
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+            if (x && x->timedData.value.size() > 0) {
+                x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
+                x->timedData.finalFlag = true;
+                done_ = true;
+            }
+            return x;
+        } else {
+            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+        }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
 };
