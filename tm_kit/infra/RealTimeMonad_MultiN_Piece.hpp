@@ -1,6 +1,6 @@
 private:
-    template <class A0, class A1, class B, class F, bool Threaded>
-    class Multi2 final : public MultiActionCore<std::variant<A0,A1>, B, Threaded> {
+    template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi2 final : public MultiActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -31,21 +31,29 @@ private:
             }
         }
     public:
-        Multi2(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi2(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi2() {}
     };
 public:
     template <class A0, class A1, class F>
     static auto liftMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> ( new Multi2<A0,A1,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> ( new Multi2<A0,A1,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> ( new Multi2<A0,A1,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> ( new Multi2<A0,A1,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> ( new Multi2<A0,A1,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type>> ( new Multi2<A0,A1,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class B, class F, bool Threaded>
-    class Multi3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, Threaded> {
+    template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -86,21 +94,29 @@ private:
             }
         }
     public:
-        Multi3(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi3(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi3() {}
     };
 public:
     template <class A0, class A1, class A2, class F>
     static auto liftMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> ( new Multi3<A0,A1,A2,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> ( new Multi3<A0,A1,A2,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> ( new Multi3<A0,A1,A2,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> ( new Multi3<A0,A1,A2,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> ( new Multi3<A0,A1,A2,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type>> ( new Multi3<A0,A1,A2,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded>
-    class Multi4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -151,21 +167,29 @@ private:
             }
         }
     public:
-        Multi4(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi4(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi4() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto liftMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> ( new Multi4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> ( new Multi4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> ( new Multi4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> ( new Multi4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> ( new Multi4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type>> ( new Multi4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded>
-    class Multi5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -226,21 +250,29 @@ private:
             }
         }
     public:
-        Multi5(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi5(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi5() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto liftMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> ( new Multi5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> ( new Multi5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> ( new Multi5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> ( new Multi5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> ( new Multi5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type>> ( new Multi5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded>
-    class Multi6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -311,21 +343,29 @@ private:
             }
         }
     public:
-        Multi6(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi6(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi6() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto liftMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> ( new Multi6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> ( new Multi6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> ( new Multi6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> ( new Multi6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> ( new Multi6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type>> ( new Multi6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded>
-    class Multi7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -406,21 +446,29 @@ private:
             }
         }
     public:
-        Multi7(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi7(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi7() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto liftMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> ( new Multi7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> ( new Multi7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> ( new Multi7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> ( new Multi7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> ( new Multi7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type>> ( new Multi7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded>
-    class Multi8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -511,21 +559,29 @@ private:
             }
         }
     public:
-        Multi8(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi8(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi8() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto liftMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> ( new Multi8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> ( new Multi8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> ( new Multi8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> ( new Multi8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> ( new Multi8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type>> ( new Multi8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded>
-    class Multi9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -626,21 +682,29 @@ private:
             }
         }
     public:
-        Multi9(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi9(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi9() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto liftMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> ( new Multi9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> ( new Multi9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> ( new Multi9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> ( new Multi9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> ( new Multi9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type>> ( new Multi9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded>
-    class Multi10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
+    class Multi10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -751,15 +815,23 @@ private:
             }
         }
     public:
-        Multi10(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        Multi10(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~Multi10() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto liftMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> ( new Multi10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> ( new Multi10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> ( new Multi10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> ( new Multi10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> ( new Multi10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type>> ( new Multi10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((A0 *) nullptr)),std::move(*((A1 *) nullptr)),std::move(*((A2 *) nullptr)),std::move(*((A3 *) nullptr)),std::move(*((A4 *) nullptr)),std::move(*((A5 *) nullptr)),std::move(*((A6 *) nullptr)),std::move(*((A7 *) nullptr)),std::move(*((A8 *) nullptr)),std::move(*((A9 *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }

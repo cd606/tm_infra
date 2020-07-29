@@ -1,12 +1,11 @@
-template <class A0, class A1, class B>
-class ActionCore<std::variant<A0,A1>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>> {
+template <class A0, class A1, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -18,11 +17,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -30,21 +29,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class B>
-class ActionCore<std::variant<A0,A1>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
+template <class A0, class A1, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -53,11 +51,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -72,7 +70,7 @@ private:
         return std::variant<A0,A1>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -83,15 +81,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA1, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class B>
-class ActionCore<std::variant<A0,A1,A2>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
+template <class A0, class A1, class A2, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -103,11 +100,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -115,21 +112,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class B>
-class ActionCore<std::variant<A0,A1,A2>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
+template <class A0, class A1, class A2, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -138,11 +134,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -160,7 +156,7 @@ private:
         return std::variant<A0,A1,A2>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -174,15 +170,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA2, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class B>
-class ActionCore<std::variant<A0,A1,A2,A3>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
+template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -194,11 +189,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -206,21 +201,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class B>
-class ActionCore<std::variant<A0,A1,A2,A3>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
+template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -229,11 +223,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -254,7 +248,7 @@ private:
         return std::variant<A0,A1,A2,A3>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -271,15 +265,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA3, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
+template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -291,11 +284,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -303,21 +296,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -326,11 +318,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()), withtime_utils::makeCopy(timeChecker_.get4()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -354,7 +346,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -374,15 +366,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA4, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -394,11 +385,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -406,21 +397,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -429,11 +419,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()), withtime_utils::makeCopy(timeChecker_.get4()), withtime_utils::makeCopy(timeChecker_.get5()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -460,7 +450,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -483,15 +473,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA5, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -503,11 +492,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -515,21 +504,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -538,11 +526,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()), withtime_utils::makeCopy(timeChecker_.get4()), withtime_utils::makeCopy(timeChecker_.get5()), withtime_utils::makeCopy(timeChecker_.get6()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -572,7 +560,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -598,15 +586,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA6, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -618,11 +605,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()), withtime_utils::makeCopy(tc.get7()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -630,21 +617,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -653,11 +639,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()), withtime_utils::makeCopy(timeChecker_.get4()), withtime_utils::makeCopy(timeChecker_.get5()), withtime_utils::makeCopy(timeChecker_.get6()), withtime_utils::makeCopy(timeChecker_.get7()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -690,7 +676,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -719,15 +705,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA7, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -739,11 +724,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()), withtime_utils::makeCopy(tc.get7()), withtime_utils::makeCopy(tc.get8()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -751,21 +736,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -774,11 +758,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()), withtime_utils::makeCopy(timeChecker_.get4()), withtime_utils::makeCopy(timeChecker_.get5()), withtime_utils::makeCopy(timeChecker_.get6()), withtime_utils::makeCopy(timeChecker_.get7()), withtime_utils::makeCopy(timeChecker_.get8()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -814,7 +798,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -846,15 +830,14 @@ public:
         actuallyHandle(pureInnerDataLift(fromA8, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
 private:
-    bool fireOnceOnly_;
     bool done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) = 0;
     virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -866,11 +849,11 @@ protected:
         if (tc.good()) {
             auto res = action(data.environment, tc.lastIdx(), withtime_utils::makeCopy(tc.get0()), withtime_utils::makeCopy(tc.get1()), withtime_utils::makeCopy(tc.get2()), withtime_utils::makeCopy(tc.get3()), withtime_utils::makeCopy(tc.get4()), withtime_utils::makeCopy(tc.get5()), withtime_utils::makeCopy(tc.get6()), withtime_utils::makeCopy(tc.get7()), withtime_utils::makeCopy(tc.get8()), withtime_utils::makeCopy(tc.get9()));
             if (res) {
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
                 }
                 Producer<B>::publish(std::move(*res));
-                if (fireOnceOnly_) {
+                if constexpr (FireOnceOnly) {
                     done_ = true;
                     this->stop();
                 }
@@ -878,21 +861,20 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>(requireMask), fireOnceOnly_(fireOnceOnly), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
     typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> timeChecker_;
-    bool fireOnceOnly_;
-    std::atomic<bool> done_;
+    std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) = 0;
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
-        if (fireOnceOnly_) {
+        if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
             }
@@ -901,11 +883,11 @@ protected:
             if (timeChecker_.good()) {
                 auto res = action(data.environment, timeChecker_.lastIdx(), withtime_utils::makeCopy(timeChecker_.get0()), withtime_utils::makeCopy(timeChecker_.get1()), withtime_utils::makeCopy(timeChecker_.get2()), withtime_utils::makeCopy(timeChecker_.get3()), withtime_utils::makeCopy(timeChecker_.get4()), withtime_utils::makeCopy(timeChecker_.get5()), withtime_utils::makeCopy(timeChecker_.get6()), withtime_utils::makeCopy(timeChecker_.get7()), withtime_utils::makeCopy(timeChecker_.get8()), withtime_utils::makeCopy(timeChecker_.get9()));
                 if (res) {
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
                     }
                     Producer<B>::publish(std::move(*res));
-                    if (fireOnceOnly_) {
+                    if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
                 }
@@ -944,7 +926,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), timeChecker_(requireMask), fireOnceOnly_(fireOnceOnly), done_(true) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }

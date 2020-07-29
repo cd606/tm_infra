@@ -1,6 +1,6 @@
 private:
     template <class A0, class A1>
-    class Merge2 final : public ActionCore<std::variant<A0,A1>,std::tuple<A0,A1>,false> {
+    class Merge2 final : public ActionCore<std::variant<A0,A1>,std::tuple<A0,A1>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
             switch (which) {
@@ -13,7 +13,7 @@ private:
             }
         }
     public:
-        Merge2(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,std::tuple<A0,A1>,false>(requireMask) {}
+        Merge2(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1>,std::tuple<A0,A1>,false,false>(requireMask) {}
         virtual ~Merge2() {}
     };
 public:
@@ -23,7 +23,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2>
-    class Merge3 final : public ActionCore<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>,false> {
+    class Merge3 final : public ActionCore<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
             switch (which) {
@@ -38,7 +38,7 @@ private:
             }
         }
     public:
-        Merge3(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>,false>(requireMask) {}
+        Merge3(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2>,std::tuple<A0,A1,A2>,false,false>(requireMask) {}
         virtual ~Merge3() {}
     };
 public:
@@ -48,7 +48,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3>
-    class Merge4 final : public ActionCore<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>,false> {
+    class Merge4 final : public ActionCore<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
             switch (which) {
@@ -65,7 +65,7 @@ private:
             }
         }
     public:
-        Merge4(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>,false>(requireMask) {}
+        Merge4(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3>,std::tuple<A0,A1,A2,A3>,false,false>(requireMask) {}
         virtual ~Merge4() {}
     };
 public:
@@ -75,7 +75,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4>
-    class Merge5 final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>,false> {
+    class Merge5 final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3,A4>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
             switch (which) {
@@ -94,7 +94,7 @@ private:
             }
         }
     public:
-        Merge5(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>,false>(requireMask) {}
+        Merge5(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,std::tuple<A0,A1,A2,A3,A4>,false,false>(requireMask) {}
         virtual ~Merge5() {}
     };
 public:
@@ -104,7 +104,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5>
-    class Merge6 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>,false> {
+    class Merge6 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3,A4,A5>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
             switch (which) {
@@ -125,7 +125,7 @@ private:
             }
         }
     public:
-        Merge6(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>,false>(requireMask) {}
+        Merge6(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,std::tuple<A0,A1,A2,A3,A4,A5>,false,false>(requireMask) {}
         virtual ~Merge6() {}
     };
 public:
@@ -135,7 +135,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
-    class Merge7 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>,false> {
+    class Merge7 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3,A4,A5,A6>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
             switch (which) {
@@ -158,7 +158,7 @@ private:
             }
         }
     public:
-        Merge7(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>,false>(requireMask) {}
+        Merge7(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,std::tuple<A0,A1,A2,A3,A4,A5,A6>,false,false>(requireMask) {}
         virtual ~Merge7() {}
     };
 public:
@@ -168,7 +168,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
-    class Merge8 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>,false> {
+    class Merge8 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
             switch (which) {
@@ -193,7 +193,7 @@ private:
             }
         }
     public:
-        Merge8(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>,false>(requireMask) {}
+        Merge8(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7>,false,false>(requireMask) {}
         virtual ~Merge8() {}
     };
 public:
@@ -203,7 +203,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
-    class Merge9 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>,false> {
+    class Merge9 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
             switch (which) {
@@ -230,7 +230,7 @@ private:
             }
         }
     public:
-        Merge9(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>,false>(requireMask) {}
+        Merge9(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8>,false,false>(requireMask) {}
         virtual ~Merge9() {}
     };
 public:
@@ -240,7 +240,7 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
-    class Merge10 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,false> {
+    class Merge10 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,false,false> {
     protected:
         virtual Data<std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
             switch (which) {
@@ -269,7 +269,7 @@ private:
             }
         }
     public:
-        Merge10(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,false>(requireMask) {}
+        Merge10(FanInParamMask const &requireMask=FanInParamMask()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,std::tuple<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,false,false>(requireMask) {}
         virtual ~Merge10() {}
     };
 public:

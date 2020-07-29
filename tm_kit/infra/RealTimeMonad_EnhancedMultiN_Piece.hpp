@@ -1,6 +1,6 @@
 private:
-    template <class A0, class A1, class B, class F, bool Threaded>
-    class EnhancedMulti2 final : public MultiActionCore<std::variant<A0,A1>, B, Threaded> {
+    template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti2 final : public MultiActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -31,21 +31,29 @@ private:
             }
         }
     public:
-        EnhancedMulti2(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti2(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti2() {}
     };
 public:
     template <class A0, class A1, class F>
     static auto enhancedMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> ( new EnhancedMulti2<A0,A1,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> ( new EnhancedMulti2<A0,A1,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> ( new EnhancedMulti2<A0,A1,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> ( new EnhancedMulti2<A0,A1,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> ( new EnhancedMulti2<A0,A1,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type>> ( new EnhancedMulti2<A0,A1,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class B, class F, bool Threaded>
-    class EnhancedMulti3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, Threaded> {
+    template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -86,21 +94,29 @@ private:
             }
         }
     public:
-        EnhancedMulti3(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti3(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti3() {}
     };
 public:
     template <class A0, class A1, class A2, class F>
     static auto enhancedMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> ( new EnhancedMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> ( new EnhancedMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> ( new EnhancedMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> ( new EnhancedMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> ( new EnhancedMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type>> ( new EnhancedMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded>
-    class EnhancedMulti4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -151,21 +167,29 @@ private:
             }
         }
     public:
-        EnhancedMulti4(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti4(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti4() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto enhancedMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> ( new EnhancedMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> ( new EnhancedMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> ( new EnhancedMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> ( new EnhancedMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> ( new EnhancedMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type>> ( new EnhancedMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded>
-    class EnhancedMulti5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -226,21 +250,29 @@ private:
             }
         }
     public:
-        EnhancedMulti5(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti5(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti5() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto enhancedMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> ( new EnhancedMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> ( new EnhancedMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> ( new EnhancedMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> ( new EnhancedMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> ( new EnhancedMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type>> ( new EnhancedMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded>
-    class EnhancedMulti6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -311,21 +343,29 @@ private:
             }
         }
     public:
-        EnhancedMulti6(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti6(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti6() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto enhancedMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> ( new EnhancedMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> ( new EnhancedMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> ( new EnhancedMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> ( new EnhancedMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> ( new EnhancedMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type>> ( new EnhancedMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded>
-    class EnhancedMulti7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -406,21 +446,29 @@ private:
             }
         }
     public:
-        EnhancedMulti7(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti7(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti7() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto enhancedMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> ( new EnhancedMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> ( new EnhancedMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> ( new EnhancedMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> ( new EnhancedMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> ( new EnhancedMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type>> ( new EnhancedMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded>
-    class EnhancedMulti8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -511,21 +559,29 @@ private:
             }
         }
     public:
-        EnhancedMulti8(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti8(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti8() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto enhancedMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> ( new EnhancedMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> ( new EnhancedMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> ( new EnhancedMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> ( new EnhancedMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> ( new EnhancedMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type>> ( new EnhancedMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded>
-    class EnhancedMulti9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -626,21 +682,29 @@ private:
             }
         }
     public:
-        EnhancedMulti9(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti9(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti9() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto enhancedMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> ( new EnhancedMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> ( new EnhancedMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> ( new EnhancedMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> ( new EnhancedMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> ( new EnhancedMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type>> ( new EnhancedMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
 private:
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded>
-    class EnhancedMulti10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded> {
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
+    class EnhancedMulti10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly> {
     private:
         F f_;
     protected:
@@ -751,15 +815,23 @@ private:
             }
         }
     public:
-        EnhancedMulti10(F &&f, FanInParamMask const &requireMask=FanInParamMask(), bool fireOnceOnly=false) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded>(requireMask, fireOnceOnly), f_(std::move(f)) {}
+        EnhancedMulti10(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
         virtual ~EnhancedMulti10() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto enhancedMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> {
-        if (liftParam.suggestThreaded) {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> ( new EnhancedMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type,F,true>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+        if (liftParam.fireOnceOnly) {
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> ( new EnhancedMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> ( new EnhancedMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+            }
         } else {
-            return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> ( new EnhancedMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type,F,false>(std::move(f), liftParam.requireMask, liftParam.fireOnceOnly) );
+            if (liftParam.suggestThreaded) {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> ( new EnhancedMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+            } else {
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type>> ( new EnhancedMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((std::tuple<TimePoint, A0> *) nullptr)),std::move(*((std::tuple<TimePoint, A1> *) nullptr)),std::move(*((std::tuple<TimePoint, A2> *) nullptr)),std::move(*((std::tuple<TimePoint, A3> *) nullptr)),std::move(*((std::tuple<TimePoint, A4> *) nullptr)),std::move(*((std::tuple<TimePoint, A5> *) nullptr)),std::move(*((std::tuple<TimePoint, A6> *) nullptr)),std::move(*((std::tuple<TimePoint, A7> *) nullptr)),std::move(*((std::tuple<TimePoint, A8> *) nullptr)),std::move(*((std::tuple<TimePoint, A9> *) nullptr))))::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+            }
         }
     }
