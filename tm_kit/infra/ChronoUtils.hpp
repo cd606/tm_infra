@@ -5,6 +5,8 @@
 #include <ctime>
 #include <string>
 #include <type_traits>
+#include <iostream>
+#include <sstream>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     //Some small helper functions to help write apps and tests
@@ -14,6 +16,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmm" (the microsecond part can be omitted)
         extern std::chrono::system_clock::time_point parseLocalTime(std::string const &s);    
         extern std::string localTimeString(std::chrono::system_clock::time_point const &tp);
+        template <class TimeType>
+        inline std::string genericLocalTimeString(TimeType const &t) {
+            std::ostringstream oss;
+            oss << t;
+            return oss.str();
+        }
+        template <>
+        inline std::string genericLocalTimeString<std::chrono::system_clock::time_point>(std::chrono::system_clock::time_point const &t) {
+            return localTimeString(t);
+        }
 
         //The usage is like withtime_utils::sinceMidnight<std::chrono::seconds>(...);
         template <class Duration>
