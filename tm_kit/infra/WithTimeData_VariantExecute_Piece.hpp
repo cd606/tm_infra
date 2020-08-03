@@ -26,7 +26,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> cons
     }
     m_.execute(*f, std::move(x0.mSource));
     m_.execute(*f, std::move(x1.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x) {
@@ -59,7 +59,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x0, So
     }
     m_.execute(*f, std::move(x0.mSource));
     m_.execute(*f, std::move(x1.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x) {
@@ -100,7 +100,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
     m_.execute(*f, std::move(x0.mSource));
     m_.execute(*f, std::move(x1.mSource));
     m_.execute(*f, std::move(x2.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x) {
@@ -145,7 +145,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x0,
     m_.execute(*f, std::move(x0.mSource));
     m_.execute(*f, std::move(x1.mSource));
     m_.execute(*f, std::move(x2.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&x) {
@@ -197,7 +197,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
     m_.execute(*f, std::move(x1.mSource));
     m_.execute(*f, std::move(x2.mSource));
     m_.execute(*f, std::move(x3.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&x) {
@@ -254,7 +254,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&
     m_.execute(*f, std::move(x1.mSource));
     m_.execute(*f, std::move(x2.mSource));
     m_.execute(*f, std::move(x3.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0> &&x) {
@@ -317,7 +317,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     m_.execute(*f, std::move(x2.mSource));
     m_.execute(*f, std::move(x3.mSource));
     m_.execute(*f, std::move(x4.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0> &&x) {
@@ -386,7 +386,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0>
     m_.execute(*f, std::move(x2.mSource));
     m_.execute(*f, std::move(x3.mSource));
     m_.execute(*f, std::move(x4.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A0> &&x) {
@@ -460,7 +460,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     m_.execute(*f, std::move(x3.mSource));
     m_.execute(*f, std::move(x4.mSource));
     m_.execute(*f, std::move(x5.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A0> &&x) {
@@ -541,7 +541,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
     m_.execute(*f, std::move(x3.mSource));
     m_.execute(*f, std::move(x4.mSource));
     m_.execute(*f, std::move(x5.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A0> &&x) {
@@ -626,7 +626,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     m_.execute(*f, std::move(x4.mSource));
     m_.execute(*f, std::move(x5.mSource));
     m_.execute(*f, std::move(x6.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A0> &&x) {
@@ -719,7 +719,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
     m_.execute(*f, std::move(x4.mSource));
     m_.execute(*f, std::move(x5.mSource));
     m_.execute(*f, std::move(x6.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A0> &&x) {
@@ -815,7 +815,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     m_.execute(*f, std::move(x5.mSource));
     m_.execute(*f, std::move(x6.mSource));
     m_.execute(*f, std::move(x7.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A0> &&x) {
@@ -920,7 +920,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
     m_.execute(*f, std::move(x5.mSource));
     m_.execute(*f, std::move(x6.mSource));
     m_.execute(*f, std::move(x7.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A0> &&x) {
@@ -1027,7 +1027,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     m_.execute(*f, std::move(x6.mSource));
     m_.execute(*f, std::move(x7.mSource));
     m_.execute(*f, std::move(x8.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A0> &&x) {
@@ -1144,7 +1144,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
     m_.execute(*f, std::move(x6.mSource));
     m_.execute(*f, std::move(x7.mSource));
     m_.execute(*f, std::move(x8.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A0> &&x) {
@@ -1262,7 +1262,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
     m_.execute(*f, std::move(x7.mSource));
     m_.execute(*f, std::move(x8.mSource));
     m_.execute(*f, std::move(x9.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A0> &&x) {
@@ -1391,5 +1391,5 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const
     m_.execute(*f, std::move(x7.mSource));
     m_.execute(*f, std::move(x8.mSource));
     m_.execute(*f, std::move(x9.mSource));
-    return { m_.actionAsSource(*f), name };
+    return { m_.actionAsSource(env_, *f), name };
 }
