@@ -4,10 +4,9 @@
 #include <functional>
 #include <utility>
 
-//The reason these utilities are introduced is that, although we
-//call RealTimeApp and SinglePassIterationApp "monads", they 
-//are not exactly monads. To be more precise, their Action's are 
-//kind of applicative arrows, something like
+//The reason these utilities are introduced is that,
+//in RealTimeApp and SinglePassIterationApp, the Actions are 
+//are applicative arrows, something like
 // Stream a -> Stream b
 //And this is why, while we might easily decorate a Kleisli arrow of
 // InnerData a -> Data b
