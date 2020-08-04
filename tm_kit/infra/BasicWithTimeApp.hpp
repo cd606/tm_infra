@@ -1,16 +1,16 @@
-#ifndef TM_KIT_INFRA_BASIC_WITHTIME_MONAD_HPP_
-#define TM_KIT_INFRA_BASIC_WITHTIME_MONAD_HPP_
+#ifndef TM_KIT_INFRA_BASIC_WITHTIME_APP_HPP_
+#define TM_KIT_INFRA_BASIC_WITHTIME_APP_HPP_
 
 #include <future>
 #include <tm_kit/infra/WithTimeData.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class StateT>
-    class BasicWithTimeMonad {
+    class BasicWithTimeApp {
     private:
-        friend class MonadRunner<BasicWithTimeMonad>;
-        BasicWithTimeMonad() = default;
-        ~BasicWithTimeMonad() = default;
+        friend class AppRunner<BasicWithTimeApp>;
+        BasicWithTimeApp() = default;
+        ~BasicWithTimeApp() = default;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
@@ -50,16 +50,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class T>
-        using Data = TimedMonadData<T,StateT>;
+        using Data = TimedAppData<T,StateT>;
 
         //we don't allow any action to manufacture KeyedData "out of the blue"
         //, but it is ok to manipulate Keys, so the check is one-sided
         //Moreover, we allow manipulation of keyed datas
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
-        using Action = TimedMonadModelKleisli<A,B,StateT>;
+        using Action = TimedAppModelKleisli<A,B,StateT>;
 
         template <class A, class B>
-        using OnOrderFacility = TimedMonadModelKleisli<Key<A>,KeyedData<A,B>,StateT>;
+        using OnOrderFacility = TimedAppModelKleisli<Key<A>,KeyedData<A,B>,StateT>;
 
         template <class T1, class T2, class T3>
         static std::shared_ptr<Action<T1,T3>> compose(Action<T1,T2> &&f1, Action<T2,T3> &&f2) {
@@ -185,14 +185,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<I0,O0>>();
         }
     
-    #include <tm_kit/infra/BasicWithTimeMonad_VariantAndMerge_Piece.hpp>
-    #include <tm_kit/infra/BasicWithTimeMonad_Pure_Maybe_Kleisli_Piece.hpp>
+    #include <tm_kit/infra/BasicWithTimeApp_VariantAndMerge_Piece.hpp>
+    #include <tm_kit/infra/BasicWithTimeApp_Pure_Maybe_Kleisli_Piece.hpp>
     
     public:   
         template <class T>
         class Source {
         private:
-            friend class BasicWithTimeMonad;
+            friend class BasicWithTimeApp;
             Data<T> data;
             Source() : data(std::nullopt) {}
             Source(Data<T> &&d) : data(std::move(d)) {}
@@ -206,7 +206,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class Sink {
         private:
-            friend class BasicWithTimeMonad;
+            friend class BasicWithTimeApp;
             std::function<void(Source<T> &&)> action;
             Sink() : action() {}
             Sink(std::function<void(Source<T> &&)> f) : action(f) {}
@@ -329,7 +329,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
 
-        #include <tm_kit/infra/BasicWithTimeMonad_ExecuteAction_Piece.hpp> 
+        #include <tm_kit/infra/BasicWithTimeApp_ExecuteAction_Piece.hpp> 
 
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
@@ -340,7 +340,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
 
-        #include <tm_kit/infra/BasicWithTimeMonad_VariantSink_Piece.hpp>
+        #include <tm_kit/infra/BasicWithTimeApp_VariantSink_Piece.hpp>
 
         template <class A, class B>
         void placeOrderWithFacility(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility, Sink<KeyedData<A,B>> const &sink) {

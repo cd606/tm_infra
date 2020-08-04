@@ -1,5 +1,5 @@
-#ifndef TM_KIT_INFRA_SINGLE_PASS_ITERATION_MONAD_HPP_
-#define TM_KIT_INFRA_SINGLE_PASS_ITERATION_MONAD_HPP_
+#ifndef TM_KIT_INFRA_SINGLE_PASS_ITERATION_APP_HPP_
+#define TM_KIT_INFRA_SINGLE_PASS_ITERATION_APP_HPP_
 
 #include <tm_kit/infra/WithTimeData.hpp>
 
@@ -12,9 +12,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     //Nothing in this monad is mutex protected because it is supposed to run
     //single-threaded
     template <class StateT, std::enable_if_t<StateT::PreserveInputRelativeOrder,int> = 0>
-    class SinglePassIterationMonad {
+    class SinglePassIterationApp {
     private:
-        friend class MonadRunner<SinglePassIterationMonad>;
+        friend class AppRunner<SinglePassIterationApp>;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
@@ -54,10 +54,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class T>
-        using Data = TimedMonadData<T,StateT>;
+        using Data = TimedAppData<T,StateT>;
 
         template <class T>
-        using MultiData = TimedMonadMultiData<T,StateT>;
+        using MultiData = TimedAppMultiData<T,StateT>;
 
         struct SpecialOutputDataTypeForExporters {};
 
@@ -74,7 +74,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             std::optional<TimePoint> timePoint_;
             std::stack<Provider<T> *> signerStack_;
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             Certificate(std::optional<TimePoint> &&tp, std::stack<Provider<T> *> &&signerStack, Provider<T> *topSigner)
                 : timePoint_(std::move(tp)), signerStack_(std::move(signerStack)) 
             {
@@ -261,7 +261,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             using Queue = std::deque<QueueItem>;
             Queue queue_;
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
         public:
             class Output : public virtual Provider<T> {
             private:
@@ -337,7 +337,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
             friend class Output;
-            friend class SinglePassForwardingMonad;
+            friend class SinglePassForwardingApp;
         private:
             std::vector<std::unique_ptr<Output>> outputs_;
             void updateQueue() {
@@ -377,7 +377,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, class Input, class Output>
         class TwoWayHolder {
         private:
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
@@ -392,7 +392,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, class Data>
         class OneWayHolder {
         private:
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
@@ -406,7 +406,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T1, class Input, class Output, class T2, class Data>
         class ThreeWayHolder {
         private:
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             //The reason why we use raw pointers here is that
             //the two pointers may well be pointing to the same
             //object (through different base classes). Therefore
@@ -433,7 +433,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
         class FourWayHolder {
         private:
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             //The reason why we use raw pointers here is that
             //the three pointers may well be pointing to the same
             //object (through different base classes). Therefore
@@ -466,7 +466,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractActionCore : public virtual AbstractConsumer<A>, public virtual Provider<B> {
         };
 
-        #include <tm_kit/infra/SinglePassIterationMonad_AbstractActionCore_Piece.hpp>
+        #include <tm_kit/infra/SinglePassIterationApp_AbstractActionCore_Piece.hpp>
 
         template <class B>
         class BufferedProvider : public virtual Provider<B> {
@@ -1092,10 +1092,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }   
             virtual void handle(InnerData<Key<A>> &&input) = 0;
         private:
-            virtual void fetchProvidersForMonadRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) {
+            virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) {
                 //by default do nothing
             } 
-            friend class SinglePassIterationMonad;       
+            friend class SinglePassIterationApp;       
         };
 
     public:
@@ -1342,12 +1342,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };  
 
-        #include <tm_kit/infra/SinglePassIterationMonad_ActionCore_Piece.hpp>
+        #include <tm_kit/infra/SinglePassIterationApp_ActionCore_Piece.hpp>
 
     public:
 
-        #include <tm_kit/infra/SinglePassIterationMonad_Merge_Piece.hpp>
-        #include <tm_kit/infra/SinglePassIterationMonad_Pure_Maybe_Kleisli_Piece.hpp>
+        #include <tm_kit/infra/SinglePassIterationApp_Merge_Piece.hpp>
+        #include <tm_kit/infra/SinglePassIterationApp_Pure_Maybe_Kleisli_Piece.hpp>
 
     public:
         template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
@@ -1654,7 +1654,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 c1_.fill(std::move(i0));
             }
         private:
-            virtual void fetchProvidersForMonadRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) override final {
+            virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) override final {
                 output.push_back(&c4_);
                 output.push_back(&c2_);
             } 
@@ -1671,7 +1671,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     public:
         //For the reason why LocalOnOrderFacility is essentially a tuple
         //and not directly based on AbstractIntegratedLocalOnOrderFacility,
-        //please refer to the comments in RealTimeMonad.hpp
+        //please refer to the comments in RealTimeApp.hpp
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         using LocalOnOrderFacility = ThreeWayHolder<
             OnOrderFacilityCore<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
@@ -1810,7 +1810,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         //for definition of VIEOnOrderFacility and its types
-        //,see the comments on the corresponding part of RealTimeMonad.hpp
+        //,see the comments on the corresponding part of RealTimeApp.hpp
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         using VIEOnOrderFacility = FourWayHolder<
             OnOrderFacilityCore<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
@@ -1892,7 +1892,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class Source {
         private:
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             Provider<T> *provider;
             Source(Provider<T> *p) : provider(p) {}
         public:
@@ -1903,7 +1903,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class Sink {
         private:
-            friend class SinglePassIterationMonad;
+            friend class SinglePassIterationApp;
             AbstractConsumer<T> *consumer;
             Sink(AbstractConsumer<T> *p) : consumer(p) {}
         };
@@ -1914,8 +1914,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<ProviderBase *, OutputMultiplexerBase *> outputMultiplexerMap_;
         std::unordered_map<ProviderBase *, std::unordered_set<ConsumerBase *>> connectionMap_;
 
-        SinglePassIterationMonad() : externalComponents_(), externalComponentsSet_(), joinedSource_(), joinedSpecialSource_(), outputMultiplexerMap_(), connectionMap_() {}
-        ~SinglePassIterationMonad() {}
+        SinglePassIterationApp() : externalComponents_(), externalComponentsSet_(), joinedSource_(), joinedSpecialSource_(), outputMultiplexerMap_(), connectionMap_() {}
+        ~SinglePassIterationApp() {}
 
         void registerExternalComponent(IExternalComponent *c) {
             if (externalComponentsSet_.find(c) == externalComponentsSet_.end()) {
@@ -1959,7 +1959,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             innerConnect(localE, provider);
             std::list<Provider<SpecialOutputDataTypeForExporters> *> l;
             joinedSpecialSource_.addSource(getMultiplexerOutput(localE)); 
-            facility->fetchProvidersForMonadRunner(l);
+            facility->fetchProvidersForAppRunner(l);
             for (auto *p : l) {
                 joinedSpecialSource_.addSource(getMultiplexerOutput(p));
             }      
@@ -1980,7 +1980,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {dynamic_cast<Provider<B> *>(action.core_.get())};
         }
 
-        #include <tm_kit/infra/SinglePassIterationMonad_ExecuteAction_Piece.hpp>
+        #include <tm_kit/infra/SinglePassIterationApp_ExecuteAction_Piece.hpp>
    
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
@@ -1993,7 +1993,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {dynamic_cast<AbstractConsumer<A> *>(action.core_.get())};
         }
 
-        #include <tm_kit/infra/SinglePassIterationMonad_VariantSink_Piece.hpp>
+        #include <tm_kit/infra/SinglePassIterationApp_VariantSink_Piece.hpp>
 
         template <class A, class B>
         void placeOrderWithFacility(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility, Sink<KeyedData<A,B>> const &sink) {

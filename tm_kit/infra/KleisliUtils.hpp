@@ -5,7 +5,7 @@
 #include <utility>
 
 //The reason these utilities are introduced is that, although we
-//call RealTimeMonad and SinglePassIterationMonad "monads", they 
+//call RealTimeApp and SinglePassIterationApp "monads", they 
 //are not exactly monads. To be more precise, their Action's are 
 //kind of applicative arrows, something like
 // Stream a -> Stream b

@@ -1,5 +1,5 @@
-#ifndef TM_KIT_INFRA_REALTIME_MONAD_HPP_
-#define TM_KIT_INFRA_REALTIME_MONAD_HPP_
+#ifndef TM_KIT_INFRA_REALTIME_APP_HPP_
+#define TM_KIT_INFRA_REALTIME_APP_HPP_
 
 #include <tm_kit/infra/WithTimeData.hpp>
 
@@ -14,13 +14,13 @@
 #include <sstream>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
-    class RealTimeMonadException : public std::runtime_error {
+    class RealTimeAppException : public std::runtime_error {
     public:
-        RealTimeMonadException(std::string const &s) : std::runtime_error(s) {}
+        RealTimeAppException(std::string const &s) : std::runtime_error(s) {}
     };
 
     template <class StateT>
-    class RealTimeMonadComponents {
+    class RealTimeAppComponents {
     public:
         template <class T>
         using Key = Key<T,StateT>;
@@ -89,7 +89,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
-        #include <tm_kit/infra/RealTimeMonad_TimeChecker_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_TimeChecker_Piece.hpp>
 
     private:
         template <class T>
@@ -176,7 +176,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
-        #include <tm_kit/infra/RealTimeMonad_ThreadedHandler_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_ThreadedHandler_Piece.hpp>
 
         template <class T>
         class Producer {
@@ -268,17 +268,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 bool isFinal = data.timedData.finalFlag;
                 KeyedData<A,B> outputD {std::get<0>(iter->second), std::move(data.timedData.value.key())};
-                //There is a slight difference in how RealTimeMonad and SinglePassIterationMonad
+                //There is a slight difference in how RealTimeApp and SinglePassIterationApp
                 //handles the "final" reply message in an OnOrderFacility
-                //For SinglePassIterationMonad, when the message goes to the consumer, it will be marked as
+                //For SinglePassIterationApp, when the message goes to the consumer, it will be marked as
                 //"final" ONLY IF this message is the last one ever in the OnOrderFacility (meaning that the
                 //key is a "final" one too). This makes sense because otherwise we will terminate the
                 //OnOrderFacility too early in that monad.
-                //However, here, for RealTimeMonad, the final flag will be preserved when it gets into the consumer
-                //The reason is that in RealTimeMonad, the final flag is only used to release 
+                //However, here, for RealTimeApp, the final flag will be preserved when it gets into the consumer
+                //The reason is that in RealTimeApp, the final flag is only used to release 
                 //internal key records of OnOrderFacility, so we pass the final flag in case that the consumer
                 //is actually somehow passing it to another OnOrderFacility which will release its internal key
-                //object. Since RealTimeMonad does not really terminate the logic of OnOrderFacility based
+                //object. Since RealTimeApp does not really terminate the logic of OnOrderFacility based
                 //on final flag, this is harmless
                 WithTime<KeyedData<A,B>,typename StateT::TimePointType> outputT {data.timedData.timePoint, std::move(outputD), isFinal};                                  
                 h->handle(withtime_utils::pureTimedDataWithEnvironment<KeyedData<A,B>, StateT, typename StateT::TimePointType>(data.environment, std::move(outputT)));    
@@ -301,7 +301,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractAction : public virtual IHandler<A>, public Producer<B> {
         };
 
-        #include <tm_kit/infra/RealTimeMonad_AbstractAction_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
 
         //KeyedData cannot be imported "out of the blue"
         template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
@@ -320,14 +320,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class OneLevelDownKleisli {
         protected:
             virtual ~OneLevelDownKleisli() {}
-            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A, typename StateT::TimePointType> &&data) = 0;
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A, typename StateT::TimePointType> &&data) = 0;
         };
 
         template <class A, class B, class F, bool ForceFinal>
         class PureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A,B> {
         private:
             F f_;
-            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 if constexpr (ForceFinal) {
                     auto ret = withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                     ret.timedData.finalFlag = true;
@@ -350,7 +350,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class EnhancedPureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
-            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
                 return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
                     data.timePoint,
@@ -370,7 +370,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class MaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
-            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 auto b = f_(std::move(data.value));
                 if (b) {
                     return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
@@ -394,7 +394,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class EnhancedMaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
-            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
                 if (b) {
                     return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
@@ -418,7 +418,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class DirectOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
-            virtual TimedMonadData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 if (ForceFinal) {
                     auto ret = f_(TimedDataWithEnvironment<A, StateT, typename StateT::TimePointType> {
                         env
@@ -490,9 +490,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     };
     
     template <class StateT>
-    class RealTimeMonad {
+    class RealTimeApp {
     private:  
-        friend class MonadRunner<RealTimeMonad>;
+        friend class AppRunner<RealTimeApp>;
 
     public:
         static constexpr bool PossiblyMultiThreaded = true;
@@ -537,23 +537,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class T>
-        using IHandler = typename RealTimeMonadComponents<StateT>::template IHandler<T>;
+        using IHandler = typename RealTimeAppComponents<StateT>::template IHandler<T>;
         template <class T>
-        using Producer = typename RealTimeMonadComponents<StateT>::template Producer<T>;
+        using Producer = typename RealTimeAppComponents<StateT>::template Producer<T>;
 
-        using IExternalComponent = typename RealTimeMonadComponents<StateT>::IExternalComponent;
-
-        template <class T>
-        using Data = TimedMonadData<T,StateT>;
+        using IExternalComponent = typename RealTimeAppComponents<StateT>::IExternalComponent;
 
         template <class T>
-        using MultiData = TimedMonadMultiData<T,StateT>;
+        using Data = TimedAppData<T,StateT>;
+
+        template <class T>
+        using MultiData = TimedAppMultiData<T,StateT>;
     
     private:
         template <class T, class Input, class Output>
         class TwoWayHolder {
         private:
-            friend class RealTimeMonad;
+            friend class RealTimeApp;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
@@ -569,7 +569,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, class Data>
         class OneWayHolder {
         private:
-            friend class RealTimeMonad;
+            friend class RealTimeApp;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
@@ -584,7 +584,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T1, class Input, class Output, class T2, class Data>
         class ThreeWayHolder {
         private:
-            friend class RealTimeMonad;
+            friend class RealTimeApp;
             //The reason why we use raw pointers here is that
             //the two pointers may well be pointing to the same
             //object (through different base classes). Therefore
@@ -611,7 +611,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
         class FourWayHolder {
         private:
-            friend class RealTimeMonad;
+            friend class RealTimeApp;
             //The reason why we use raw pointers here is that
             //the three pointers may well be pointing to the same
             //object (through different base classes). Therefore
@@ -643,7 +643,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, bool Threaded, bool FireOnceOnly>
         class ActionCore {};
         template <class A, class B, bool FireOnceOnly>
-        class ActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<A> {
+        class ActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
         private:
             bool done_;
         protected:
@@ -669,18 +669,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask), done_(false) {
+            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(requireMask), done_(false) {
             }
             virtual ~ActionCore() {
             }
         };
         template <class A, class B, bool FireOnceOnly>
-        class ActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
+        class ActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
         private:
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
+            typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
             std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
         public:
-            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), done_(false) {
+            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), done_(false) {
             }
             virtual ~ActionCore() {
             }
@@ -706,9 +706,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         //PureActionCore will be specialized so it is not defined with mixin
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        class PureActionCore final : public virtual RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>, public ActionCore<A,B,Threaded,FireOnceOnly> {
+        class PureActionCore final : public virtual RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>, public ActionCore<A,B,Threaded,FireOnceOnly> {
         public:
-            PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded,FireOnceOnly>(requireMask) {}
+            PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded,FireOnceOnly>(requireMask) {}
             PureActionCore(PureActionCore const &) = delete;
             PureActionCore &operator=(PureActionCore const &) = delete;
             PureActionCore(PureActionCore &&) = default;
@@ -716,35 +716,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~PureActionCore() {}
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using MaybeActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using MaybeActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,false>,
+                                typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,false>,
                                 ActionCore<A,B,Threaded, FireOnceOnly>
                                 >;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using EnhancedMaybeActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using EnhancedMaybeActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,false>,
+                                typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,false>,
                                 ActionCore<A,B,Threaded, FireOnceOnly>
                                 >;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using KleisliActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using KleisliActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,false>,
+                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,false>,
                                 ActionCore<A,B,Threaded, FireOnceOnly>
                                 >;
 
-        #include <tm_kit/infra/RealTimeMonad_ActionCore_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_ActionCore_Piece.hpp>
 
     public:
         //We don't allow any action to manufacture KeyedData "out of the blue"
         //, but it is ok to manipulate Keys, so the check is one-sided
         //Moreover, we allow manipulation of KeyedData
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
-        using AbstractAction = typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B>;
+        using AbstractAction = typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>;
 
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
-        using Action = TwoWayHolder<typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B>,A,B>;
+        using Action = TwoWayHolder<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>,A,B>;
         
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
@@ -822,7 +822,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, bool Threaded, bool FireOnceOnly>
         class MultiActionCore {};
         template <class A, class B, bool FireOnceOnly>
-        class MultiActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<A> {
+        class MultiActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
         private:
             bool done_;
         protected:
@@ -866,19 +866,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<A>(requireMask), done_(false) {
+            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(requireMask), done_(false) {
             }
             virtual ~MultiActionCore() {
             }
         };
         template <class A, class B, bool FireOnceOnly>
-        class MultiActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeMonadComponents<StateT>::template AbstractAction<A,B> {
+        class MultiActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
         private:
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, A> timeChecker_;
+            typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
             bool fireOnceOnly_;
             std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
         public:
-            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), done_(false) {
+            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), done_(false) {
             }
             virtual ~MultiActionCore() {
             }
@@ -921,25 +921,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using SimpleMultiActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownMultiKleisliMixin<
+        using SimpleMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,std::vector<B>,F,false>,
                                 MultiActionCore<A,B,Threaded,FireOnceOnly>
                                 >;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using EnhancedMultiActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownMultiKleisliMixin<
+        using EnhancedMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                typename RealTimeAppComponents<StateT>::template EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>,
                                 MultiActionCore<A,B,Threaded,FireOnceOnly>
                                 >;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using KleisliMultiActionCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownMultiKleisliMixin<
+        using KleisliMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,std::vector<B>,F,false>,
                                 MultiActionCore<A,B,Threaded,FireOnceOnly>
                                 >;
         
-        #include <tm_kit/infra/RealTimeMonad_MultiActionCore_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_MultiActionCore_Piece.hpp>
     public:
         template <class A, class F>
         static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
@@ -1001,7 +1001,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, bool Threaded>
         class OnOrderFacilityCore {};
         template <class A, class B>
-        class OnOrderFacilityCore<A,B,true> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<Key<A>> {
+        class OnOrderFacilityCore<A,B,true> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>> {
         protected:
             virtual void actuallyHandle(InnerData<Key<A>> &&data) override final {  
                 if (!this->timeCheckGood(data)) {
@@ -1011,7 +1011,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                 auto res = this->action(data.environment, std::move(a));
                 if (res) {
-                    RealTimeMonadComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
+                    RealTimeAppComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                         pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
                             return {std::move(id), std::move(b)};
                         }, std::move(*res))
@@ -1019,17 +1019,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<Key<A>>(requireMask) {
+            OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>>(requireMask) {
             }
             virtual ~OnOrderFacilityCore() {
             }
         };
         template <class A, class B>
-        class OnOrderFacilityCore<A,B,false> : public virtual RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B> {
+        class OnOrderFacilityCore<A,B,false> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> {
         private:
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, Key<A>> timeChecker_;
+            typename RealTimeAppComponents<StateT>::template TimeChecker<true, Key<A>> timeChecker_;
         public:
-            OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_(requireMask) {
+            OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_(requireMask) {
             }
             virtual ~OnOrderFacilityCore() {
             }
@@ -1039,7 +1039,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                     auto res = this->action(data.environment, std::move(a));
                     if (res) {
-                        RealTimeMonadComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
+                        RealTimeAppComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                             pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
                                 return {std::move(id), std::move(b)};
                             }, std::move(*res))
@@ -1049,61 +1049,61 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B, class F, bool Threaded>
-        using PureOnOrderFacilityCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using PureOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                                 >;
         template <class A, class B, class F, bool Threaded>
-        using MaybeOnOrderFacilityCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using MaybeOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                                 >;
         template <class A, class B, class F, bool Threaded>
-        using EnhancedMaybeOnOrderFacilityCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using EnhancedMaybeOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                                 >;
         template <class A, class B, class F, bool Threaded>
-        using KleisliOnOrderFacilityCore = typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixin<
+        using KleisliOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
                                 A, B, F,
-                                typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                                 >;
 
         template <class A, class B, class F, class StartF, bool Threaded>
         using PureOnOrderFacilityCoreWithStart = 
-                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
                                 A, B, F, StartF,
-                                typename RealTimeMonadComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                         >;
         template <class A, class B, class F, class StartF, bool Threaded>
         using MaybeOnOrderFacilityCoreWithStart = 
-                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
                                 A, B, F, StartF,
-                                typename RealTimeMonadComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                         >;
         template <class A, class B, class F, class StartF, bool Threaded>
         using EnhancedMaybeOnOrderFacilityCoreWithStart = 
-                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
                                 A, B, F, StartF,
-                                typename RealTimeMonadComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                         >;
         template <class A, class B, class F, class StartF, bool Threaded>
         using KleisliOnOrderFacilityCoreWithStart = 
-                        typename RealTimeMonadComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
+                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
                                 A, B, F, StartF,
-                                typename RealTimeMonadComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
+                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
                                 OnOrderFacilityCore<A,B,Threaded>
                         >;
     public:
         template <class A, class B>
-        using AbstractOnOrderFacility = typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B>;
+        using AbstractOnOrderFacility = typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>;
         template <class A, class B>
         using OnOrderFacility = TwoWayHolder<AbstractOnOrderFacility<A,B>,A,B>;
 
@@ -1190,39 +1190,39 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class A, class B>
-        static std::shared_ptr<Action<A,B>> fromAbstractAction(typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B> *t) {
+        static std::shared_ptr<Action<A,B>> fromAbstractAction(typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *t) {
             return std::make_shared<Action<A,B>>(t);
         }
         template <class A, class B>
-        static std::shared_ptr<OnOrderFacility<A,B>> fromAbstractOnOrderFacility(typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B> *t) {
+        static std::shared_ptr<OnOrderFacility<A,B>> fromAbstractOnOrderFacility(typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *t) {
             return std::make_shared<OnOrderFacility<A,B>>(t);
         }
     private:
         template <class I0, class O0, class I1, class O1>
-        class WrappedOnOrderFacility final : public IExternalComponent, public RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<I0,O0> {
+        class WrappedOnOrderFacility final : public IExternalComponent, public RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<I0,O0> {
         private:
             OnOrderFacility<I1,O1> toWrap_;
             Action<Key<I0>,Key<I1>> inputT_;
             Action<Key<O1>,Key<O0>> outputT_;
-            class Conduit1 final : public RealTimeMonadComponents<StateT>::template IHandler<Key<I1>> {
+            class Conduit1 final : public RealTimeAppComponents<StateT>::template IHandler<Key<I1>> {
             private:
-                typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<I1,O1> *toWrap_;
-                typename RealTimeMonadComponents<StateT>::template IHandler<KeyedData<I1,O1>> *nextConduit_;
+                typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<I1,O1> *toWrap_;
+                typename RealTimeAppComponents<StateT>::template IHandler<KeyedData<I1,O1>> *nextConduit_;
             public:
                 Conduit1(
-                    typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<I1,O1> *toWrap,
-                    typename RealTimeMonadComponents<StateT>::template IHandler<KeyedData<I1,O1>> *nextConduit
+                    typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<I1,O1> *toWrap,
+                    typename RealTimeAppComponents<StateT>::template IHandler<KeyedData<I1,O1>> *nextConduit
                 ) : toWrap_(toWrap), nextConduit_(nextConduit) {}
                 void handle(InnerData<Key<I1>> &&i1) override final {
                     toWrap_->registerKeyHandler(i1.timedData.value, nextConduit_);
                     toWrap_->handle(std::move(i1));
                 }
             };
-            class Conduit2 final : public RealTimeMonadComponents<StateT>::template IHandler<KeyedData<I1,O1>> {
+            class Conduit2 final : public RealTimeAppComponents<StateT>::template IHandler<KeyedData<I1,O1>> {
             private:
-                typename RealTimeMonadComponents<StateT>::template AbstractAction<Key<O1>,Key<O0>> *outputT_;
+                typename RealTimeAppComponents<StateT>::template AbstractAction<Key<O1>,Key<O0>> *outputT_;
             public:
-                Conduit2(typename RealTimeMonadComponents<StateT>::template AbstractAction<Key<O1>,Key<O0>> *outputT)
+                Conduit2(typename RealTimeAppComponents<StateT>::template AbstractAction<Key<O1>,Key<O0>> *outputT)
                     : outputT_(outputT) {}
                 void handle(InnerData<KeyedData<I1,O1>> &&o1) override final {
                     auto x = pureInnerDataLift([](KeyedData<I1,O1> &&a) -> Key<O1> {
@@ -1231,7 +1231,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     outputT_->handle(std::move(x));
                 }
             }; 
-            class Conduit3 final : public RealTimeMonadComponents<StateT>::template IHandler<Key<O0>> {
+            class Conduit3 final : public RealTimeAppComponents<StateT>::template IHandler<Key<O0>> {
             private:
                 WrappedOnOrderFacility *parent_;
             public:
@@ -1273,10 +1273,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     private:
         template <class A, class B, class C>
-        class Compose final : public RealTimeMonadComponents<StateT>::template AbstractAction<A,C> {
+        class Compose final : public RealTimeAppComponents<StateT>::template AbstractAction<A,C> {
         private:
-            std::unique_ptr<typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B>> f_;
-            std::unique_ptr<typename RealTimeMonadComponents<StateT>::template AbstractAction<B,C>> g_;
+            std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>> f_;
+            std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<B,C>> g_;
             class InnerHandler : public IHandler<C> {
             private:
                 Producer<C> *p_;
@@ -1293,7 +1293,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             Compose() : f_(), g_(), innerHandler_(this) {}
-            Compose(std::unique_ptr<typename RealTimeMonadComponents<StateT>::template AbstractAction<A,B>> &&f, std::unique_ptr<typename RealTimeMonadComponents<StateT>::template AbstractAction<B,C>> &&g) : f_(std::move(f)), g_(std::move(g)), innerHandler_(this) {
+            Compose(std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>> &&f, std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<B,C>> &&g) : f_(std::move(f)), g_(std::move(g)), innerHandler_(this) {
                 f_->addHandler(g_.get());
                 g_->addHandler(&innerHandler_);
             }
@@ -1304,18 +1304,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Action<A,C>>(new Compose<A,B,C>(std::move(f.core_), std::move(g.core_)));
         }
 
-    #include <tm_kit/infra/RealTimeMonad_Merge_Piece.hpp>
-    #include <tm_kit/infra/RealTimeMonad_PureN_Piece.hpp>
-    #include <tm_kit/infra/RealTimeMonad_MaybeN_Piece.hpp>  
-    #include <tm_kit/infra/RealTimeMonad_EnhancedMaybeN_Piece.hpp>  
-    #include <tm_kit/infra/RealTimeMonad_KleisliN_Piece.hpp>  
-    #include <tm_kit/infra/RealTimeMonad_MultiN_Piece.hpp>  
-    #include <tm_kit/infra/RealTimeMonad_EnhancedMultiN_Piece.hpp>  
-    #include <tm_kit/infra/RealTimeMonad_KleisliMultiN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeApp_Merge_Piece.hpp>
+    #include <tm_kit/infra/RealTimeApp_PureN_Piece.hpp>
+    #include <tm_kit/infra/RealTimeApp_MaybeN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeApp_EnhancedMaybeN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeApp_KleisliN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeApp_MultiN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeApp_EnhancedMultiN_Piece.hpp>  
+    #include <tm_kit/infra/RealTimeApp_KleisliMultiN_Piece.hpp>  
 
     public:
         template <class T>
-        using AbstractImporter = typename RealTimeMonadComponents<StateT>::template AbstractImporter<T>;
+        using AbstractImporter = typename RealTimeAppComponents<StateT>::template AbstractImporter<T>;
         template <class T>
         using Importer = OneWayHolder<AbstractImporter<T>,T>;
         template <class T>
@@ -1384,14 +1384,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     public:
         template <class T>
-        using AbstractExporter = typename RealTimeMonadComponents<StateT>::template AbstractExporter<T>;
+        using AbstractExporter = typename RealTimeAppComponents<StateT>::template AbstractExporter<T>;
         template <class T>
         using Exporter = OneWayHolder<AbstractExporter<T>,T>;
     private:
         template <class T, class F, bool Threaded>
         class SimpleExporter {};
         template <class T, class F>
-        class SimpleExporter<T,F,true> final : public virtual AbstractExporter<T>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<T> {
+        class SimpleExporter<T,F,true> final : public virtual AbstractExporter<T>, public RealTimeAppComponents<StateT>::template ThreadedHandler<T> {
         private:
             F f_;  
             virtual void actuallyHandle(InnerData<T> &&d) override final {
@@ -1404,7 +1404,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #ifdef _MSC_VER
             SimpleExporter(F &&f) : f_(std::move(f)) {}
         #else
-            SimpleExporter(F &&f) : AbstractExporter<T>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<T>(), f_(std::move(f)) {}
+            SimpleExporter(F &&f) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T>(), f_(std::move(f)) {}
         #endif            
             virtual ~SimpleExporter() {}
             virtual void start(StateT *) override final {}
@@ -1413,7 +1413,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class SimpleExporter<T,F,false> final : public virtual AbstractExporter<T> {
         private:
             F f_;    
-            typename RealTimeMonadComponents<StateT>::template TimeChecker<true, T> timeChecker_; 
+            typename RealTimeAppComponents<StateT>::template TimeChecker<true, T> timeChecker_; 
         public:
         #ifdef _MSC_VER
             SimpleExporter(F &&f) : f_(std::move(f)), timeChecker_() {}
@@ -1460,7 +1460,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             private:
                 Importer<T1> orig_;
                 Action<T1,T2> post_;
-                class LocalH final : public RealTimeMonadComponents<StateT>::template IHandler<T2> {
+                class LocalH final : public RealTimeAppComponents<StateT>::template IHandler<T2> {
                 private:
                     LocalI *parent_;
                 public:
@@ -1525,12 +1525,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //the whole life of the program.
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         using LocalOnOrderFacility = ThreeWayHolder<
-            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
+            typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
             , AbstractExporter<DataInputType>,DataInputType
         >;
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
-            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
             , AbstractExporter<DataInputType> *e) {
             return std::make_shared<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>>(t,e);
         }
@@ -1601,12 +1601,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //an "input" from outside view anyway.
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         using OnOrderFacilityWithExternalEffects = ThreeWayHolder<
-            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
+            typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
             , AbstractImporter<DataInputType>,DataInputType
         >;
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
-            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
             , AbstractImporter<DataInputType> *i) {
             return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(t,i);
         }
@@ -1674,13 +1674,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //Here the "input" and "output" is viewed from the point of VIEOnOrderFacility
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         using VIEOnOrderFacility = FourWayHolder<
-            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
+            typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType,QueryResultType>,QueryKeyType,QueryResultType
             , AbstractExporter<ExtraInputType>,ExtraInputType
             , AbstractImporter<ExtraOutputType>,ExtraOutputType
         >;
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
-            typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
             , AbstractExporter<ExtraInputType> *i
             , AbstractImporter<ExtraOutputType> *o) {
             return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(t,i,o);
@@ -1752,7 +1752,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class Source {
         private:
-            friend class RealTimeMonad;
+            friend class RealTimeApp;
             Producer<T> *producer;
             Source(Producer<T> *p) : producer(p) {}
         public:
@@ -1763,7 +1763,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class Sink {
         private:
-            friend class RealTimeMonad;
+            friend class RealTimeApp;
             IHandler<T> *consumer;
             Sink(IHandler<T> *c) : consumer(c) {}
         };           
@@ -1772,12 +1772,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<IExternalComponent *> externalComponents_[3];
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         std::mutex mutex_;
-        RealTimeMonad() : externalComponents_(), externalComponentsSet_(), mutex_() {}
-        ~RealTimeMonad() {}
+        RealTimeApp() : externalComponents_(), externalComponentsSet_(), mutex_() {}
+        ~RealTimeApp() {}
 
         void registerExternalComponent(IExternalComponent *c, int idx) {
             if (c == nullptr) {
-                throw RealTimeMonadException(
+                throw RealTimeAppException(
                     "Cannot register an external component of null"
                 );
             }
@@ -1793,13 +1793,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             producer->addHandler(handler);
         }
         template <class A, class B>
-        static void innerConnectFacility(Producer<Key<A>> *producer, typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B> *facility, IHandler<KeyedData<A,B>> *consumer) {
+        static void innerConnectFacility(Producer<Key<A>> *producer, typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *facility, IHandler<KeyedData<A,B>> *consumer) {
             class LocalC final : public virtual IHandler<Key<A>> {
             private:                    
-                typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B> *p_;
+                typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *p_;
                 IHandler<KeyedData<A,B>> *h_;
             public:
-                LocalC(typename RealTimeMonadComponents<StateT>::template AbstractOnOrderFacility<A,B> *p, IHandler<KeyedData<A,B>> *h) : p_(p), h_(h) {}
+                LocalC(typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *p, IHandler<KeyedData<A,B>> *h) : p_(p), h_(h) {}
                 virtual void handle(InnerData<Key<A>> &&k) {
                     p_->registerKeyHandler(k.timedData.value, h_);
                     p_->handle(std::move(k));
@@ -1823,7 +1823,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {dynamic_cast<Producer<B> *>(action.core_.get())};
         }
 
-        #include <tm_kit/infra/RealTimeMonad_ExecuteAction_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_ExecuteAction_Piece.hpp>
  
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
@@ -1835,7 +1835,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {dynamic_cast<IHandler<A> *>(action.core_.get())};
         }
 
-        #include <tm_kit/infra/RealTimeMonad_VariantSink_Piece.hpp>
+        #include <tm_kit/infra/RealTimeApp_VariantSink_Piece.hpp>
 
         template <class A, class B>
         void placeOrderWithFacility(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility, Sink<KeyedData<A,B>> const &sink) {

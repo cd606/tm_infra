@@ -1,5 +1,5 @@
 template <class A0, class A1, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>> {
+class ActionCore<std::variant<A0,A1>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>> {
 private:
     bool done_;
 protected:
@@ -29,15 +29,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
+class ActionCore<std::variant<A0,A1>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) = 0;
@@ -70,7 +70,7 @@ private:
         return std::variant<A0,A1>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -82,7 +82,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
+class ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
 private:
     bool done_;
 protected:
@@ -112,15 +112,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
+class ActionCore<std::variant<A0,A1,A2>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) = 0;
@@ -156,7 +156,7 @@ private:
         return std::variant<A0,A1,A2>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -171,7 +171,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
+class ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
 private:
     bool done_;
 protected:
@@ -201,15 +201,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) = 0;
@@ -248,7 +248,7 @@ private:
         return std::variant<A0,A1,A2,A3>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -266,7 +266,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
 private:
     bool done_;
 protected:
@@ -296,15 +296,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) = 0;
@@ -346,7 +346,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -367,7 +367,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
 private:
     bool done_;
 protected:
@@ -397,15 +397,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) = 0;
@@ -450,7 +450,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -474,7 +474,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
 private:
     bool done_;
 protected:
@@ -504,15 +504,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) = 0;
@@ -560,7 +560,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -587,7 +587,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
 private:
     bool done_;
 protected:
@@ -617,15 +617,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) = 0;
@@ -676,7 +676,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -706,7 +706,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
 private:
     bool done_;
 protected:
@@ -736,15 +736,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) = 0;
@@ -798,7 +798,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
@@ -831,7 +831,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
 private:
     bool done_;
 protected:
@@ -861,15 +861,15 @@ protected:
         }
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeMonadComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false, FireOnceOnly> : public RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
-    typename RealTimeMonadComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> timeChecker_;
+    typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
 protected:
     virtual Data<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) = 0;
@@ -926,7 +926,7 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>(std::move(x));
     }
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeMonadComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), timeChecker_(requireMask), done_(false) {
+    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), timeChecker_(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
     }
