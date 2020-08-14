@@ -59,6 +59,9 @@ public:
     inline WithTime<A1, typename StateT::TimePointType> const &get1() const {
         return a1_;
     }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
+    }
 };
 template <class A0, class A1>
 class TimeChecker<true, std::variant<A0,A1>> {
@@ -126,6 +129,9 @@ public:
     inline WithTime<A1, typename StateT::TimePointType> const &get1() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a1_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2>
@@ -208,6 +214,9 @@ public:
     }
     inline WithTime<A2, typename StateT::TimePointType> const &get2() const {
         return a2_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2>
@@ -297,6 +306,9 @@ public:
     inline WithTime<A2, typename StateT::TimePointType> const &get2() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a2_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3>
@@ -399,6 +411,9 @@ public:
     }
     inline WithTime<A3, typename StateT::TimePointType> const &get3() const {
         return a3_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3>
@@ -509,6 +524,9 @@ public:
     inline WithTime<A3, typename StateT::TimePointType> const &get3() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a3_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4>
@@ -631,6 +649,9 @@ public:
     }
     inline WithTime<A4, typename StateT::TimePointType> const &get4() const {
         return a4_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4>
@@ -762,6 +783,9 @@ public:
     inline WithTime<A4, typename StateT::TimePointType> const &get4() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a4_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
@@ -904,6 +928,9 @@ public:
     }
     inline WithTime<A5, typename StateT::TimePointType> const &get5() const {
         return a5_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
@@ -1056,6 +1083,9 @@ public:
     inline WithTime<A5, typename StateT::TimePointType> const &get5() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a5_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
@@ -1218,6 +1248,9 @@ public:
     }
     inline WithTime<A6, typename StateT::TimePointType> const &get6() const {
         return a6_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
@@ -1391,6 +1424,9 @@ public:
     inline WithTime<A6, typename StateT::TimePointType> const &get6() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a6_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
@@ -1573,6 +1609,9 @@ public:
     }
     inline WithTime<A7, typename StateT::TimePointType> const &get7() const {
         return a7_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
@@ -1767,6 +1806,9 @@ public:
     inline WithTime<A7, typename StateT::TimePointType> const &get7() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a7_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
@@ -1969,6 +2011,9 @@ public:
     }
     inline WithTime<A8, typename StateT::TimePointType> const &get8() const {
         return a8_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
@@ -2184,6 +2229,9 @@ public:
     inline WithTime<A8, typename StateT::TimePointType> const &get8() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a8_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
@@ -2406,6 +2454,9 @@ public:
     }
     inline WithTime<A9, typename StateT::TimePointType> const &get9() const {
         return a9_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
@@ -2642,5 +2693,8 @@ public:
     inline WithTime<A9, typename StateT::TimePointType> const &get9() const {
         std::lock_guard<std::mutex> _(mutex_);
         return a9_;
+    }
+    inline FanInParamMask fanInParamMask() const {
+        return requireMask_;
     }
 };

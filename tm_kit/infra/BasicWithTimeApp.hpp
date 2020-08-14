@@ -66,6 +66,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &) {
             return false; 
         }
+        template <class A, class B>
+        static FanInParamMask actionFanInParamMask(std::shared_ptr<Action<A,B>> const &) {
+            return FanInParamMask {}; 
+        }
 
         template <class A, class B>
         using OnOrderFacility = TimedAppModelKleisli<Key<A>,KeyedData<A,B>,StateT>;

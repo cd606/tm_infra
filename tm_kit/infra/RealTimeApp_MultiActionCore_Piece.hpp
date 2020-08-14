@@ -57,6 +57,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
+    }
 };
 template <class A0, class A1, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
@@ -128,6 +131,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
@@ -187,6 +193,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly>
@@ -265,6 +274,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
@@ -324,6 +336,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
@@ -408,6 +423,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
@@ -467,6 +485,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
@@ -557,6 +578,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
@@ -616,6 +640,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
@@ -712,6 +739,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
@@ -771,6 +801,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
@@ -873,6 +906,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
@@ -932,6 +968,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
@@ -1040,6 +1079,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
@@ -1099,6 +1141,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
@@ -1213,6 +1258,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
@@ -1272,6 +1320,9 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return this->timeChecker().fanInParamMask();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
@@ -1391,5 +1442,8 @@ public:
     }
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return timeChecker_.fanInParamMask();
     }
 };

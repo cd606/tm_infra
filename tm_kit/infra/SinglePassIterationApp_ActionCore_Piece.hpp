@@ -97,6 +97,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class B>
 class MultiActionCore<std::variant<A0,A1>,B> : public virtual AbstractActionCore<std::variant<A0,A1>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual MultiBufferedProvider<B> {
@@ -196,6 +199,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class B, class F>
@@ -710,6 +716,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class B>
 class MultiActionCore<std::variant<A0,A1,A2>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual MultiBufferedProvider<B> {
@@ -850,6 +859,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class B, class F>
@@ -1422,6 +1434,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual MultiBufferedProvider<B> {
@@ -1605,6 +1620,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
@@ -2237,6 +2255,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual MultiBufferedProvider<B> {
@@ -2465,6 +2486,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
@@ -3159,6 +3183,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual MultiBufferedProvider<B> {
@@ -3434,6 +3461,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
@@ -4192,6 +4222,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual MultiBufferedProvider<B> {
@@ -4516,6 +4549,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
@@ -5340,6 +5376,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual MultiBufferedProvider<B> {
@@ -5715,6 +5754,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
@@ -6607,6 +6649,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual MultiBufferedProvider<B> {
@@ -7035,6 +7080,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
@@ -7997,6 +8045,9 @@ protected:
 public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), a9_(), hasA9_(false), versionChecker9_(), requireMask_(requireMask) {
     }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual Consumer<A9>, public virtual MultiBufferedProvider<B> {
@@ -8480,6 +8531,9 @@ protected:
     virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&, WithTime<A9,TimePoint> &&) = 0;
 public:
     MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), a9_(), hasA9_(false), versionChecker9_(), requireMask_(requireMask) {
+    }
+    virtual FanInParamMask fanInParamMask() const override final {
+        return requireMask_;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>

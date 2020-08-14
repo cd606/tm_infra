@@ -676,6 +676,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionProperties {
             bool threaded;
             bool oneTimeOnly;
+            FanInParamMask fanInParamMask;
         };
         std::unordered_map<std::string, ActionProperties> actionPropertiesMap_;
         mutable std::mutex mutex_;
@@ -694,6 +695,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ActionProperties prop;
             prop.threaded = AppType::actionIsThreaded(f);
             prop.oneTimeOnly = AppType::actionIsOneTimeOnly(f);
+            prop.fanInParamMask = AppType::actionFanInParamMask(f);
             actionPropertiesMap_.insert({name, prop});
         }
         template <class A>
@@ -1649,7 +1651,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 os << "];\n";
                 ++counter;
             }
-            for (auto const &item : nameMap_) {   
+            for (auto const &item : nameMap_) { 
+                FanInParamMask paramMask;
+                if (item.second.paramCount > 1) {
+                    auto propIter = actionPropertiesMap_.find(item.second.name);
+                    if (propIter != actionPropertiesMap_.end()) {
+                        paramMask = propIter->second.fanInParamMask;
+                    }
+                }  
                 for (int ii=0; ii<item.second.paramCount; ++ii) {
                     for (auto const &src : item.second.paramConnectedFrom[ii]) {
                         auto iter1 = reverseLookup_.find(src.first);
@@ -1668,14 +1677,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         } else {
                             os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name];
                         }   
+                        bool hasStyles = false;
                         if (color != 0 && isExternal && ii == 0) {
-                            os << " [style=dotted,colorscheme=spectral11,color=" << color << "]";
+                            os << " [style=dotted,colorscheme=spectral11,color=" << color;
+                            hasStyles = true;
                         } else if (isExternal && ii == 0) {
-                            os << " [style=dotted]";
+                            os << " [style=dotted";
+                            hasStyles = true;
                         } else if (color != 0) {
-                            os << " [style=dashed,colorscheme=spectral11,color=" << color << "]";
+                            os << " [style=dashed,colorscheme=spectral11,color=" << color;
+                            hasStyles = true;
                         }
-                        os << ";\n";                      
+                        if (paramMask[ii]) {
+                            if (hasStyles) {
+                                os << ",arrowhead=diamond";
+                            } else {
+                                os << " [arrowhead=diamond]";
+                            }
+                        }
+                        if (hasStyles) {
+                            os << "];\n";
+                        } else {
+                            os << ";\n";
+                        }           
                     }                                                        
                 }
                 ++counter;
