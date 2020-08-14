@@ -299,6 +299,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         class AbstractAction : public virtual IHandler<A>, public Producer<B> {
+        public:
+            virtual bool isThreaded() const = 0;
+            virtual bool isOneTimeOnly() const = 0;
         };
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
@@ -673,6 +676,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~ActionCore() {
             }
+            virtual bool isThreaded() const override final {
+                return true;
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return FireOnceOnly;
+            }
         };
         template <class A, class B, bool FireOnceOnly>
         class ActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
@@ -702,6 +711,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                 }
+            }
+            virtual bool isThreaded() const override final {
+                return false;
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return FireOnceOnly;
             }
         };
         //PureActionCore will be specialized so it is not defined with mixin
@@ -745,6 +760,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
         using Action = TwoWayHolder<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>,A,B>;
+
+        template <class A, class B>
+        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &a) {
+            return a->core_->isThreaded(); 
+        }
+        template <class A, class B>
+        static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
+            return a->core_->isOneTimeOnly(); 
+        }
         
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
@@ -870,6 +894,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~MultiActionCore() {
             }
+            virtual bool isThreaded() const override final {
+                return true;
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return FireOnceOnly;
+            }
         };
         template <class A, class B, bool FireOnceOnly>
         class MultiActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
@@ -918,6 +948,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                 }
+            }
+            virtual bool isThreaded() const override final {
+                return false;
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return FireOnceOnly;
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
@@ -1296,6 +1332,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Compose(std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>> &&f, std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<B,C>> &&g) : f_(std::move(f)), g_(std::move(g)), innerHandler_(this) {
                 f_->addHandler(g_.get());
                 g_->addHandler(&innerHandler_);
+            }
+            virtual bool isThreaded() const override final {
+                return f_->isThreaded() || g_->isThreaded();
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return f_->isOneTimeOnly() || g_->isOneTimeOnly();
             }
         };
     public:   

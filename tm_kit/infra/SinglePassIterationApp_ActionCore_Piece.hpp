@@ -253,6 +253,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class B, class F>
 class MaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
@@ -312,6 +315,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
@@ -371,6 +377,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class B, class F>
 class KleisliActionCore<std::variant<A0,A1>,B,F> final : public ActionCore<std::variant<A0,A1>,B> {
@@ -399,6 +408,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1>,B,F> final : public MultiActionCore<std::variant<A0,A1>,B> {
@@ -459,6 +471,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1>,B,F> final : public MultiActionCore<std::variant<A0,A1>,B> {
@@ -519,6 +534,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1>,B,F> final : public MultiActionCore<std::variant<A0,A1>,B> {
@@ -548,6 +566,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B>
 class ActionCore<std::variant<A0,A1,A2>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual BufferedProvider<B> {
@@ -889,6 +910,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
@@ -951,6 +975,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
@@ -1013,6 +1040,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2>,B,F> final : public ActionCore<std::variant<A0,A1,A2>,B> {
@@ -1041,6 +1071,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2>,B> {
@@ -1104,6 +1137,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2>,B> {
@@ -1167,6 +1203,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2>,B> {
@@ -1196,6 +1235,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B>
 class ActionCore<std::variant<A0,A1,A2,A3>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual BufferedProvider<B> {
@@ -1626,6 +1668,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -1691,6 +1736,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -1756,6 +1804,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -1784,6 +1835,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -1850,6 +1904,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -1916,6 +1973,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3>,B> {
@@ -1945,6 +2005,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual BufferedProvider<B> {
@@ -2468,6 +2531,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -2536,6 +2602,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -2604,6 +2673,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -2632,6 +2704,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -2701,6 +2776,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -2770,6 +2848,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B> {
@@ -2799,6 +2880,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual BufferedProvider<B> {
@@ -3419,6 +3503,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -3490,6 +3577,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -3561,6 +3651,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -3589,6 +3682,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -3661,6 +3757,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -3733,6 +3832,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> {
@@ -3762,6 +3864,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual BufferedProvider<B> {
@@ -4483,6 +4588,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -4557,6 +4665,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -4631,6 +4742,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -4659,6 +4773,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -4734,6 +4851,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -4809,6 +4929,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
@@ -4838,6 +4961,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual BufferedProvider<B> {
@@ -5664,6 +5790,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -5741,6 +5870,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -5818,6 +5950,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -5846,6 +5981,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -5924,6 +6062,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -6002,6 +6143,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
@@ -6031,6 +6175,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual BufferedProvider<B> {
@@ -6966,6 +7113,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -7046,6 +7196,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -7126,6 +7279,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -7154,6 +7310,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -7235,6 +7394,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -7316,6 +7478,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
@@ -7345,6 +7510,9 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual Consumer<A9>, public virtual BufferedProvider<B> {
@@ -8393,6 +8561,9 @@ public:
     PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class MaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
@@ -8476,6 +8647,9 @@ public:
     MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class EnhancedMaybeActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
@@ -8559,6 +8733,9 @@ public:
     EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class KleisliActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
@@ -8587,6 +8764,9 @@ public:
     KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class SimpleMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
@@ -8671,6 +8851,9 @@ public:
     SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class EnhancedMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
@@ -8755,6 +8938,9 @@ public:
     EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
 class KleisliMultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,F> final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
@@ -8784,4 +8970,7 @@ public:
     KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
+    virtual bool isOneTimeOnly() const override final {
+        return fireOnceOnly_;
+    }
 };

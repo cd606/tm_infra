@@ -673,6 +673,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         };
         std::unordered_map<std::string, MaxConnectivityLimits> maxConnectivityLimits_;
+        struct ActionProperties {
+            bool threaded;
+            bool oneTimeOnly;
+        };
+        std::unordered_map<std::string, ActionProperties> actionPropertiesMap_;
         mutable std::mutex mutex_;
 
         template <class A, class B>
@@ -686,6 +691,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nameMap_.insert({p, ActionCheckData::create(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
+            ActionProperties prop;
+            prop.threaded = AppType::actionIsThreaded(f);
+            prop.oneTimeOnly = AppType::actionIsOneTimeOnly(f);
+            actionPropertiesMap_.insert({name, prop});
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -852,9 +861,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), mutex_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), mutex_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), mutex_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), mutex_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -1627,6 +1636,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     os << "label=\"" << item.second.name << "\",shape=oval";                   
                 } else {
                     os << "label=\"" << item.second.name << "\",shape=box";
+                }
+                auto propIter = actionPropertiesMap_.find(item.second.name);
+                if (propIter != actionPropertiesMap_.end()) {
+                    if (propIter->second.threaded) {
+                        os << ",color=red";
+                    }
+                    if (propIter->second.oneTimeOnly) {
+                        os << ",style=dotted";
+                    }
                 }
                 os << "];\n";
                 ++counter;

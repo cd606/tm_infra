@@ -33,6 +33,12 @@ public:
     }
     virtual ~ActionCore() {
     }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
@@ -80,6 +86,12 @@ public:
     virtual void handle(InnerData<A1> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA1, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
@@ -115,6 +127,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly>
@@ -169,6 +187,12 @@ public:
     virtual void handle(InnerData<A2> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA2, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
@@ -204,6 +228,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
@@ -264,6 +294,12 @@ public:
     virtual void handle(InnerData<A3> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA3, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
@@ -299,6 +335,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
@@ -365,6 +407,12 @@ public:
     virtual void handle(InnerData<A4> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA4, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
@@ -400,6 +448,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
@@ -472,6 +526,12 @@ public:
     virtual void handle(InnerData<A5> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA5, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
@@ -507,6 +567,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
@@ -585,6 +651,12 @@ public:
     virtual void handle(InnerData<A6> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA6, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
@@ -620,6 +692,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
@@ -704,6 +782,12 @@ public:
     virtual void handle(InnerData<A7> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA7, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
@@ -739,6 +823,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
@@ -829,6 +919,12 @@ public:
     virtual void handle(InnerData<A8> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA8, std::move(data), true));
     }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
@@ -864,6 +960,12 @@ public:
     ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>(requireMask), done_(false) {
     }
     virtual ~ActionCore() {
+    }
+    virtual bool isThreaded() const override final {
+        return true;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
@@ -959,5 +1061,11 @@ public:
     }
     virtual void handle(InnerData<A9> &&data) override final {
         actuallyHandle(pureInnerDataLift(fromA9, std::move(data), true));
+    }
+    virtual bool isThreaded() const override final {
+        return false;
+    }
+    virtual bool isOneTimeOnly() const override final {
+        return FireOnceOnly;
     }
 };

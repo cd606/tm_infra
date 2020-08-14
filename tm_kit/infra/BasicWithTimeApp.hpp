@@ -59,6 +59,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using Action = TimedAppModelKleisli<A,B,StateT>;
 
         template <class A, class B>
+        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &) {
+            return false; 
+        }
+        template <class A, class B>
+        static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &) {
+            return false; 
+        }
+
+        template <class A, class B>
         using OnOrderFacility = TimedAppModelKleisli<Key<A>,KeyedData<A,B>,StateT>;
 
         template <class T1, class T2, class T3>

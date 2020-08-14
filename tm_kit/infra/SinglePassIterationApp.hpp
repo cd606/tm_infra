@@ -464,6 +464,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         template <class A, class B>
         class AbstractActionCore : public virtual AbstractConsumer<A>, public virtual Provider<B> {
+        public:
+            virtual bool isOneTimeOnly() const = 0;
         };
 
         #include <tm_kit/infra/SinglePassIterationApp_AbstractActionCore_Piece.hpp>
@@ -701,6 +703,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             PureActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~PureActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
         template <class A, class B, class F>
         class MaybeActionCore final : public ActionCore<A,B> {
@@ -742,6 +747,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~MaybeActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
         template <class A, class B, class F>
         class EnhancedMaybeActionCore final : public ActionCore<A,B> {
@@ -783,6 +791,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~EnhancedMaybeActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
         template <class A, class B, class F>
         class KleisliActionCore final : public ActionCore<A,B> {
@@ -811,6 +822,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~KleisliActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
 
     public:
@@ -819,6 +833,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
         using Action = TwoWayHolder<AbstractActionCore<A,B>,A,B>;
+
+        template <class A, class B>
+        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &) {
+            return false; 
+        }
+        template <class A, class B>
+        static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
+            return a->core_->isOneTimeOnly(); 
+        }
 
     public:
         template <class A, class F>
@@ -874,6 +897,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~SimpleMultiActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
         template <class A, class B, class F>
         class EnhancedMultiActionCore final : public MultiActionCore<A,B> {
@@ -912,6 +938,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~EnhancedMultiActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
         template <class A, class B, class F>
         class KleisliMultiActionCore final : public MultiActionCore<A,B> {
@@ -941,6 +970,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~KleisliMultiActionCore() {}
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
         };
     public:
         template <class A, class F>
@@ -985,6 +1017,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual Data<C> next(Certificate<C> &&cert) override final {
                 cert.consume(this);
                 return y_->next(std::move(cert));
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return x_->isOneTimeOnly() || y_->isOneTimeOnly();
             }
         };
 
@@ -1615,6 +1650,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return { pureInnerDataLift([](KeyedData<I1,O1> &&d) -> Key<O1> {
                         return {d.key.id(), std::move(d.data)};
                     }, std::move(o1WithKey)) };
+                }
+            public:
+                virtual bool isOneTimeOnly() const override final {
+                    return false;
                 }
             };
             class Conduit4 final : public AbstractExporterCore<Key<O0>> {
