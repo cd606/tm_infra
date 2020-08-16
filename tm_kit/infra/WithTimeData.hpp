@@ -691,6 +691,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register an action with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for an action"
+                    );
                     return;
                 }
             }
@@ -713,6 +716,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register an importer with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for an importer"
+                    );
                     return;
                 }
             }
@@ -730,6 +736,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register an exporter with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for an exporter"
+                    );
                     return;
                 }
             }
@@ -747,6 +756,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register an on-order facility with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for an on-order facility"
+                    );
                     return;
                 }
             }
@@ -765,6 +777,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register a local on-order facility with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for a local on-order facility"
+                    );
                     return;
                 }
             }
@@ -783,6 +798,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register an on-order facility with external effects with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for an on-order facility with external effects"
+                    );
                     return;
                 }
             }
@@ -801,6 +819,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         "Attempt to re-register a VIE on-order facility with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
                     );
                 } else {
+                    env_->log(LogLevel::Warning,
+                        "Trying to re-register name '" + name + "' for a VIE on-order facility"
+                    );
                     return;
                 }
             }
@@ -855,6 +876,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto connIter = iter->second.paramConnectedFrom[pos].find(producer);
             if (connIter != iter->second.paramConnectedFrom[pos].end()) {
                 if (connIter->second.find({colorCode, outputLegCode}) != connIter->second.end()) {
+                    env_->log(LogLevel::Warning,
+                        "Reconnecting an output of '" + producer + "' to '" + iter->second.name + "'"
+                    );
                     isReconnect = true;
                 } else {
                     connIter->second.insert({colorCode, outputLegCode});
