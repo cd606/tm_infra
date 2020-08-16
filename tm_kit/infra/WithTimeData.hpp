@@ -568,13 +568,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionCheckData {
             std::string name;
             int paramCount;
-            std::vector<std::unordered_map<std::string,std::tuple<int,int>>> paramConnectedFrom;
-            std::unordered_map<std::string,int> outputConnectedTo;            
+            std::vector<std::unordered_map<std::string,std::set<std::tuple<int,int>>>> paramConnectedFrom;
+            std::unordered_map<std::string,std::unordered_set<int>> outputConnectedTo;            
             bool isImporter = false;
             bool isExporter = false;
             bool hasAltOutput = false;
             bool isFacility = false;
-            std::unordered_map<std::string,int> altOutputConnectedTo;
+            std::unordered_map<std::string,std::unordered_set<int>> altOutputConnectedTo;
 
             ActionCheckData() : name(), paramCount(0), paramConnectedFrom(), outputConnectedTo(), isImporter(false), isExporter(false), hasAltOutput(false), altOutputConnectedTo()
             {}
@@ -684,10 +684,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register an action with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register an action with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::create(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -701,10 +706,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register an importer with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register an importer with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::template createForImporter<A>(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -713,10 +723,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A>
         void registerExporter_(ExporterPtr<A> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register an exporter with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register an exporter with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::template createForExporter<A>(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -725,10 +740,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         void registerOnOrderFacility_(OnOrderFacilityPtr<A,B> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register an on-order facility with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register an on-order facility with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::template createForOnOrderFacility<A,B>(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -738,10 +758,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C>
         void registerLocalOnOrderFacility_(LocalOnOrderFacilityPtr<A,B,C> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register a local on-order facility with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register a local on-order facility with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::template createForLocalOnOrderFacility<A,B,C>(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -751,10 +776,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C>
         void registerOnOrderFacilityWithExternalEffects_(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register an on-order facility with external effects with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register an on-order facility with external effects with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::template createForOnOrderFacilityWithExternalEffects<A,B,C>(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -764,10 +794,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C, class D>
         void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
             void *p = (void *) (f.get());
-            if (nameMap_.find(p) != nameMap_.end()) {
-                throw AppRunnerException(
-                    "Attempt to re-register a VIE on-order facility with name '"+name+"'"
-                );
+            auto nameIter = nameMap_.find(p);
+            if (nameIter != nameMap_.end()) {
+                if (nameIter->second.name != name) {
+                    throw AppRunnerException(
+                        "Attempt to re-register a VIE on-order facility with name '"+name+"', it has been registered as '"+nameIter->second.name+"'"
+                    );
+                } else {
+                    return;
+                }
             }
             nameMap_.insert({p, ActionCheckData::template createForVIEOnOrderFacility<A,B,C,D>(f.get(), name)});
             reverseLookup_.insert({name, p});
@@ -783,7 +818,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return iter->second.name;
         }
-        void connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode, bool useAltOutput) {
+        bool connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode, bool useAltOutput) {
             auto iter = nameMap_.find(p);
             if (iter == nameMap_.end()) {
                 throw AppRunnerException(
@@ -795,11 +830,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to connect pos "+std::to_string(pos+1)+" of '"+iter->second.name+"' from empty producer"
                 );
             }
-            if (iter->second.paramConnectedFrom[pos].find(producer) != iter->second.paramConnectedFrom[pos].end()) {
-                throw AppRunnerException(
-                    "Attempt to connect pos "+std::to_string(pos+1)+" of '"+iter->second.name+"' from producer '"+producer+"' again"
-                );
-            }
+            
             auto reverseIter = reverseLookup_.find(producer);
             if (reverseIter == reverseLookup_.end()) {
                 throw AppRunnerException(
@@ -812,29 +843,51 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to connect pos "+std::to_string(pos+1)+" of "+iter->second.name+" from non-registered producer '"+producer+"'"
                 );
             }
-            if (useAltOutput) {
-                if (sourceIter->second.hasAltOutput) {
-                    if (sourceIter->second.altOutputConnectedTo.find(iter->second.name) != sourceIter->second.altOutputConnectedTo.end()) {
-                        throw AppRunnerException(
-                            "Attempt to connect alternate output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' again"
-                        );
-                    }
-                    sourceIter->second.altOutputConnectedTo.insert({iter->second.name,colorCode});
-                } else {
-                    throw AppRunnerException(
-                        "Attempt to connect alternate output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' but there is no such alternate output"
-                    );
-                }   
-            } else {
-                if (sourceIter->second.outputConnectedTo.find(iter->second.name) != sourceIter->second.outputConnectedTo.end()) {
-                    throw AppRunnerException(
-                        "Attempt to connect output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' again"
-                    );
-                }
-                sourceIter->second.outputConnectedTo.insert({iter->second.name,colorCode});
+
+            if (useAltOutput && !(sourceIter->second.hasAltOutput)) {
+                throw AppRunnerException(
+                    "Attempt to connect alternate output of '"+sourceIter->second.name+"' to '"+iter->second.name+"' but there is no such alternate output"
+                );
             }
-            iter->second.paramConnectedFrom[pos].insert({producer, {colorCode, (useAltOutput?1:(sourceIter->second.hasAltOutput?0:-1))}});
+            int outputLegCode = (useAltOutput?1:(sourceIter->second.hasAltOutput?0:-1));
+
+            bool isReconnect = false;
+            auto connIter = iter->second.paramConnectedFrom[pos].find(producer);
+            if (connIter != iter->second.paramConnectedFrom[pos].end()) {
+                if (connIter->second.find({colorCode, outputLegCode}) != connIter->second.end()) {
+                    isReconnect = true;
+                } else {
+                    connIter->second.insert({colorCode, outputLegCode});
+                }
+            } else {
+                iter->second.paramConnectedFrom[pos].insert({producer, {{colorCode, outputLegCode}}});
+            }
             
+            if (useAltOutput) {
+                auto sourceOutputConnIter = sourceIter->second.altOutputConnectedTo.find(iter->second.name);
+                if (sourceOutputConnIter != sourceIter->second.altOutputConnectedTo.end()) {
+                    if (sourceOutputConnIter->second.find(colorCode) != sourceOutputConnIter->second.end()) {
+                        isReconnect = true;
+                    } else {
+                        sourceOutputConnIter->second.insert(colorCode);
+                    }
+                } else {
+                    sourceIter->second.altOutputConnectedTo.insert({iter->second.name,{colorCode}});   
+                }
+            } else {
+                auto sourceOutputConnIter = sourceIter->second.outputConnectedTo.find(iter->second.name);
+                if (sourceOutputConnIter != sourceIter->second.outputConnectedTo.end()) {
+                    if (sourceOutputConnIter->second.find(colorCode) != sourceOutputConnIter->second.end()) {
+                        isReconnect = true;
+                    } else {
+                        sourceOutputConnIter->second.insert(colorCode);
+                    }
+                } else {
+                    sourceIter->second.outputConnectedTo.insert({iter->second.name,{colorCode}});
+                }
+            }
+
+            return !isReconnect;
         }
         void setMaxOutputConnectivity_(std::string const &name, size_t maxOutputConnectivity) {
             auto iter = maxConnectivityLimits_.find(name);
@@ -1012,7 +1065,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 registerAction_(f, name);
-                connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
+                if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
+                    return { m_.actionAsSource(env_, *f), name };
+                }
             }
             return { m_.execute(*f, std::move(x.mSource)), name };
         }
@@ -1021,7 +1076,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::string name;
             {
                 std::lock_guard<std::mutex> _(mutex_);
-                connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput);
+                if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
+                    return { m_.actionAsSource(env_, *f), name };
+                }
                 name = nameMap_[(void *) f.get()].name;
             }
             return { m_.execute(*f, std::move(x.mSource)), name };
@@ -1560,7 +1617,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "No such sink '"+sink.consumer+"'"
                 );
             }
-            connectAndCheck_(sink.pos, iter->second, source.producer, 0, source.useAltOutput);
+            if (!connectAndCheck_(sink.pos, iter->second, source.producer, 0, source.useAltOutput)) {
+                return;
+            }
             m_.connect(std::move(source.mSource), sink.mSink);
         }
 
@@ -1639,13 +1698,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     os << "label=\"" << item.second.name << "\",shape=box";
                 }
-                auto propIter = actionPropertiesMap_.find(item.second.name);
-                if (propIter != actionPropertiesMap_.end()) {
-                    if (propIter->second.threaded) {
-                        os << ",color=red";
-                    }
-                    if (propIter->second.oneTimeOnly) {
-                        os << ",style=dotted";
+                if (item.second.isFacility) {
+                    os << ",color=blue";
+                } else {
+                    //actionPropertiesMap is not applicable for facilities
+                    auto propIter = actionPropertiesMap_.find(item.second.name);
+                    if (propIter != actionPropertiesMap_.end()) {
+                        if (propIter->second.threaded) {
+                            os << ",color=red";
+                        }
+                        if (propIter->second.oneTimeOnly) {
+                            os << ",style=dotted";
+                        }
                     }
                 }
                 os << "];\n";
@@ -1664,42 +1728,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         auto iter1 = reverseLookup_.find(src.first);
                         auto iter2 = nameMap_.find(iter1->second);
                         bool isExternal = iter2->second.isImporter || item.second.isExporter;
-                        auto color = std::get<0>(src.second);
-                        auto srcConnector = std::get<1>(src.second);
-                        std::string srcConnectorStr;
-                        if (srcConnector < 0) {
-                            srcConnectorStr = "";
-                        } else {
-                            srcConnectorStr = std::string(":out")+std::to_string(srcConnector);
-                        }
-                        if (item.second.paramCount > 1) {
-                            os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name] << ":arg" << ii;
-                        } else {
-                            os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name];
-                        }   
-                        bool hasStyles = false;
-                        if (color != 0 && isExternal && ii == 0) {
-                            os << " [style=dotted,colorscheme=spectral11,color=" << color;
-                            hasStyles = true;
-                        } else if (isExternal && ii == 0) {
-                            os << " [style=dotted";
-                            hasStyles = true;
-                        } else if (color != 0) {
-                            os << " [style=dashed,colorscheme=spectral11,color=" << color;
-                            hasStyles = true;
-                        }
-                        if (paramMask[ii]) {
-                            if (hasStyles) {
-                                os << ",arrowhead=diamond";
+                        for (auto const &connector : src.second) {
+                            auto color = std::get<0>(connector);
+                            auto srcConnector = std::get<1>(connector);
+                            std::string srcConnectorStr;
+                            if (srcConnector < 0) {
+                                srcConnectorStr = "";
                             } else {
-                                os << " [arrowhead=diamond]";
+                                srcConnectorStr = std::string(":out")+std::to_string(srcConnector);
                             }
-                        }
-                        if (hasStyles) {
-                            os << "];\n";
-                        } else {
-                            os << ";\n";
-                        }           
+                            if (item.second.paramCount > 1) {
+                                os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name] << ":arg" << ii;
+                            } else {
+                                os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name];
+                            }   
+                            bool hasStyles = false;
+                            if (color != 0 && isExternal && ii == 0) {
+                                os << " [style=dotted,colorscheme=spectral11,color=" << color;
+                                hasStyles = true;
+                            } else if (isExternal && ii == 0) {
+                                os << " [style=dotted";
+                                hasStyles = true;
+                            } else if (color != 0) {
+                                os << " [style=dashed,colorscheme=spectral11,color=" << color;
+                                hasStyles = true;
+                            }
+                            if (paramMask[ii]) {
+                                if (hasStyles) {
+                                    os << ",arrowhead=diamond";
+                                } else {
+                                    os << " [arrowhead=diamond]";
+                                }
+                            }
+                            if (hasStyles) {
+                                os << "];\n";
+                            } else {
+                                os << ";\n";
+                            }         
+                        }  
                     }                                                        
                 }
                 ++counter;
@@ -1762,7 +1828,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 visited.insert(item.second.name);
                 recStack.insert(item.second.name);
                 for (auto const &outputTo : item.second.outputConnectedTo) {
-                    if (!includeFacility && outputTo.second != 0) {
+                    if (!includeFacility && outputTo.second.find(0) == outputTo.second.end()) {
                         continue;
                     }
                     auto iter = reverseLookup_.find(outputTo.first);
@@ -1777,7 +1843,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 if (item.second.hasAltOutput) {
                     for (auto const &outputTo : item.second.altOutputConnectedTo) {
-                        if (!includeFacility && outputTo.second != 0) {
+                        if (!includeFacility && outputTo.second.find(0) == outputTo.second.end()) {
                             continue;
                         }
                         auto iter = reverseLookup_.find(outputTo.first);
