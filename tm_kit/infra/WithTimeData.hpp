@@ -875,6 +875,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool isReconnect = false;
             auto connIter = iter->second.paramConnectedFrom[pos].find(producer);
             if (connIter != iter->second.paramConnectedFrom[pos].end()) {
+                if (colorCode != 0) {
+                    for (auto const &item : connIter->second) {
+                        if (std::get<1>(item) == outputLegCode && std::get<0>(item) != 0) {
+                            throw AppRunnerException(
+                                "Attempt to re-connect an output of '"+producer+"' to '"+iter->second.name+"' as a facility order, this will cause double-callback issues"
+                            );
+                        }
+                    }
+                }
                 if (connIter->second.find({colorCode, outputLegCode}) != connIter->second.end()) {
                     env_->log(LogLevel::Warning,
                         "Reconnecting an output of '" + producer + "' to '" + iter->second.name + "'"
