@@ -2081,6 +2081,36 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.connect(src1.clone(), sink);
             };
         }
+        template <class A, class B>
+        static Sourceoid<typename App::template KeyedData<A,B>> facilityAndInputAsSinkoid(OnOrderFacilityPtr<A,B> const &facility, Source<typename App::template Key<A>> &&input) {
+            return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithFacility(std::move(input), facility, sink);
+            };
+        }
+        template <class A, class B, class C>
+        static Sourceoid<typename App::template KeyedData<A,B>> localFacilityAndInputAsSinkoid(LocalOnOrderFacilityPtr<A,B,C> const &facility, Source<typename App::template Key<A>> &&input) {
+            return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithLocalFacility(std::move(input), facility, sink);
+            };;
+        }
+        template <class A, class B, class C>
+        static Sourceoid<typename App::template KeyedData<A,B>> facilityWithExternalEffectsAndInputAsSinkoid(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility, Source<typename App::template Key<A>> &&input) {
+            return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithFacilityWithExternalEffects(std::move(input), facility, sink);
+            };
+        }
+        template <class A, class B, class C, class D>
+        static Sourceoid<typename App::template KeyedData<A,B>> vieFacilityAndInputAsSinkoid(VIEOnOrderFacilityPtr<A,B,C,D> const &facility, Source<typename App::template Key<A>> &&input) {
+            return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
+                r.placeOrderWithVIEFacility(std::move(input), facility, sink);
+            };
+        }
+        template <class A, class B>
+        static Sourceoid<typename App::template KeyedData<A,B>> facilitioidConnectorAndInputAsSinkoid(FacilitioidConnector<A,B> const &f, Source<typename App::template Key<A>> &&input) {
+            return [f,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
+                f(r, std::move(input), sink);
+            };
+        }
         template <class A>
         static Sinkoid<A> sinkAsSinkoid(Sink<A> const &sink) {
             return [sink](AppRunner &r, Source<A> &&src) {
@@ -2116,6 +2146,56 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return [f](AppRunner &r, Source<typename App::template Key<A>> &&src) {
                 f(r, std::move(src), std::nullopt);
             };
+        }
+        template <class A, class B>
+        static Sinkoid<typename App::template Key<A>> facilityAndOutputAsSinkoid(OnOrderFacilityPtr<A,B> const &facility, Sink<typename App::template KeyedData<A,B>> const &output) {
+            return [facility,output](AppRunner &r, Source<typename App::template Key<A>> &&src) {
+                Sink<typename App::template KeyedData<A,B>> outputCopy {output};
+                r.placeOrderWithFacility(std::move(src), facility, outputCopy);
+            };
+        }
+        template <class A, class B, class C>
+        static Sinkoid<typename App::template Key<A>> localFacilityAndOutputAsSinkoid(LocalOnOrderFacilityPtr<A,B,C> const &facility, Sink<typename App::template KeyedData<A,B>> const &output) {
+            return [facility,output](AppRunner &r, Source<typename App::template Key<A>> &&src) {
+                Sink<typename App::template KeyedData<A,B>> outputCopy {output};
+                r.placeOrderWithLocalFacility(std::move(src), facility, outputCopy);
+            };
+        }
+        template <class A, class B, class C>
+        static Sinkoid<typename App::template Key<A>> facilityWithExternalEffectsAndOutputAsSinkoid(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility, Sink<typename App::template KeyedData<A,B>> const &output) {
+            return [facility,output](AppRunner &r, Source<typename App::template Key<A>> &&src) {
+                Sink<typename App::template KeyedData<A,B>> outputCopy {output};
+                r.placeOrderWithFacilityWithExternalEffects(std::move(src), facility, outputCopy);
+            };
+        }
+        template <class A, class B, class C, class D>
+        static Sinkoid<typename App::template Key<A>> vieFacilityAndOutputAsSinkoid(VIEOnOrderFacilityPtr<A,B,C,D> const &facility, Sink<typename App::template KeyedData<A,B>> const &output) {
+            return [facility,output](AppRunner &r, Source<typename App::template Key<A>> &&src) {
+                Sink<typename App::template KeyedData<A,B>> outputCopy {output};
+                r.placeOrderWithVIEFacility(std::move(src), facility, outputCopy);
+            };
+        }
+        template <class A, class B>
+        static Sinkoid<typename App::template Key<A>> facilitioidConnectorAndOutputAsSinkoid(FacilitioidConnector<A,B> const &f, Sink<typename App::template KeyedData<A,B>> const &output) {
+            return [f,output](AppRunner &r, Source<typename App::template Key<A>> &&src) {
+                Sink<typename App::template KeyedData<A,B>> outputCopy {output};
+                f(r, std::move(src), outputCopy);
+            };
+        }
+
+        template <class A>
+        Source<A> sourceoidToSource(Sourceoid<A> const &src, std::string const &connectorName) {
+            auto connector = App::template liftPure<A>([](A&&a) -> A {return std::move(a);});
+            registerAction(connectorName, connector);
+            src(*this, actionAsSink(connector));
+            return actionAsSource(connector);
+        }
+        template <class A>
+        Sink<A> sinkoidToSink(Sinkoid<A> const &sink, std::string const &connectorName) {
+            auto connector = App::template liftPure<A>([](A&&a) -> A {return std::move(a);});
+            registerAction(connectorName, connector);
+            sink(*this, actionAsSource(connector));
+            return actionAsSink(connector);
         }
     };
 
