@@ -91,6 +91,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class F>
+        class KleisliMultiFromEnhancedMulti {
+        private:
+            F f_;
+        public:
+            KleisliMultiFromEnhancedMulti(F &&f) : f_(std::move(f)) {}
+ 
+            using B = typename decltype(f_(std::tuple<typename M::TimePoint, A>()))::value_type;
+            typename M::template Data<std::vector<B>> operator()(typename M::template InnerData<A> &&x) {
+                auto res = f_(std::tuple<typename M::TimePoint,A> {x.timedData.timePoint, std::move(x.timedData.value)});
+                return M::template pureInnerData<std::vector<B>>(x.environment, {x.timedData.timePoint, std::move(res), x.timedData.finalFlag});
+            }
+        };
+        template <class A, class F>
         class KleisliHolder {
         private:
             F f_;
@@ -149,6 +162,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static KleisliFromEnhancedMaybe<A, F> enhancedMaybe(F &&f) {
             return KleisliFromEnhancedMaybe<A, F>(std::move(f));
+        }
+        template <class A, class F>
+        static KleisliMultiFromEnhancedMulti<A, F> enhancedMulti(F &&f) {
+            return KleisliMultiFromEnhancedMulti<A, F>(std::move(f));
         }
         template <class A, class F>
         static KleisliHolder<A, F> kleisli(F &&f) {
