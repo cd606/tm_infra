@@ -122,6 +122,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                         if (incoming_.empty()) {
                             lock.unlock();
+                            idleWork();
                             continue;
                         }
                         processing_.splice(processing_.end(), incoming_);
@@ -141,6 +142,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
                 return timeChecker_(std::move(data));
             }
+            virtual void idleWork() {}
             virtual void actuallyHandle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
         public:
             ThreadedHandlerBase(FanInParamMask const &requireMask=FanInParamMask()) : timeChecker_(requireMask), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_() {
