@@ -122,7 +122,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                         if (incoming_.empty()) {
                             lock.unlock();
-                            idleWork();
+                            this->idleWork();
                             continue;
                         }
                         processing_.splice(processing_.end(), incoming_);
