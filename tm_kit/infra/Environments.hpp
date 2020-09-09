@@ -42,7 +42,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             running_ = false;
         }
     };
+    //The "hold a value" component
+    template <class T>
+    class ConstValueHolderComponent {
+    private:
+        T t_;
+    public:
+        ConstValueHolderComponent() : t_() {}
+        ConstValueHolderComponent(T &&t) : t_(std::move(t)) {}
+        template <class... Ts>
+        ConstValueHolderComponent(Ts &&... ts) : t_(ts...) {}
+        ConstValueHolderComponent(ConstValueHolderComponent const &) = default;
+        ConstValueHolderComponent(ConstValueHolderComponent &&) = default;
+        ConstValueHolderComponent &operator=(ConstValueHolderComponent const &) = default;
+        ConstValueHolderComponent &operator=(ConstValueHolderComponent &&) = default;
+        ~ConstValueHolderComponent() {}
 
+        T const &value() const {
+            return t_;
+        }
+    };
 } } } }
 
 #endif

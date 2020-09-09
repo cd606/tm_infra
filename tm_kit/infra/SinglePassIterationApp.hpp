@@ -1405,7 +1405,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {
                 auto d = generate();
                 if (d) {
-                    return std::tuple<TimePoint, std::function<Data<T>()>> {d->timedData.timePoint, [d=std::move(d)]() -> Data<T> {return {std::move(*d)};}};
+                    TimePoint tp = d->timedData.timePoint;
+                    return std::tuple<TimePoint, std::function<Data<T>()>> {tp, [d=std::move(d)]() -> Data<T> {return {std::move(*d)};}};
                 } else {
                     return std::nullopt;
                 }
@@ -1489,6 +1490,84 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return constFirstPushImporter<Key<T>>(
                 infra::withtime_utils::keyify<T,StateT>(std::move(t))
             );
+        }
+        template <class T>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void()>> constTriggerImporter(T &&t = T()) {
+            class LocalI final : public AbstractImporterCore<T> {
+            private:
+                T t_;
+                StateT *env_;
+                Data<T> toPublish_;
+            public:           
+                virtual Data<T> generate() {
+                    Data<T> ret {std::move(toPublish_)};
+                    toPublish_ = std::nullopt;
+                    return ret;
+                }
+                LocalI(T &&t) : AbstractImporterCore<T>(), t_(), env_(nullptr), toPublish_(std::nullopt) {}
+                virtual void start(StateT *env) override final {
+                    env_ = env;
+                }
+                void trigger() {
+                    if (!toPublish_) {
+                        toPublish_ = InnerData<T> {
+                            env_
+                            , {
+                                env_->resolveTime()
+                                , t_
+                                , false
+                            }
+                        };
+                    } else {
+                        toPublish_->timedData.timePoint = env_->resolveTime();
+                    }
+                }
+            };
+            auto *p = new LocalI(std::move(t));
+            return {
+                std::make_shared<Importer<T>>(p)
+                , [p]() {
+                    p->trigger();
+                }
+            };
+        }
+        template <class T>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(T&&)>> triggerImporter() {
+            class LocalI final : public AbstractImporterCore<T> {
+            private:
+                std::deque<T> q_;
+                StateT *env_;
+            public:           
+                virtual Data<T> generate() {
+                    if (q_.empty()) {
+                        return std::nullopt;
+                    }
+                    Data<T> ret = InnerData<T> {
+                        env_
+                        , {
+                            env_->resolveTime()
+                            , std::move(q_.front())
+                            , false
+                        }
+                    };
+                    q_.pop_front();
+                    return ret;
+                }
+                LocalI() : AbstractImporterCore<T>(), q_(), env_(nullptr) {}
+                virtual void start(StateT *env) override final {
+                    env_ = env;
+                }
+                void trigger(T &&t) {
+                    q_.push_back(std::move(t));
+                }
+            };
+            auto *p = new LocalI();
+            return {
+                std::make_shared<Importer<T>>(p)
+                , [p](T &&t) {
+                    p->trigger(std::move(t));
+                }
+            };
         }
     public:
         template <class T>
