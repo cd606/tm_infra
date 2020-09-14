@@ -267,10 +267,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             private:
                 friend class OutputMultiplexer;
                 OutputMultiplexer *parent_;
-                int idx_;
                 std::size_t qPos_;
             public:
-                Output(OutputMultiplexer *parent, int idx) : parent_(parent), idx_(idx), qPos_(parent_->queue_.size()) {}
+                Output(OutputMultiplexer *parent) : parent_(parent), qPos_(parent_->queue_.size()) {}
                 Output(Output const &) = delete;
                 Output &operator=(Output const &) = delete;
                 Output(Output &&) = default;
@@ -358,7 +357,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             Output *addOutput() {
-                outputs_.push_back(std::make_unique<Output>(this, outputs_.size()));
+                outputs_.push_back(std::make_unique<Output>(this));
                 return outputs_.back().get();
             }
             void enqueue(Certificate<T> &&cert) {
