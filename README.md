@@ -1,5 +1,5 @@
-This is unstable software, with absolutely no warranty or guarantee whatsoever, whether express or implied, including but not limited to merchantability, fitness for specific purpose, or non-infringement.
- 
+This is unstable software, with absolutely no warranty or guarantee whatsoever, whether express or implied, including but not limited to those of merchantability, fitness for specific purpose, or non-infringement.
+
 This package aims to provide a set of C++ helper classes that enable the writing of data-flow code in a functional way, which can be easily adapted between a "real time" mode and a "single pass" test mode.
 
 The basic concept is that, a data-flow code can be visualized as a graph, in which there are three types of nodes: 
