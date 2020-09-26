@@ -29,3 +29,13 @@ While these theoretically cover all the possibilities of node types in a general
 All these nodes may be constructed through various static methods provided by RealTimeApp or SinglePassIterationApp, and then connected toghether through a AppRunner instance in a "natural" methodology completely expressed in C++, with all attending type checks (which also means that if there is some type mismatch, the compiler will generate lengthy compilation error messages). The AppRunner instance can then output a Graphviz® visualization of the graph, or run the graph.
 
 This particular package (tm_infra) only provides the basic node and graph definition functionalities. To make the graph useful, please refer to other related packages, also publicly available at github.com.
+
+INSTALLATION NOTES:
+
+The requirements of tm_infra are:
+
+* gcc >= 9.3.1, clang >= 10.0.1, or MSVC Build Tools 2019 (these versions have been tested to work, old version might work)
+
+* meson
+
+No third party library is required
