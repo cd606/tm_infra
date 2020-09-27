@@ -436,7 +436,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } 
         }  
         template <class A, class F, class Environment, class TimePoint>
-        inline auto pureTimedDataWithEnvironmentLift(Environment *environment, F const &f, WithTime<A,TimePoint> &&a, bool preserveTime=false) -> TimedDataWithEnvironment<decltype(f(std::move(a.value))), Environment, TimePoint> {
+        inline auto pureTimedDataWithEnvironmentLift(Environment *environment, F &f, WithTime<A,TimePoint> &&a, bool preserveTime=false) -> TimedDataWithEnvironment<decltype(f(std::move(a.value))), Environment, TimePoint> {
             return {environment, {preserveTime?a.timePoint:environment->resolveTime(a.timePoint), std::move(f(std::move(a.value))), a.finalFlag}};
         }
         template <class A, class F, class Environment, class TimePoint>
