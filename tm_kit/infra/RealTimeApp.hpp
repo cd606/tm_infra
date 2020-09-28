@@ -1466,7 +1466,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     running_ = true;
                     while (running_) {
                         std::unique_lock<std::mutex> lock(mutex_);
-                        cond_.wait_for(lock, std::chrono::milliseconds(1));
+                        cond_.wait(lock);
                         lock.unlock();
                         if (!running_) {
                             break;
@@ -1481,6 +1481,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ~LocalI() {
                     if (running_) {
                         running_ = false;
+                        cond_.notify_one();
                         if (th_.joinable()) {
                             th_.join();
                         }
@@ -1492,7 +1493,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     th_.detach();
                 }
                 void trigger() {
-                    cond_.notify_one();
+                    if (running_) {
+                        cond_.notify_one();
+                    }
                 }
             };
             auto *p = new LocalI(std::move(t));
@@ -1517,7 +1520,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     running_ = true;
                     while (running_) {
                         std::unique_lock<std::mutex> lock(mutex_);
-                        cond_.wait_for(lock, std::chrono::milliseconds(1));
+                        cond_.wait(lock);
                         if (!running_) {
                             lock.unlock();
                             break;
@@ -1541,6 +1544,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ~LocalI() {
                     if (running_) {
                         running_ = false;
+                        cond_.notify_one();
                         if (th_.joinable()) {
                             th_.join();
                         }
@@ -1552,6 +1556,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     th_.detach();
                 }
                 void trigger(T &&t) {
+                    if (!running_) {
+                        return;
+                    }
                     {
                         std::lock_guard<std::mutex> _(mutex_);
                         incoming_.push_back(std::move(t));

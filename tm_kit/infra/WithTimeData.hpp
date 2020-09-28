@@ -684,6 +684,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -709,6 +714,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -729,6 +739,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A>
         void registerExporter_(ExporterPtr<A> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -749,6 +764,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B>
         void registerOnOrderFacility_(OnOrderFacilityPtr<A,B> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -770,6 +790,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B, class C>
         void registerLocalOnOrderFacility_(LocalOnOrderFacilityPtr<A,B,C> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -791,6 +816,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B, class C>
         void registerOnOrderFacilityWithExternalEffects_(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -812,6 +842,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B, class C, class D>
         void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
+            if (reverseLookup_.find(name) != reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "Attempt to re-use already registered name '"+name+"'"
+                );
+            }
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
