@@ -26,7 +26,7 @@ While these theoretically cover all the possibilities of node types in a general
 
 * "VIE on-order facilities": this is the combination of the two above: a bundle of a pointer to an on-order facility, a pointer to an importer, and a pointer to an exporter. To expand on the trade-and-production simile, this name comes from the "variable interest entity" business structure.
 
-All these nodes may be constructed through various static methods provided by RealTimeApp or SinglePassIterationApp, and then connected toghether through a AppRunner instance in a "natural" methodology completely expressed in C++, with all attending type checks (which also means that if there is some type mismatch, the compiler will generate lengthy compilation error messages). The AppRunner instance can then output a Graphviz® visualization of the graph, or run the graph.
+All these nodes may be constructed through various static methods provided by RealTimeApp or SinglePassIterationApp, and then connected together through an AppRunner instance in a "natural" methodology completely expressed in C++, with all attending type checks (which also means that if there is some type mismatch, the compiler will generate lengthy compilation error messages). The AppRunner instance can then output a Graphviz® visualization of the graph, or run the graph.
 
 This particular package (tm_infra) only provides the basic node and graph definition functionalities. To make the graph useful, please refer to other related packages, also publicly available at github.com.
 
