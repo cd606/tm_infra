@@ -1784,6 +1784,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     os << "label=\"" << item.second.name << "\",shape=box";
                 }
+                std::vector<std::string> styleStrings;
                 if (item.second.isFacility) {
                     os << ",color=blue";
                 } else {
@@ -1794,12 +1795,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             os << ",color=red";
                         }
                         if (propIter->second.oneTimeOnly) {
-                            os << ",style=dotted";
+                            styleStrings.push_back("dotted");
                         }
                     }
                 }
                 if (item.second.name.find('/') != std::string::npos) {
+                    styleStrings.push_back("filled");
                     os << ",fillcolor=gray60";
+                }
+                if (!styleStrings.empty()) {
+                    os << ",style=\"";
+                    for (size_t ii=0; ii<styleStrings.size(); ++ii) {
+                        if (ii != 0) {
+                            os << ',';
+                        }
+                        os << styleStrings[ii];
+                    }
+                    os << "\"";
                 }
                 os << "];\n";
                 ++counter;
