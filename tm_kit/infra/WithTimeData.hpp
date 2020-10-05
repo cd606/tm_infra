@@ -1798,6 +1798,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                 }
+                if (item.second.name.find('/') != std::string::npos) {
+                    os << ",fillcolor=gray60";
+                }
                 os << "];\n";
                 ++counter;
             }
@@ -2134,32 +2137,61 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.connect(src1.clone(), sink);
             };
         }
+        template <class A>
+        static Sourceoid<A> sourceAsSourceoid(std::optional<Source<A>> &&src) {
+            if (src) {
+                return sourceAsSourceoid(std::move(*src));
+            } else {
+                return [](AppRunner &, Sink<A> const &) {};
+            }
+        }
+        template <class A>
+        using ConvertibleToSourceoid = std::variant<
+            Source<A>
+            , Sourceoid<A>
+            , std::optional<Source<A>>
+        >;
+        template <class A>
+        static Sourceoid<A> convertToSourceoid(ConvertibleToSourceoid<A> &&s) {
+            return std::visit([](auto &&x) -> Sourceoid<A> {
+                using T = std::decay_t<decltype(x)>;
+                if constexpr (std::is_same_v<T, Source<A>>) {
+                    return sourceAsSourceoid<A>(std::move(x));
+                } else if constexpr (std::is_same_v<T, Sourceoid<A>>) {
+                    return x;
+                } else if constexpr (std::is_same_v<T, std::optional<Source<A>>>) {
+                    return sourceAsSourceoid<A>(std::move(x));
+                } else {
+                    return [](AppRunner &, Sink<A> const &) {};
+                }
+            }, std::move(s));
+        }
         template <class A, class B>
-        static Sourceoid<typename App::template KeyedData<A,B>> facilityAndInputAsSinkoid(OnOrderFacilityPtr<A,B> const &facility, Source<typename App::template Key<A>> &&input) {
+        static Sourceoid<typename App::template KeyedData<A,B>> facilityAndInputAsSourceoid(OnOrderFacilityPtr<A,B> const &facility, Source<typename App::template Key<A>> &&input) {
             return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithFacility(std::move(input), facility, sink);
             };
         }
         template <class A, class B, class C>
-        static Sourceoid<typename App::template KeyedData<A,B>> localFacilityAndInputAsSinkoid(LocalOnOrderFacilityPtr<A,B,C> const &facility, Source<typename App::template Key<A>> &&input) {
+        static Sourceoid<typename App::template KeyedData<A,B>> localFacilityAndInputAsSourceoid(LocalOnOrderFacilityPtr<A,B,C> const &facility, Source<typename App::template Key<A>> &&input) {
             return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithLocalFacility(std::move(input), facility, sink);
             };;
         }
         template <class A, class B, class C>
-        static Sourceoid<typename App::template KeyedData<A,B>> facilityWithExternalEffectsAndInputAsSinkoid(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility, Source<typename App::template Key<A>> &&input) {
+        static Sourceoid<typename App::template KeyedData<A,B>> facilityWithExternalEffectsAndInputAsSourceoid(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility, Source<typename App::template Key<A>> &&input) {
             return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithFacilityWithExternalEffects(std::move(input), facility, sink);
             };
         }
         template <class A, class B, class C, class D>
-        static Sourceoid<typename App::template KeyedData<A,B>> vieFacilityAndInputAsSinkoid(VIEOnOrderFacilityPtr<A,B,C,D> const &facility, Source<typename App::template Key<A>> &&input) {
+        static Sourceoid<typename App::template KeyedData<A,B>> vieFacilityAndInputAsSourceoid(VIEOnOrderFacilityPtr<A,B,C,D> const &facility, Source<typename App::template Key<A>> &&input) {
             return [facility,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
                 r.placeOrderWithVIEFacility(std::move(input), facility, sink);
             };
         }
         template <class A, class B>
-        static Sourceoid<typename App::template KeyedData<A,B>> facilitioidConnectorAndInputAsSinkoid(FacilitioidConnector<A,B> const &f, Source<typename App::template Key<A>> &&input) {
+        static Sourceoid<typename App::template KeyedData<A,B>> facilitioidConnectorAndInputAsSourceoid(FacilitioidConnector<A,B> const &f, Source<typename App::template Key<A>> &&input) {
             return [f,input=std::move(input)](AppRunner &r, Sink<typename App::template KeyedData<A,B>> const &sink) {
                 f(r, std::move(input), sink);
             };
@@ -2169,6 +2201,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return [sink](AppRunner &r, Source<A> &&src) {
                 r.connect(std::move(src), sink);
             };
+        }
+        template <class A>
+        static Sinkoid<A> sinkAsSinkoid(std::optional<Sink<A>> &&sink) {
+            if (sink) {
+                return sinkAsSinkoid(std::move(*sink));
+            } else {
+                return [](AppRunner &, Source<A> &&) {};
+            }
+        }
+        template <class A>
+        using ConvertibleToSinkoid = std::variant<
+            Sink<A>
+            , Sinkoid<A>
+            , std::optional<Sink<A>>
+        >;
+        template <class A>
+        static Sinkoid<A> convertToSinkoid(ConvertibleToSinkoid<A> &&s) {
+            return std::visit([](auto &&x) -> Sinkoid<A> {
+                using T = std::decay_t<decltype(x)>;
+                if constexpr (std::is_same_v<T, Sink<A>>) {
+                    return sinkAsSinkoid<A>(std::move(x));
+                } else if constexpr (std::is_same_v<T, Sinkoid<A>>) {
+                    return x;
+                } else if constexpr (std::is_same_v<T, std::optional<Sink<A>>>) {
+                    return sinkAsSinkoid<A>(std::move(x));
+                } else {
+                    return [](AppRunner &, Source<A> &&) {};
+                }
+            }, std::move(s));
         }
         template <class A, class B>
         static Sinkoid<typename App::template Key<A>> facilityAsSinkoid(OnOrderFacilityPtr<A,B> const &facility) {
