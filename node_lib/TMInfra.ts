@@ -34,17 +34,30 @@ export function keyify<T>(t : T) : Key<T> {
         , key : t
     };
 }
-export function pureTimedDataWithEnvironment<Env,T>(env : Env, t : T, final : boolean = true) : TimedDataWithEnvironment<Env,T> {
+export enum LogLevel {
+    Trace,
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Critical
+}
+export interface EnvBase {
+    now : () => Date;
+    log : (l : LogLevel, s : string) => void;
+    exit : () => void
+}
+export function pureTimedDataWithEnvironment<Env extends EnvBase,T>(env : Env, t : T, final : boolean = true) : TimedDataWithEnvironment<Env,T> {
     return {
         environment : env
         , timedData : {
-            timePoint : new Date()
+            timePoint : env.now()
             , value : t                
             , finalFlag : final
         }
     }
 }
-export function mapTimedDataWithEnvironment<Env,T1,T2>(f : (t : T1)=>T2, x : TimedDataWithEnvironment<Env,T1>) : TimedDataWithEnvironment<Env,T2> {
+export function mapTimedDataWithEnvironment<Env extends EnvBase,T1,T2>(f : (t : T1)=>T2, x : TimedDataWithEnvironment<Env,T1>) : TimedDataWithEnvironment<Env,T2> {
     return {
         environment : x.environment
         , timedData: {
@@ -56,14 +69,14 @@ export function mapTimedDataWithEnvironment<Env,T1,T2>(f : (t : T1)=>T2, x : Tim
 }
 
 export namespace Kleisli {
-    export type F<Env,T1,T2> = (x : TimedDataWithEnvironment<Env,T1>) => TimedDataWithEnvironment<Env,T2>;
+    export type F<Env extends EnvBase,T1,T2> = (x : TimedDataWithEnvironment<Env,T1>) => TimedDataWithEnvironment<Env,T2>;
     export class Utils {
-        public static liftPure<Env,T,OutT>(f : (a : T) => OutT) : F<Env,T,OutT> {
+        public static liftPure<Env extends EnvBase,T,OutT>(f : (a : T) => OutT) : F<Env,T,OutT> {
             return function (x : TimedDataWithEnvironment<Env,T>) : TimedDataWithEnvironment<Env,OutT> {
                 return mapTimedDataWithEnvironment<Env,T,OutT>(f, x);
             }
         }
-        public static liftMaybe<Env,T,OutT>(f : (a : T) => OutT) : F<Env,T,OutT> {
+        public static liftMaybe<Env extends EnvBase,T,OutT>(f : (a : T) => OutT) : F<Env,T,OutT> {
             return function (x : TimedDataWithEnvironment<Env,T>) : TimedDataWithEnvironment<Env,OutT> {
                 let y = f(x.timedData.value);
                 if (y === null) {
@@ -79,7 +92,7 @@ export namespace Kleisli {
                 };
             }
         }
-        public static enhancedMaybe<Env,T,OutT>(f : (d : Date, a : T) => OutT) : F<Env,T,OutT> {
+        public static enhancedMaybe<Env extends EnvBase,T,OutT>(f : (d : Date, a : T) => OutT) : F<Env,T,OutT> {
             return function (x : TimedDataWithEnvironment<Env,T>) : TimedDataWithEnvironment<Env,OutT> {
                 let y = f(x.timedData.timePoint, x.timedData.value);
                 if (y === null) {
@@ -95,7 +108,7 @@ export namespace Kleisli {
                 };
             }
         }
-        public static compose<Env,T1,T2,T3>(f1 : F<Env,T1,T2>, f2 : F<Env,T2,T3>) : F<Env,T1,T3> {
+        public static compose<Env extends EnvBase,T1,T2,T3>(f1 : F<Env,T1,T2>, f2 : F<Env,T2,T3>) : F<Env,T1,T3> {
             return function (x : TimedDataWithEnvironment<Env,T1>) : TimedDataWithEnvironment<Env,T3> {
                 let y = f1(x);
                 if (y === null || y.timedData.value === null) {
@@ -108,10 +121,10 @@ export namespace Kleisli {
 }
 
 export namespace RealTimeApp {
-    export abstract class IExternalComponent<Env> {
+    export abstract class IExternalComponent<Env extends EnvBase> {
         public abstract start(e : Env) : void;
     }
-    export abstract class Importer<Env,T> extends IExternalComponent<Env> {
+    export abstract class Importer<Env extends EnvBase,T> extends IExternalComponent<Env> {
         private theStream : Stream.Readable;
         protected env : Env;
         public constructor() {
@@ -129,15 +142,15 @@ export namespace RealTimeApp {
             return this.theStream;
         }
     };
-    export class TimeChecker<Env,T> {
+    export class TimeChecker<Env extends EnvBase,T> {
         private now : Date;
         private version : any;
         public constructor() {
-            this.now = new Date();
+            this.now = null;
             this.version = null;
         }
         public check(data : TimedDataWithEnvironment<Env,T>) : boolean {
-            if (data.timedData.timePoint < this.now) {
+            if (this.now != null && data.timedData.timePoint < this.now) {
                 return false;
             }
             if ((data.timedData.value as any).groupID !== undefined && (data.timedData.value as any).version !== undefined) {
@@ -163,7 +176,7 @@ export namespace RealTimeApp {
             return true;
         }
     };
-    export abstract class Exporter<Env,T> extends IExternalComponent<Env> {
+    export abstract class Exporter<Env extends EnvBase,T> extends IExternalComponent<Env> {
         private theStream : Stream.Writable;
         private timeChecker : TimeChecker<Env,T>;
         public abstract handle(data : TimedDataWithEnvironment<Env, T>) : void;
@@ -185,7 +198,7 @@ export namespace RealTimeApp {
             return this.theStream;
         }
     };
-    export abstract class Action<Env,T,OutT> {
+    export abstract class Action<Env extends EnvBase,T,OutT> {
         private theStream : Stream.Transform;
         private timeChecker : TimeChecker<Env, T>;
         public abstract handle(data: TimedDataWithEnvironment<Env, T>) : void;
@@ -211,7 +224,7 @@ export namespace RealTimeApp {
     }
     export type Either2<T1,T2> = [number, T1|T2];
     export type Either3<T1,T2,T3> = [number, T1|T2|T3]; //Action3 is currently not supported yet, this is just a convenience type
-    export abstract class Action2<Env,T1,T2,OutT> {
+    export abstract class Action2<Env extends EnvBase,T1,T2,OutT> {
         private theStream : Stream.Transform;
         private timeChecker1 : TimeChecker<Env, T1>;
         private timeChecker2 : TimeChecker<Env, T2>;
@@ -249,7 +262,7 @@ export namespace RealTimeApp {
             return this.theStream;
         }
     }
-    export abstract class OnOrderFacility<Env,T,OutT> extends IExternalComponent<Env> {
+    export abstract class OnOrderFacility<Env extends EnvBase,T,OutT> extends IExternalComponent<Env> {
         private theStream : Stream.Duplex;
         private timeChecker : TimeChecker<Env,Key<T>>;
         private requestMap : Map<string, Key<T>>;
@@ -285,32 +298,34 @@ export namespace RealTimeApp {
                     }
                     callback();
                 }
+                , read : (_s : number) => {}
                 , objectMode : true
             });
             this.timeChecker = new TimeChecker<Env,Key<T>>();
+            this.requestMap = new Map<string,Key<T>>();
         }
         public stream() : Stream.Duplex {
             return this.theStream;
         }
     }
-    export class Source<Env,T> {
+    export class Source<Env extends EnvBase,T> {
         public stream : Stream.Readable;
         public constructor(s : Stream.Readable) {
             this.stream = s;
         }
     };
-    export class Sink<Env,T> {
+    export class Sink<Env extends EnvBase,T> {
         public stream : Stream.Writable;
         public constructor(s : Stream.Writable) {
             this.stream = s;
         }
     };
     export type PubFunc<T> = ((t : T, isFinal : boolean) => void);
-    export type Generator<T> = ((pub : PubFunc<T>) => void);
+    export type Generator<Env extends EnvBase,T> = ((env : Env, pub : PubFunc<T>) => void);
     export class Utils {
-        public static simpleImporter<Env,T>(gen : Generator<T>) : Importer<Env,T> {
+        public static simpleImporter<Env extends EnvBase,T>(gen : Generator<Env,T>) : Importer<Env,T> {
             class LocalI extends Importer<Env,T> {
-                private genFunc : Generator<T>;
+                private genFunc : Generator<Env,T>;
                 public constructor() {
                     super();
                     this.genFunc = gen;
@@ -318,14 +333,14 @@ export namespace RealTimeApp {
                 public start(e : Env) : void {
                     this.env = e;
                     let thisObj = this;
-                    this.genFunc((t : T, isFinal : boolean) => {
+                    this.genFunc(e, (t : T, isFinal : boolean) => {
                         thisObj.publish(t, isFinal);
                     });
                 }
             };
             return new LocalI();
         }
-        public static simpleExporter<Env,T>(f : (a : TimedDataWithEnvironment<Env,T>) => void) : Exporter<Env,T> {
+        public static simpleExporter<Env extends EnvBase,T>(f : (a : TimedDataWithEnvironment<Env,T>) => void) : Exporter<Env,T> {
             class LocalE extends Exporter<Env,T> {
                 public start(_e : Env) : void {}
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
@@ -334,7 +349,7 @@ export namespace RealTimeApp {
             };
             return new LocalE();
         }
-        public static pureExporter<Env,T>(f : (a : T) => void) : Exporter<Env,T> {
+        public static pureExporter<Env extends EnvBase,T>(f : (a : T) => void) : Exporter<Env,T> {
             class LocalE extends Exporter<Env,T> {
                 public start(_e : Env) : void {}
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
@@ -343,7 +358,7 @@ export namespace RealTimeApp {
             };
             return new LocalE();
         }
-        public static liftPure<Env,T,OutT>(f : (a : T) => OutT) : Action<Env,T,OutT> {
+        public static liftPure<Env extends EnvBase,T,OutT>(f : (a : T) => OutT) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     this.publish(pureTimedDataWithEnvironment(
@@ -353,7 +368,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static liftMaybe<Env,T,OutT>(f : (a : T) => OutT) : Action<Env,T,OutT> {
+        public static liftMaybe<Env extends EnvBase,T,OutT>(f : (a : T) => OutT) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     let v = f(data.timedData.value);
@@ -367,7 +382,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static enhancedMaybe<Env,T,OutT>(f : (d : Date, a : T) => OutT) : Action<Env,T,OutT> {
+        public static enhancedMaybe<Env extends EnvBase,T,OutT>(f : (d : Date, a : T) => OutT) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     let v = f(data.timedData.timePoint, data.timedData.value);
@@ -381,7 +396,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static kleisli<Env,T,OutT>(f : Kleisli.F<Env,T,OutT>) : Action<Env,T,OutT> {
+        public static kleisli<Env extends EnvBase,T,OutT>(f : Kleisli.F<Env,T,OutT>) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     let v = f(data);
@@ -393,7 +408,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static liftMulti<Env,T,OutT>(f : (a : T) => OutT[]) : Action<Env,T,OutT> {
+        public static liftMulti<Env extends EnvBase,T,OutT>(f : (a : T) => OutT[]) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     let v = f(data.timedData.value);
@@ -406,7 +421,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static enhancedMulti<Env,T,OutT>(f : (d : Date, a : T) => OutT[]) : Action<Env,T,OutT> {
+        public static enhancedMulti<Env extends EnvBase,T,OutT>(f : (d : Date, a : T) => OutT[]) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     let v = f(data.timedData.timePoint, data.timedData.value);
@@ -419,7 +434,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static kleisliMulti<Env,T,OutT>(f : (a : TimedDataWithEnvironment<Env,T>) => TimedDataWithEnvironment<Env,OutT[]>) : Action<Env,T,OutT> {
+        public static kleisliMulti<Env extends EnvBase,T,OutT>(f : (a : TimedDataWithEnvironment<Env,T>) => TimedDataWithEnvironment<Env,OutT[]>) : Action<Env,T,OutT> {
             class LocalA extends Action<Env,T,OutT> {
                 public handle(data : TimedDataWithEnvironment<Env, T>) : void {
                     let v = f(data);
@@ -440,7 +455,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static liftPure2<Env,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static liftPure2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : T1;
                 private snapshot2 : T2;
@@ -470,7 +485,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static liftMaybe2<Env,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static liftMaybe2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : T1;
                 private snapshot2 : T2;
@@ -504,7 +519,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static enhancedMaybe2<Env,T1,T2,OutT>(f : (index: number, d1 : Date, a : T1, d2 : Date, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static enhancedMaybe2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : Date, a : T1, d2 : Date, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : TimedDataWithEnvironment<Env,T1>;
                 private snapshot2 : TimedDataWithEnvironment<Env,T2>;
@@ -550,7 +565,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static kleisli2<Env,T1,T2,OutT>(f : (index: number, d1 : TimedDataWithEnvironment<Env,T1>, d2 : TimedDataWithEnvironment<Env,T2>) => TimedDataWithEnvironment<Env,OutT>, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static kleisli2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : TimedDataWithEnvironment<Env,T1>, d2 : TimedDataWithEnvironment<Env,T2>) => TimedDataWithEnvironment<Env,OutT>, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : TimedDataWithEnvironment<Env,T1>;
                 private snapshot2 : TimedDataWithEnvironment<Env,T2>;
@@ -592,7 +607,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static liftMulti2<Env,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT[], reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static liftMulti2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT[], reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : T1;
                 private snapshot2 : T2;
@@ -628,7 +643,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static enhancedMulti2<Env,T1,T2,OutT>(f : (index: number, d1 : Date, a : T1, d2 : Date, b : T2) => OutT[], reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static enhancedMulti2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : Date, a : T1, d2 : Date, b : T2) => OutT[], reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : TimedDataWithEnvironment<Env,T1>;
                 private snapshot2 : TimedDataWithEnvironment<Env,T2>;
@@ -676,7 +691,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        public static kleisliMulti2<Env,T1,T2,OutT>(f : (index: number, d1 : TimedDataWithEnvironment<Env,T1>, d2 : TimedDataWithEnvironment<Env,T2>) => TimedDataWithEnvironment<Env,OutT[]>, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        public static kleisliMulti2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : TimedDataWithEnvironment<Env,T1>, d2 : TimedDataWithEnvironment<Env,T2>) => TimedDataWithEnvironment<Env,OutT[]>, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
                 private snapshot1 : TimedDataWithEnvironment<Env,T1>;
                 private snapshot2 : TimedDataWithEnvironment<Env,T2>;
@@ -729,7 +744,7 @@ export namespace RealTimeApp {
         }
     }
 
-    export class Runner<Env> {
+    export class Runner<Env extends EnvBase> {
         private env : Env;
         private importers : IExternalComponent<Env>[];
         private exporters : IExternalComponent<Env>[];
@@ -745,6 +760,12 @@ export namespace RealTimeApp {
                 this.importers.push(importer);
             }
             return new Source<Env,T>(importer.stream());
+        }
+        public exportItem<T>(exporter : Exporter<Env,T>, src : Source<Env,T>) : void {
+            if (this.exporters.indexOf(exporter) < 0) {
+                this.exporters.push(exporter);
+            }
+            src.stream.pipe(exporter.stream());
         }
         public exporterAsSink<T>(exporter : Exporter<Env,T>) : Sink<Env,T> {
             if (this.exporters.indexOf(exporter) < 0) {
