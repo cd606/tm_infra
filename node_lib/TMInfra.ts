@@ -199,7 +199,7 @@ export namespace RealTimeApp {
         }
     };
     export abstract class Action<Env extends EnvBase,T,OutT> {
-        private theStream : Stream.Transform;
+        private theStream : Stream.Duplex;
         private timeChecker : TimeChecker<Env, T>;
         public abstract handle(data: TimedDataWithEnvironment<Env, T>) : void;
         protected publish(data : TimedDataWithEnvironment<Env,OutT>) {
@@ -207,25 +207,26 @@ export namespace RealTimeApp {
         }
         public constructor() {
             let thisObj = this;
-            this.theStream = new Stream.Transform({
+            this.theStream = new Stream.Duplex({
                 write : function(chunk : TimedDataWithEnvironment<Env,T>, _encoding : BufferEncoding, callback) {
                     if (thisObj.timeChecker.check(chunk)) {
                         thisObj.handle(chunk);
                     }
                     callback();
                 }
+                , read : function(_s : number) {}
                 , objectMode : true
             });
             this.timeChecker = new TimeChecker<Env,T>();
         }
-        public stream() : Stream.Transform {
+        public stream() : Stream.Duplex {
             return this.theStream;
         }
     }
     export type Either2<T1,T2> = [number, T1|T2];
     export type Either3<T1,T2,T3> = [number, T1|T2|T3]; //Action3 is currently not supported yet, this is just a convenience type
     export abstract class Action2<Env extends EnvBase,T1,T2,OutT> {
-        private theStream : Stream.Transform;
+        private theStream : Stream.Duplex;
         private timeChecker1 : TimeChecker<Env, T1>;
         private timeChecker2 : TimeChecker<Env, T2>;
         public abstract handle(data: TimedDataWithEnvironment<Env,Either2<T1,T2>>) : void;
@@ -234,7 +235,7 @@ export namespace RealTimeApp {
         }
         public constructor() {
             let thisObj = this;
-            this.theStream = new Stream.Transform({
+            this.theStream = new Stream.Duplex({
                 write : function(chunk : TimedDataWithEnvironment<Env,Either2<T1,T2>>, _encoding : BufferEncoding, callback) {
                     if (chunk.timedData.value[0] == 0) {
                         if (thisObj.timeChecker1.check(mapTimedDataWithEnvironment(
@@ -253,12 +254,13 @@ export namespace RealTimeApp {
                     }
                     callback();
                 }
+                , read : function(_s : number) {}
                 , objectMode : true
             });
             this.timeChecker1 = new TimeChecker<Env,T1>();
             this.timeChecker2 = new TimeChecker<Env,T2>();
         }
-        public stream() : Stream.Transform {
+        public stream() : Stream.Duplex {
             return this.theStream;
         }
     }
