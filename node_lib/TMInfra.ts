@@ -757,6 +757,9 @@ export namespace RealTimeApp {
             this.exporters = [];
             this.otherComponents = [];
         }
+        public environment() : Env {
+            return this.env;
+        }
         public importItem<T>(importer : Importer<Env,T>) : Source<Env,T> {
             if (this.importers.indexOf(importer) < 0) {
                 this.importers.push(importer);
