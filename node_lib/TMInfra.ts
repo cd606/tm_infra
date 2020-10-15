@@ -210,6 +210,7 @@ export namespace RealTimeApp {
         }
     }
     export type Either2<T1,T2> = [number, T1|T2];
+    export type Either3<T1,T2,T3> = [number, T1|T2|T3]; //Action3 is currently not supported yet, this is just a convenience type
     export abstract class Action2<Env,T1,T2,OutT> {
         private theStream : Stream.Transform;
         private timeChecker1 : TimeChecker<Env, T1>;
