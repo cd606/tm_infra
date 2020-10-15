@@ -30,7 +30,7 @@ All these nodes may be constructed through various static methods provided by Re
 
 This particular package (tm_infra) only provides the basic node and graph definition functionalities. To make the graph useful, please refer to other related packages, also publicly available at github.com.
 
-Some Typescript codes that aim at providing a small subset of the C++ functionality is also provided, so that if it is desirable to write some Typescript codes for interacting with C++ code, they can be written in a similar fashion to the C++ code.
+Some Typescript codes that aim at providing a small subset of the C++ functionality are also provided, so that if it is desirable to write some Typescript codes for interacting with C++ code, they can be written in a similar fashion to the C++ code.
 
 INSTALLATION NOTES:
 
