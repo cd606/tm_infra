@@ -209,10 +209,7 @@ export namespace RealTimeApp {
             return this.theStream;
         }
     }
-    export interface Either2<T1,T2> {
-        index : number;
-        value : T1|T2;
-    }
+    export type Either2<T1,T2> = [number, T1|T2];
     export abstract class Action2<Env,T1,T2,OutT> {
         private theStream : Stream.Transform;
         private timeChecker1 : TimeChecker<Env, T1>;
@@ -225,16 +222,16 @@ export namespace RealTimeApp {
             let thisObj = this;
             this.theStream = new Stream.Transform({
                 write : function(chunk : TimedDataWithEnvironment<Env,Either2<T1,T2>>, _encoding : BufferEncoding, callback) {
-                    if (chunk.timedData.value.index == 0) {
+                    if (chunk.timedData.value[0] == 0) {
                         if (thisObj.timeChecker1.check(mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T1)
+                            (x : Either2<T1,T2>) => (x[1] as T1)
                             , chunk
                         ))) {
                             thisObj.handle(chunk);
                         }
                     } else {
                         if (thisObj.timeChecker2.check(mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T2)
+                            (x : Either2<T1,T2>) => (x[1] as T2)
                             , chunk
                         ))) {
                             thisObj.handle(chunk);
@@ -454,10 +451,10 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
-                        this.snapshot1 = data.timedData.value.value as T1;
+                    if (data.timedData.value[0] == 0) {
+                        this.snapshot1 = data.timedData.value[1] as T1;
                     } else {
-                        this.snapshot2 = data.timedData.value.value as T2;
+                        this.snapshot2 = data.timedData.value[1] as T2;
                     }
                     if (this.requireMask.get(0) && this.snapshot1 === null) {
                         return;
@@ -466,7 +463,7 @@ export namespace RealTimeApp {
                         return;
                     }
                     this.publish(pureTimedDataWithEnvironment(
-                        data.environment, f(data.timedData.value.index, this.snapshot1, this.snapshot2), data.timedData.finalFlag
+                        data.environment, f(data.timedData.value[0], this.snapshot1, this.snapshot2), data.timedData.finalFlag
                     ));
                 }
             };
@@ -484,10 +481,10 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
-                        this.snapshot1 = data.timedData.value.value as T1;
+                    if (data.timedData.value[0] == 0) {
+                        this.snapshot1 = data.timedData.value[1] as T1;
                     } else {
-                        this.snapshot2 = data.timedData.value.value as T2;
+                        this.snapshot2 = data.timedData.value[1] as T2;
                     }
                     if (this.requireMask.get(0) && this.snapshot1 === null) {
                         return;
@@ -495,7 +492,7 @@ export namespace RealTimeApp {
                     if (this.requireMask.get(1) && this.snapshot2 === null) {
                         return;
                     }
-                    let v = f(data.timedData.value.index, this.snapshot1, this.snapshot2);
+                    let v = f(data.timedData.value[0], this.snapshot1, this.snapshot2);
                     if (v === null) {
                         return;
                     }
@@ -518,14 +515,14 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
+                    if (data.timedData.value[0] == 0) {
                         this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T1)
+                            (x : Either2<T1,T2>) => (x[1] as T1)
                             , data
                         );
                     } else {
                         this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T2)
+                            (x : Either2<T1,T2>) => (x[1] as T2)
                             , data
                         );
                     }
@@ -536,7 +533,7 @@ export namespace RealTimeApp {
                         return;
                     }
                     let v = f(
-                        data.timedData.value.index
+                        data.timedData.value[0]
                         , this.snapshot1.timedData.timePoint
                         , this.snapshot1.timedData.value
                         , this.snapshot2.timedData.timePoint
@@ -564,14 +561,14 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
+                    if (data.timedData.value[0] == 0) {
                         this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T1)
+                            (x : Either2<T1,T2>) => (x[1] as T1)
                             , data
                         );
                     } else {
                         this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T2)
+                            (x : Either2<T1,T2>) => (x[1] as T2)
                             , data
                         );
                     }
@@ -582,7 +579,7 @@ export namespace RealTimeApp {
                         return;
                     }
                     let v = f(
-                        data.timedData.value.index
+                        data.timedData.value[0]
                         , this.snapshot1
                         , this.snapshot2
                     );
@@ -606,10 +603,10 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
-                        this.snapshot1 = data.timedData.value.value as T1;
+                    if (data.timedData.value[0] == 0) {
+                        this.snapshot1 = data.timedData.value[1] as T1;
                     } else {
-                        this.snapshot2 = data.timedData.value.value as T2;
+                        this.snapshot2 = data.timedData.value[1] as T2;
                     }
                     if (this.requireMask.get(0) && this.snapshot1 === null) {
                         return;
@@ -617,7 +614,7 @@ export namespace RealTimeApp {
                     if (this.requireMask.get(1) && this.snapshot2 === null) {
                         return;
                     }
-                    let v = f(data.timedData.value.index, this.snapshot1, this.snapshot2);
+                    let v = f(data.timedData.value[0], this.snapshot1, this.snapshot2);
                     if (v === null) {
                         return;
                     }
@@ -642,14 +639,14 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
+                    if (data.timedData.value[0] == 0) {
                         this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T1)
+                            (x : Either2<T1,T2>) => (x[1] as T1)
                             , data
                         );
                     } else {
                         this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T2)
+                            (x : Either2<T1,T2>) => (x[1] as T2)
                             , data
                         );
                     }
@@ -660,7 +657,7 @@ export namespace RealTimeApp {
                         return;
                     }
                     let v = f(
-                        data.timedData.value.index
+                        data.timedData.value[0]
                         , this.snapshot1.timedData.timePoint
                         , this.snapshot1.timedData.value
                         , this.snapshot2.timedData.timePoint
@@ -690,14 +687,14 @@ export namespace RealTimeApp {
                     this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value.index == 0) {
+                    if (data.timedData.value[0] == 0) {
                         this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T1)
+                            (x : Either2<T1,T2>) => (x[1] as T1)
                             , data
                         );
                     } else {
                         this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x.value as T2)
+                            (x : Either2<T1,T2>) => (x[1] as T2)
                             , data
                         );
                     }
@@ -708,7 +705,7 @@ export namespace RealTimeApp {
                         return;
                     }
                     let v = f(
-                        data.timedData.value.index
+                        data.timedData.value[0]
                         , this.snapshot1
                         , this.snapshot2
                     );
@@ -778,13 +775,13 @@ export namespace RealTimeApp {
             src.stream.pipe(facility.stream());
         }
         public execute_2_1<T1,T2,OutT>(action : Action2<Env,T1,T2,OutT>, src : Source<Env,T1>) : Source<Env,OutT> {
-            let p = Utils.liftPure<Env,T1,Either2<T1,T2>>((x : T1) => ({index: 0, value: x}));
+            let p = Utils.liftPure<Env,T1,Either2<T1,T2>>((x : T1) => [0, x]);
             src.stream.pipe(p.stream());
             p.stream().pipe(action.stream());
             return new Source<Env,OutT>(action.stream());
         }
         public execute_2_2<T1,T2,OutT>(action : Action2<Env,T1,T2,OutT>, src : Source<Env,T2>) : Source<Env,OutT> {
-            let p = Utils.liftPure<Env,T2,Either2<T1,T2>>((x : T2) => ({index: 1, value: x}));
+            let p = Utils.liftPure<Env,T2,Either2<T1,T2>>((x : T2) => [1, x]);
             src.stream.pipe(p.stream());
             p.stream().pipe(action.stream());
             return new Source<Env,OutT>(action.stream());
@@ -793,12 +790,12 @@ export namespace RealTimeApp {
             return new Source<Env,OutT>(action.stream());
         }
         public actionAsSink2_1<T1,T2,OutT>(action : Action2<Env,T1,T2,OutT>) : Sink<Env,T1> {
-            let p = Utils.liftPure<Env,T1,Either2<T1,T2>>((x : T1) => ({index: 0, value: x}));
+            let p = Utils.liftPure<Env,T1,Either2<T1,T2>>((x : T1) => [0, x]);
             p.stream().pipe(action.stream());
             return new Sink<Env,T1>(p.stream());
         }
         public actionAsSink2_2<T1,T2,OutT>(action : Action2<Env,T1,T2,OutT>) : Sink<Env,T2> {
-            let p = Utils.liftPure<Env,T2,Either2<T1,T2>>((x : T2) => ({index: 1, value: x}));
+            let p = Utils.liftPure<Env,T2,Either2<T1,T2>>((x : T2) => [1, x]);
             p.stream().pipe(action.stream());
             return new Sink<Env,T2>(p.stream());
         }
