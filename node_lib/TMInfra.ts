@@ -224,7 +224,11 @@ export namespace RealTimeApp {
         }
     }
     export type Either2<T1,T2> = [number, T1|T2];
-    export type Either3<T1,T2,T3> = [number, T1|T2|T3]; //Action3 is currently not supported yet, this is just a convenience type
+    //Action3 and above are currently not supported yet, so the Either3 and above types are
+    //simply convenience types
+    export type Either3<T1,T2,T3> = [number, T1|T2|T3]; 
+    export type Either4<T1,T2,T3,T4> = [number, T1|T2|T3|T4]; 
+    export type Either5<T1,T2,T3,T4,T5> = [number, T1|T2|T3|T4|T5]; 
     export abstract class Action2<Env extends EnvBase,T1,T2,OutT> {
         private theStream : Stream.Duplex;
         private timeChecker1 : TimeChecker<Env, T1>;
@@ -365,6 +369,16 @@ export namespace RealTimeApp {
             public trigger() : void {
                 this.publish(this.value, false);
             }
+        }
+        export function constFirstPushImporter<Env extends EnvBase,T>(t : T) : Importer<Env,T> {
+            return simpleImporter<Env,T>((_e : Env, pub : PubFunc<T>) => {
+                pub(t, true);
+            });
+        }
+        export function constFirstPushKeyImporter<Env extends EnvBase,T>(t : T) : Importer<Env,Key<T>> {
+            return simpleImporter<Env,Key<T>>((_e : Env, pub : PubFunc<Key<T>>) => {
+                pub(keyify(t), true);
+            });
         }
         export function simpleExporter<Env extends EnvBase,T>(f : (a : TimedDataWithEnvironment<Env,T>) => void) : Exporter<Env,T> {
             class LocalE extends Exporter<Env,T> {
