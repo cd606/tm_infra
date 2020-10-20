@@ -1402,7 +1402,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {
-                auto d = generate();
+                auto d = generate((T const *) nullptr);
                 if (d) {
                     TimePoint tp = d->timedData.timePoint;
                     return std::tuple<TimePoint, std::function<Data<T>()>> {tp, [d=std::move(d)]() -> Data<T> {return {std::move(*d)};}};
@@ -1411,7 +1411,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:           
-            virtual Data<T> generate() = 0;
+            virtual Data<T> generate(T const *notUsed=nullptr) = 0;
             AbstractImporterCore() : BufferedProvider<T>() {}
         };
 
@@ -1438,7 +1438,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void start(StateT *environment) override final {
                 environment_ = environment;
             }
-            virtual Data<T> generate() override final {
+            virtual Data<T> generate(T const *notUsed=nullptr) override final {
                 auto x = f_(environment_);
                 if (x) {
                     return *applyDelaySimulator<T>(0, std::move(*x), delaySimulator_);
@@ -1455,7 +1455,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             public:
                 virtual void start(StateT *environment) override final {
                 }
-                virtual Data<T> generate() override final {
+                virtual Data<T> generate(T const *notUsed=nullptr) override final {
                     return std::nullopt;
                 }
             };
@@ -1498,7 +1498,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 StateT *env_;
                 Data<T> toPublish_;
             public:           
-                virtual Data<T> generate() {
+                virtual Data<T> generate(T const *notUsed=nullptr) {
                     Data<T> ret {std::move(toPublish_)};
                     toPublish_ = std::nullopt;
                     return ret;
@@ -1537,7 +1537,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::deque<T> q_;
                 StateT *env_;
             public:           
-                virtual Data<T> generate() {
+                virtual Data<T> generate(T const *notUsed=nullptr) {
                     if (q_.empty()) {
                         return std::nullopt;
                     }
@@ -1676,7 +1676,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 virtual void start(StateT *environment) override final {
                     orig_.core_->start(environment);
                 }
-                virtual Data<T2> generate() override final {
+                virtual Data<T2> generate(T2 const *notUsed=nullptr) override final {
                     Certificate<T2> cert = post_.core_->poll();
                     if (cert.check()) {
                         return post_.core_->next(std::move(cert));
