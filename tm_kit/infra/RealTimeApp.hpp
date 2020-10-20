@@ -186,6 +186,86 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         #include <tm_kit/infra/RealTimeApp_ThreadedHandler_Piece.hpp>
 
+    private:
+        //busy loop can only be used to handle one kind of input
+        template <class T>
+        class BusyLoopThreadedHandlerBase {
+        private:
+            bool noYield_;
+            TimeChecker<false, T> timeChecker_;
+            std::mutex mutex_;
+            std::thread th_;
+            std::atomic<bool> running_;
+            std::list<TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType>> incoming_, processing_;  
+
+            void stopThread() {
+                running_ = false;
+            }
+            void runThread() {
+                while (running_) {
+                    idleWork();
+                    {
+                        std::lock_guard<std::mutex> _(mutex_);
+                        if (!incoming_.empty()) {
+                            processing_.splice(processing_.end(), incoming_);
+                        }
+                    }
+                    while (!processing_.empty()) {
+                        auto &data = processing_.front();
+                        actuallyHandle(std::move(data));
+                        processing_.pop_front();
+                    }
+                    if (!noYield_) {
+                        std::this_thread::yield();
+                    }
+                }  
+            }
+        protected:
+            bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> const &data) {
+                return timeChecker_(data);
+            }
+            bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
+                return timeChecker_(std::move(data));
+            }
+            virtual void idleWork() {}
+            virtual void actuallyHandle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
+        public:
+            BusyLoopThreadedHandlerBase(bool noYield=false) : noYield_(noYield), timeChecker_(), mutex_(), th_(), running_(false), incoming_(), processing_() {
+                running_ = true;
+                th_ = std::thread(&BusyLoopThreadedHandlerBase::runThread, this);
+                th_.detach();
+            }
+            virtual ~BusyLoopThreadedHandlerBase() {
+                stopThread();
+            }
+        protected:
+            void putData(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
+                if (running_) {
+                    std::lock_guard<std::mutex> _(mutex_);
+                    incoming_.push_back(std::move(data));
+                }                    
+            }
+            TimeChecker<false, T> const &timeChecker() const {
+                return timeChecker_;
+            }
+            void stop() {
+                stopThread();
+            }
+        };
+
+    public:
+        template <class T>
+        class BusyLoopThreadedHandler : public virtual IHandler<T>, public BusyLoopThreadedHandlerBase<T> {
+        public:
+            BusyLoopThreadedHandler(bool noYield=false) : BusyLoopThreadedHandlerBase<T>(noYield) {
+            }
+            virtual ~BusyLoopThreadedHandler() {
+            }
+            virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) override final {
+                BusyLoopThreadedHandlerBase<T>::putData(std::move(data));                
+            }
+        };
+
         template <class T>
         class Producer {
         private:
