@@ -179,6 +179,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static ComposedKleisliExporter<A, F, G> composeExporter(F &&f, G &&g) {
             return ComposedKleisliExporter<A, F, G>(std::move(f), std::move(g));
         }
+        
+        template <class A, class B>
+        static std::shared_ptr<typename M::template Action<A,B>> action(KleisliFunction<A,B> &&f) {
+            return M::template kleisli<A>(std::move(f));
+        }
     };
 } } } }
 
