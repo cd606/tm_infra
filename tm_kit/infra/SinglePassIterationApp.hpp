@@ -2185,7 +2185,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C>
         Source<C> facilityWithExternalEffectsAsSource(OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_));
-            joinedSource_.addSource(getMultiplexerOutput(facility.core2_));
             return {dynamic_cast<Provider<C> *>(facility.core2_)};
         }
 
@@ -2208,7 +2207,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C, class D>
         Source<D> vieFacilityWithExternalEffectsAsSource(VIEOnOrderFacility<A,B,C,D> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core3_));
-            joinedSource_.addSource(getMultiplexerOutput(facility.core3_));
             return {dynamic_cast<Provider<D> *>(facility.core3_)};
         }
         template <class A, class B, class C, class D>
