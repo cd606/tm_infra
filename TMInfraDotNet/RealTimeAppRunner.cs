@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Channels;
-using Optional;
-using Optional.Unsafe;
 
 namespace Dev.CD606.TM.Infra.RealTimeApp
 {
@@ -36,6 +31,10 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 this.handler = handler;
             }
         }
+        public void connect<T>(Source<T> source, Sink<T> sink)
+        {
+            source.producer.addHandler(sink.handler);
+        }
         public Source<T> importItem<T>(AbstractImporter<Env,T> importer)
         {
             lock (lockObj)
@@ -58,27 +57,71 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             }
             return new Sink<T>(exporter);
         }
-        public void connect<T>(Source<T> source, Sink<T> sink)
-        {
-            source.producer.addHandler(sink.handler);
-        }
         public void exportItem<T>(AbstractExporter<Env,T> exporter, Source<T> item)
         {
             connect(item, exporterAsSink(exporter));
         }
+        public Source<T2> actionAsSource<T1,T2>(AbstractAction<Env,T1,T2> action)
+        {
+            return new Source<T2>(action);
+        }
+        public Sink<T1> actionAsSink<T1,T2>(AbstractAction<Env,T1,T2> action)
+        {
+            return new Sink<T1>(action);
+        }
+        public Source<T2> execute<T1,T2>(AbstractAction<Env,T1,T2> action, Source<T1> item)
+        {
+            connect(item, actionAsSink(action));
+            return actionAsSource(action);
+        }
+        public void placeOrderWithFacility<T1,T2>(Source<Key<T1>> source, AbstractOnOrderFacility<Env,T1,T2> facility, Sink<KeyedData<T1,T2>> sink)
+        {
+            var facilityAdapter = new NonThreadedHandler<Env,Key<T1>>(
+                (TimedDataWithEnvironment<Env,Key<T1>> data) => {
+                    facility.placeRequest(data, sink.handler);
+                }
+            );
+            lock (lockObj)
+            {
+                if (!otherComponents.Contains(facility))
+                {
+                    otherComponents.Add(facility);
+                }
+                source.producer.addHandler(facilityAdapter);
+            }
+        }
+        public void placeOrderWithFacilityAndForget<T1,T2>(Source<Key<T1>> source, AbstractOnOrderFacility<Env,T1,T2> facility)
+        {
+            var facilityAdapter = new NonThreadedHandler<Env,Key<T1>>(
+                (TimedDataWithEnvironment<Env,Key<T1>> data) => {
+                    facility.placeRequestAndForget(data);
+                }
+            );
+            lock (lockObj)
+            {
+                if (!otherComponents.Contains(facility))
+                {
+                    otherComponents.Add(facility);
+                }
+                source.producer.addHandler(facilityAdapter);
+            }
+        }
         public void finalize()
         {
-            foreach (var e in exporters)
+            lock (lockObj)
             {
-                e.start(env);
-            }
-            foreach (var e in otherComponents)
-            {
-                e.start(env);
-            }
-            foreach (var e in importers)
-            {
-                e.start(env);
+                foreach (var e in exporters)
+                {
+                    e.start(env);
+                }
+                foreach (var e in otherComponents)
+                {
+                    e.start(env);
+                }
+                foreach (var e in importers)
+                {
+                    e.start(env);
+                }
             }
         }
     }

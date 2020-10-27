@@ -210,6 +210,64 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     public interface AbstractExporter<Env, T> : IHandler<Env, T>, IExternalComponent<Env> where Env : EnvBase
     {
     }
+    
+    public abstract class AbstractAction<Env,T1,T2> : Producer<Env,T2>, IHandler<Env,T1> where Env : EnvBase
+    {
+        public abstract void handle(TimedDataWithEnvironment<Env,T1> data);
+    }
+    public class KeyedDataProducer<Env,T1,T2> 
+    {
+        private object lockObj = new object();
+        private Dictionary<string, (T1, IHandler<Env,KeyedData<T1,T2>>)> handlers = new Dictionary<string, (T1, IHandler<Env, KeyedData<T1, T2>>)>();
+        protected void addHandler(Key<T1> key, IHandler<Env,KeyedData<T1,T2>> handler)
+        {
+            lock (lockObj)
+            {
+                if (!handlers.ContainsKey(key.id))
+                {
+                    handlers.Add(key.id, (key.key, handler));
+                }
+            }
+        }
+        public void publish(TimedDataWithEnvironment<Env,Key<T2>> data)
+        {
+            lock (lockObj)
+            {
+                if (handlers.TryGetValue(data.timedData.value.id, out (T1, IHandler<Env,KeyedData<T1,T2>>) handler))
+                {
+                    handler.Item2.handle(new TimedDataWithEnvironment<Env,KeyedData<T1,T2>>(
+                        data.environment
+                        , new WithTime<KeyedData<T1, T2>>(
+                            data.timedData.timePoint
+                            , new KeyedData<T1, T2>(
+                                new Key<T1>(handler.Item1)
+                                , data.timedData.value.key
+                            )
+                            , data.timedData.finalFlag
+                        )
+                    ));
+                    if (data.timedData.finalFlag)
+                    {
+                        handlers.Remove(data.timedData.value.id);
+                    }
+                }
+            }
+        }
+    }
+    public abstract class AbstractOnOrderFacility<Env,T1,T2> : KeyedDataProducer<Env,T1,T2>, IHandler<Env,Key<T1>>, IExternalComponent<Env> where Env : EnvBase
+    {
+        public abstract void start(Env env);
+        public abstract void handle(TimedDataWithEnvironment<Env,Key<T1>> data);
+        public void placeRequest(TimedDataWithEnvironment<Env,Key<T1>> data, IHandler<Env,KeyedData<T1,T2>> responseHandler)
+        {
+            addHandler(data.timedData.value, responseHandler);
+            handle(data);
+        }
+        public void placeRequestAndForget(TimedDataWithEnvironment<Env,Key<T1>> data)
+        {
+            handle(data);
+        }
+    }
 
     public static class RealTimeAppUtils
     {
@@ -327,6 +385,113 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 }
                 , threaded
             );
+        }
+        class KleisliAction<Env,T1,T2> : AbstractAction<Env,T1,T2> where Env : EnvBase
+        {
+            private Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> func;
+            public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                var res = func(data);
+                res.Match(
+                    some : (yVal) => {
+                        publish(yVal);
+                    }
+                    , none : () => {}
+                );
+            }
+            private IHandler<Env,T1> realHandler;
+            public KleisliAction(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> func, bool threaded)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler<Env,T1>(this.actuallyHandle);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler<Env,T1>(this.actuallyHandle);
+                }
+            }
+            public override void handle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                realHandler.handle(data);
+            }
+        }
+        class KleisliMultiAction<Env,T1,T2> : AbstractAction<Env,T1,T2> where Env : EnvBase
+        {
+            private Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> func;
+            public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                var res = func(data);
+                res.Match(
+                    some : (yVal) => {
+                        var itemCount = yVal.timedData.value.Count;
+                        var ii = 0;
+                        foreach (var item in yVal.timedData.value)
+                        {
+                            publish(new TimedDataWithEnvironment<Env, T2>(
+                                yVal.environment
+                                , new WithTime<T2>(
+                                    yVal.timedData.timePoint
+                                    , item
+                                    , (yVal.timedData.finalFlag && (ii == (itemCount-1)))
+                                )
+                            ));
+                            ++ii;
+                        }
+                    }
+                    , none : () => {}
+                );
+            }
+            private IHandler<Env,T1> realHandler;
+            public KleisliMultiAction(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> func, bool threaded)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler<Env,T1>(this.actuallyHandle);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler<Env,T1>(this.actuallyHandle);
+                }
+            }
+            public override void handle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                realHandler.handle(data);
+            }
+        }
+        public static AbstractAction<Env,T1,T2> liftPure<Env,T1,T2>(Func<T1,T2> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliAction<Env,T1,T2>(KleisliUtils.liftPure<Env,T1,T2>(f), threaded);
+        }
+        public static AbstractAction<Env,T1,T2> liftMaybe<Env,T1,T2>(Func<T1,Option<T2>> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliAction<Env,T1,T2>(KleisliUtils.liftMaybe<Env,T1,T2>(f), threaded);
+        }
+        public static AbstractAction<Env,T1,T2> enhancedMaybe<Env,T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliAction<Env,T1,T2>(KleisliUtils.enhancedMaybe<Env,T1,T2>(f), threaded);
+        }
+        public static AbstractAction<Env,T1,T2> kleisli<Env,T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliAction<Env,T1,T2>(f, threaded);
+        }
+        public static AbstractAction<Env,T1,T2> liftMulti<Env,T1,T2>(Func<T1,List<T2>> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliMultiAction<Env,T1,T2>(KleisliUtils.liftPure<Env,T1,List<T2>>(f), threaded);
+        }
+        public static AbstractAction<Env,T1,T2> enhancedMulti<Env,T1,T2>(Func<DateTimeOffset,T1,List<T2>> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliMultiAction<Env,T1,T2>(KleisliUtils.enhancedMaybe<Env,T1,List<T2>>(
+                (DateTimeOffset d, T1 x) => {
+                    return Option.Some<List<T2>>(f(d, x));
+                }
+            ), threaded);
+        }
+        public static AbstractAction<Env,T1,T2> kleisliMulti<Env,T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> f, bool threaded) where Env : EnvBase
+        {
+            return new KleisliMultiAction<Env,T1,T2>(f, threaded);
         }
     }
 }
