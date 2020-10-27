@@ -47,7 +47,7 @@ export interface EnvBase {
     log : (l : LogLevel, s : string) => void;
     exit : () => void
 }
-export function pureTimedDataWithEnvironment<Env extends EnvBase,T>(env : Env, t : T, final : boolean = true) : TimedDataWithEnvironment<Env,T> {
+export function pureTimedDataWithEnvironment<Env extends EnvBase,T>(env : Env, t : T, final : boolean = false) : TimedDataWithEnvironment<Env,T> {
     return {
         environment : env
         , timedData : {
