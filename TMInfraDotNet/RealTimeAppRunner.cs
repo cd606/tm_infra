@@ -106,6 +106,28 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 source.producer.addHandler(facilityAdapter);
             }
         }
+        public Source<OutT> execute_2_1<T1,T2,OutT>(AbstractAction2<Env,T1,T2,OutT> action, Source<T1> src) 
+        {
+            connect(src, actionAsSink2_1(action));
+            return actionAsSource2(action);
+        }
+        public Source<OutT> execute_2_2<T1,T2,OutT>(AbstractAction2<Env,T1,T2,OutT> action, Source<T2> src) 
+        {
+            connect(src, actionAsSink2_2(action));
+            return actionAsSource2(action);
+        }
+        public Source<OutT> actionAsSource2<T1,T2,OutT>(AbstractAction2<Env,T1,T2,OutT> action)
+        {
+            return new Source<OutT>(action);
+        }
+        public Sink<T1> actionAsSink2_1<T1,T2,OutT>(AbstractAction2<Env,T1,T2,OutT> action)
+        {
+            return new Sink<T1>(action.AsHandler1);
+        }
+        public Sink<T2> actionAsSink2_2<T1,T2,OutT>(AbstractAction2<Env,T1,T2,OutT> action)
+        {
+            return new Sink<T2>(action.AsHandler2);
+        }
         public void finalize()
         {
             lock (lockObj)

@@ -16,6 +16,19 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         void handle(TimedDataWithEnvironment<Env,T> data);
     }
 
+    class DelegateHandler<Env,T> : IHandler<Env,T>
+    {
+        private Action<TimedDataWithEnvironment<Env,T>> func;
+        public DelegateHandler(Action<TimedDataWithEnvironment<Env,T>> func)
+        {
+            this.func = func;
+        }
+        public void handle(TimedDataWithEnvironment<Env,T> data)
+        {
+            func(data);
+        }
+    }
+
     interface SecondaryChecker
     {
         bool check(object x);
@@ -117,6 +130,90 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         }
     }
 
+    class TimeChecker2<T1,T2>
+    {
+        private readonly bool[] useVersionChecker;
+        private SecondaryChecker[] versionChecker = {null, null};
+        private long lastTime = 0;
+        private WithTime<T1> copy1 = null;
+        private WithTime<T2> copy2 = null;
+        public TimeChecker2()
+        {
+            var tType = typeof(T1);
+            bool[] flags = new bool[2] {false, false};
+            if (tType.IsGenericType)
+            {
+                if (tType.Name.Equals("VersionedData`2"))
+                {
+                    var p = tType.GenericTypeArguments;
+                    var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
+                    this.versionChecker[0] = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                    flags[0] = true;
+                } else if (tType.Name.Equals("GroupedVersionedData`3"))
+                {
+                    var p = tType.GenericTypeArguments;
+                    var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
+                    this.versionChecker[0] = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                    flags[0] = true;
+                }
+            }
+            tType = typeof(T2);
+            if (tType.IsGenericType)
+            {
+                if (tType.Name.Equals("VersionedData`2"))
+                {
+                    var p = tType.GenericTypeArguments;
+                    var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
+                    this.versionChecker[1] = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                    flags[1] = true;
+                } else if (tType.Name.Equals("GroupedVersionedData`3"))
+                {
+                    var p = tType.GenericTypeArguments;
+                    var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
+                    this.versionChecker[1] = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                    flags[1] = true;
+                }
+            }
+            this.useVersionChecker = flags;
+        }
+        public (bool, WithTime<T1>,WithTime<T2>) check1(WithTime<T1> data) 
+        {
+            var t = data.timePoint;
+            if (lastTime > t)
+            {
+                return (false, copy1, copy2);
+            }
+            if (useVersionChecker[0]) 
+            {
+                if (!versionChecker[0].check(data.value))
+                {
+                    return (false, copy1, copy2);
+                }
+            }
+            lastTime = t;
+            copy1 = data;
+            return (true, copy1, copy2);
+        }
+        public (bool, WithTime<T1>, WithTime<T2>) check2(WithTime<T2> data) 
+        {
+            var t = data.timePoint;
+            if (lastTime > t)
+            {
+                return (false, copy1, copy2);
+            }
+            if (useVersionChecker[1]) 
+            {
+                if (!versionChecker[1].check(data.value))
+                {
+                    return (false, copy1, copy2);
+                }
+            }
+            lastTime = t;
+            copy2 = data;
+            return (true, copy1, copy2);
+        }
+    }
+
     class ThreadedHandler<Env,T> : IHandler<Env,T>
     {
         private Action<TimedDataWithEnvironment<Env,T>> actuallyHandle;
@@ -159,6 +256,164 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             if (checker.check(data.timedData))
             {
                 actuallyHandle(data);
+            }
+        }
+    }
+
+    public interface IHandler2<Env,T1,T2>
+    {
+        IHandler<Env,T1> AsHandler1 {get;}
+        IHandler<Env,T2> AsHandler2 {get;}
+    }
+
+    class ThreadedHandler2<Env,T1,T2> : IHandler2<Env,T1,T2>
+    {
+        private bool[] mask;
+        private Action<Env,int,WithTime<T1>,WithTime<T2>> actuallyHandle;
+
+        private Channel<(Env,int,object)> channel = Channel.CreateUnbounded<(Env,int,object)>();
+        private TimeChecker2<T1,T2> checker = new TimeChecker2<T1,T2>();
+        private bool ready(WithTime<T1> x1, WithTime<T2> x2)
+        {
+            if (mask[0] && x1 == null)
+            {
+                return false;
+            }
+            if (mask[1] && x2 == null)
+            {
+                return false;
+            }
+            return true;
+        }
+        private async void run()
+        {
+            while (await channel.Reader.WaitToReadAsync())
+            {
+                while (channel.Reader.TryRead(out (Env,int,object) item))
+                {
+                    switch (item.Item2)
+                    {
+                        case 0:
+                        {
+                            var d = (WithTime<T1>) item.Item3;
+                            var checkRes = checker.check1(d);
+                            if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                            {
+                                actuallyHandle(item.Item1, item.Item2, checkRes.Item2, checkRes.Item3);
+                            }
+                            break;
+                        }
+                        case 1:
+                        {
+                            var d = (WithTime<T2>) item.Item3;
+                            var checkRes = checker.check2(d);
+                            if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                            {
+                                actuallyHandle(item.Item1, item.Item2, checkRes.Item2, checkRes.Item3);
+                            }
+                            break;   
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        public ThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler, bool[] mask)
+        {
+            this.actuallyHandle = actualHandler;
+            this.mask = mask;
+            new Thread(this.run).Start();
+        }
+        public ThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler)
+        {
+            this.actuallyHandle = actualHandler;
+            this.mask = new bool[] {true, true};
+            new Thread(this.run).Start();
+        }
+        public void handle1(TimedDataWithEnvironment<Env,T1> data)
+        {
+            channel.Writer.WriteAsync(
+                (data.environment, 0, data.timedData)
+            );
+        }
+        public void handle2(TimedDataWithEnvironment<Env,T2> data)
+        {
+            channel.Writer.WriteAsync(
+                (data.environment, 1, data.timedData)
+            );
+        }
+        public IHandler<Env,T1> AsHandler1 {
+            get {
+                return new DelegateHandler<Env,T1>(this.handle1);
+            }
+        }
+        public IHandler<Env,T2> AsHandler2 {
+            get {
+                return new DelegateHandler<Env,T2>(this.handle2);
+            }
+        }
+    }
+
+    public class NonThreadedHandler2<Env,T1,T2> : IHandler2<Env,T1,T2>
+    {
+        private bool[] mask;
+        private Action<Env,int,WithTime<T1>,WithTime<T2>> actuallyHandle;
+
+        private TimeChecker2<T1,T2> checker = new TimeChecker2<T1,T2>();
+        private object lockObj = new object();
+        private bool ready(WithTime<T1> x1, WithTime<T2> x2)
+        {
+            if (mask[0] && x1 == null)
+            {
+                return false;
+            }
+            if (mask[1] && x2 == null)
+            {
+                return false;
+            }
+            return true;
+        }
+        public NonThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler, bool[] mask)
+        {
+            this.actuallyHandle = actualHandler;
+            this.mask = mask;
+        }
+        public NonThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler)
+        {
+            this.actuallyHandle = actualHandler;
+            this.mask = new bool[] {true, true};
+        }
+        public void handle1(TimedDataWithEnvironment<Env,T1> data)
+        {
+            lock (lockObj)
+            {
+                var checkRes = checker.check1(data.timedData);
+                if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                {
+                    actuallyHandle(data.environment, 0, checkRes.Item2, checkRes.Item3);
+                }
+            }
+        }
+        public void handle2(TimedDataWithEnvironment<Env,T2> data)
+        {
+            lock (lockObj)
+            {
+                var checkRes = checker.check2(data.timedData);
+                if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                {
+                    actuallyHandle(data.environment, 1, checkRes.Item2, checkRes.Item3);
+                }
+            }
+        }
+        public IHandler<Env,T1> AsHandler1 {
+            get {
+                return new DelegateHandler<Env,T1>(this.handle1);
+            }
+        }
+        public IHandler<Env,T2> AsHandler2 {
+            get {
+                return new DelegateHandler<Env,T2>(this.handle2);
             }
         }
     }
@@ -230,6 +485,12 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     public abstract class AbstractAction<Env,T1,T2> : Producer<Env,T2>, IHandler<Env,T1> where Env : EnvBase
     {
         public abstract void handle(TimedDataWithEnvironment<Env,T1> data);
+    }
+    
+    public abstract class AbstractAction2<Env,T1,T2,OutT> : Producer<Env,OutT>, IHandler2<Env,T1,T2>
+    {
+        public abstract IHandler<Env,T1> AsHandler1 {get;}
+        public abstract IHandler<Env,T2> AsHandler2 {get;}
     }
     public class KeyedDataProducer<Env,T1,T2> 
     {
@@ -505,6 +766,162 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         public static AbstractAction<Env,T1,T2> kleisliMulti<T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> f, bool threaded)
         {
             return new KleisliMultiAction<T1,T2>(f, threaded);
+        }
+        class KleisliAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
+        {
+            private Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> func;
+            public void actuallyHandle(Env env, int which, WithTime<T1> t1, WithTime<T2> t2)
+            {
+                var res = func(
+                    which 
+                    , new TimedDataWithEnvironment<Env, T1>(
+                        env, t1
+                    )
+                    , new TimedDataWithEnvironment<Env, T2>(
+                        env, t2
+                    )
+                );
+                if (res.HasValue)
+                {
+                    publish(res.ValueOrFailure());
+                }
+            }
+            private IHandler2<Env,T1,T2> realHandler;
+            public KleisliAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> func, bool threaded, bool[] mask)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
+                }
+            }
+            public KleisliAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> func, bool threaded)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler2<Env,T1,T2>(this.actuallyHandle);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler2<Env,T1,T2>(this.actuallyHandle);
+                }
+            }
+            public override IHandler<Env,T1> AsHandler1 {
+                get {
+                    return realHandler.AsHandler1;
+                }
+            }
+            public override IHandler<Env,T2> AsHandler2 {
+                get {
+                    return realHandler.AsHandler2;
+                }
+            }
+        }
+        class KleisliMultiAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
+        {
+            private Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func;
+            public void actuallyHandle(Env env, int which, WithTime<T1> t1, WithTime<T2> t2)
+            {
+                var res = func(
+                    which 
+                    , new TimedDataWithEnvironment<Env, T1>(
+                        env, t1
+                    )
+                    , new TimedDataWithEnvironment<Env, T2>(
+                        env, t2
+                    )
+                );
+                if (res.HasValue)
+                {
+                    var yVal = res.ValueOrFailure();
+                    var count = yVal.timedData.value.Count;
+                    var ii = 0;
+                    foreach (var item in yVal.timedData.value)
+                    {
+                        publish(new TimedDataWithEnvironment<Env, OutT>(
+                            yVal.environment
+                            , new WithTime<OutT>(
+                                yVal.timedData.timePoint
+                                , item
+                                , (yVal.timedData.finalFlag && (ii == count-1))
+                            )
+                        ));
+                        ++ii;
+                    }
+                }
+            }
+            private IHandler2<Env,T1,T2> realHandler;
+            public KleisliMultiAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func, bool threaded, bool[] mask)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
+                }
+            }
+            public KleisliMultiAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func, bool threaded)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler2<Env,T1,T2>(this.actuallyHandle);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler2<Env,T1,T2>(this.actuallyHandle);
+                }
+            }
+            public override IHandler<Env,T1> AsHandler1 {
+                get {
+                    return realHandler.AsHandler1;
+                }
+            }
+            public override IHandler<Env,T2> AsHandler2 {
+                get {
+                    return realHandler.AsHandler2;
+                }
+            }
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> liftPure2<T1,T2,OutT>(Func<int,T1,T2,OutT> f, bool threaded, bool[] mask) 
+        {
+            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.liftPure2<T1,T2,OutT>(f), threaded, mask);
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> liftMaybe<T1,T2,OutT>(Func<int,T1,T2,Option<OutT>> f, bool threaded, bool[] mask) 
+        {
+            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.liftMaybe2<T1,T2,OutT>(f), threaded, mask);
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> enhancedMaybe2<T1,T2,OutT>(Func<int,long,T1,T2,Option<OutT>> f, bool threaded, bool[] mask) 
+        {
+            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe2<T1,T2,OutT>(f), threaded);
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> kleisli2<T1,T2,OutT>(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> f, bool threaded, bool[] mask) 
+        {
+            return new KleisliAction2<T1,T2,OutT>(f, threaded, mask);
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> liftMulti2<T1,T2,OutT>(Func<int,T1,T2,List<OutT>> f, bool threaded, bool[] mask)
+        {
+            return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.liftPure2<T1,T2,List<OutT>>(f), threaded, mask);
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> enhancedMulti2<T1,T2,OutT>(Func<int,long,T1,T2,List<OutT>> f, bool threaded, bool[] mask)
+        {
+            return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe2<T1,T2,List<OutT>>(
+                (int which, long d, T1 x1, T2 x2) => {
+                    return Option.Some(f(which, d, x1, x2));
+                }
+            ), threaded, mask);
+        }
+        public static AbstractAction2<Env,T1,T2,OutT> kleisliMulti2<T1,T2,OutT>(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> f, bool threaded, bool[] mask)
+        {
+            return new KleisliMultiAction2<T1,T2,OutT>(f, threaded, mask);
         }
 
         public static void terminateAtTimePoint(Env env, DateTimeOffset tp)
