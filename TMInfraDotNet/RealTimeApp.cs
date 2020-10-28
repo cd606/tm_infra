@@ -288,7 +288,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             public override void start(Env env)
             {
                 this.env = env;
-
+                new Thread(this.run).Start();
             }
         }
         public static AbstractImporter<Env,T> simpleImporter<Env,T>(
