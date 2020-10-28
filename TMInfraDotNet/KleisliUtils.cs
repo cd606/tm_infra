@@ -1,5 +1,6 @@
 using System;
 using Optional;
+using Optional.Unsafe;
 
 namespace Dev.CD606.TM.Infra
 {
@@ -21,19 +22,23 @@ namespace Dev.CD606.TM.Infra
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f(x.timedData.value);
-                return y.Match(
-                    some : yVal => Option.Some(
+                if (y.HasValue)
+                {
+                    return Option.Some(
                         new TimedDataWithEnvironment<Env, T2>(
                             x.environment
                             , new WithTime<T2>(
                                 x.timedData.timePoint
-                                , yVal
+                                , y.ValueOrFailure()
                                 , x.timedData.finalFlag
                             )
                         )
-                    )
-                    , none : () => Option.None<TimedDataWithEnvironment<Env,T2>>()
-                );
+                    );
+                }
+                else
+                {
+                    return Option.None<TimedDataWithEnvironment<Env,T2>>();
+                }
             };
         }
         public static 
@@ -42,19 +47,23 @@ namespace Dev.CD606.TM.Infra
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f(x.timedData.timePoint, x.timedData.value);
-                return y.Match(
-                    some : yVal => Option.Some(
+                if (y.HasValue)
+                {
+                    return Option.Some(
                         new TimedDataWithEnvironment<Env, T2>(
                             x.environment
                             , new WithTime<T2>(
                                 x.timedData.timePoint
-                                , yVal
+                                , y.ValueOrFailure()
                                 , x.timedData.finalFlag
                             )
                         )
-                    )
-                    , none : () => Option.None<TimedDataWithEnvironment<Env,T2>>()
-                );
+                    );
+                }
+                else
+                {
+                    return Option.None<TimedDataWithEnvironment<Env,T2>>();
+                }
             };
         }
         public static 
@@ -66,10 +75,14 @@ namespace Dev.CD606.TM.Infra
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f1(x);
-                return y.Match(
-                    some : yVal => f2(yVal)
-                    , none : () => Option.None<TimedDataWithEnvironment<Env,T3>>()
-                );
+                if (y.HasValue)
+                {
+                    return f2(y.ValueOrFailure());
+                }
+                else
+                {
+                    return Option.None<TimedDataWithEnvironment<Env,T3>>();
+                }
             };
         }
     }

@@ -2,7 +2,7 @@
 
 namespace Dev.CD606.TM.Infra
 {
-    public readonly struct Key<T>
+    public class Key<T>
     {
         public readonly string id;
         public readonly T key;
@@ -16,7 +16,7 @@ namespace Dev.CD606.TM.Infra
         }
     }
 
-    public readonly struct KeyedData<A,B>
+    public class KeyedData<A,B>
     {
         public readonly Key<A> key;
         public readonly B data;
@@ -26,7 +26,7 @@ namespace Dev.CD606.TM.Infra
         }
     }
 
-    public readonly struct VersionedData<Version, T> where Version : IComparable
+    public class VersionedData<Version, T> where Version : IComparable
     {
         public readonly Version version;
         public readonly T data;
@@ -36,7 +36,7 @@ namespace Dev.CD606.TM.Infra
         }
     }
 
-    public readonly struct GroupedVersionedData<GroupID, Version, T> where Version : IComparable
+    public class GroupedVersionedData<GroupID, Version, T> where Version : IComparable
     {
         public readonly GroupID groupID;
         public readonly Version version;
@@ -48,7 +48,7 @@ namespace Dev.CD606.TM.Infra
         }
     }
 
-    public readonly struct WithTime<T> 
+    public class WithTime<T> 
     {
         public readonly DateTimeOffset timePoint;
         public readonly T value;
@@ -60,7 +60,7 @@ namespace Dev.CD606.TM.Infra
         }
     }
 
-    public readonly struct TimedDataWithEnvironment<Env, T>
+    public class TimedDataWithEnvironment<Env, T>
     {
         public readonly Env environment;
         public readonly WithTime<T> timedData;

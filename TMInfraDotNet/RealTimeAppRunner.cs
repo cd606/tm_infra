@@ -15,7 +15,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             this.env = env;
         }
 
-        public readonly struct Source<T>
+        public class Source<T>
         {
             public readonly Producer<Env,T> producer;
             public Source(Producer<Env,T> producer)
@@ -23,7 +23,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 this.producer = producer;
             }
         }
-        public readonly struct Sink<T>
+        public class Sink<T>
         {
             public readonly IHandler<Env,T> handler;
             public Sink(IHandler<Env,T> handler)

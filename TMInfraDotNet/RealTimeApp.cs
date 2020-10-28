@@ -16,12 +16,16 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         void handle(TimedDataWithEnvironment<Env,T> data);
     }
 
-    class VersionedDataChecker<Version,T> where Version : IComparable
+    interface SecondaryChecker
+    {
+        bool check(object x);
+    }
+    class VersionedDataChecker<Version,T> : SecondaryChecker where Version : IComparable
     {
         private Option<Version> lastVersion = Option.None<Version>();
-        public bool check(dynamic x)
+        public bool check(object x)
         {
-            VersionedData<Version,T> d = x.value;
+            var d = (VersionedData<Version,T>) x;
             if (lastVersion.HasValue && d.version.CompareTo(lastVersion.ValueOrFailure()) <= 0)
             {
                 return false;
@@ -30,12 +34,12 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             return true;
         }
     }
-    class GroupedVersionedDataChecker<GroupID,Version,T> where Version : IComparable
+    class GroupedVersionedDataChecker<GroupID,Version,T> : SecondaryChecker where Version : IComparable
     {
         private Dictionary<GroupID,Version> lastVersion = new Dictionary<GroupID, Version>();
-        public bool check(dynamic x)
+        public bool check(object x)
         {
-            GroupedVersionedData<GroupID,Version,T> d = x.value;
+            var d = (GroupedVersionedData<GroupID,Version,T>) x;
             Version v;
             if (lastVersion.TryGetValue(d.groupID, out v))
             {
@@ -59,25 +63,36 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
 
     class TimeChecker<T>
     {
-        private dynamic versionChecker = null;
+        private readonly bool useVersionChecker;
+        private SecondaryChecker versionChecker = null;
         private Option<DateTimeOffset> lastTime = Option.None<DateTimeOffset>();
         private object lockObj = new object();
         public TimeChecker()
         {
             var tType = typeof(T);
-            if (tType.IsValueType && !tType.IsEnum && tType.IsGenericType)
+            if (tType.IsGenericType)
             {
                 if (tType.Name.Equals("VersionedData`2"))
                 {
                     var p = tType.GenericTypeArguments;
                     var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
-                    this.versionChecker = Activator.CreateInstance(checkerType);
+                    this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                    this.useVersionChecker = true;
                 } else if (tType.Name.Equals("GroupedVersionedData`3"))
                 {
                     var p = tType.GenericTypeArguments;
                     var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
-                    this.versionChecker = Activator.CreateInstance(checkerType);
+                    this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                    this.useVersionChecker = true;
                 }
+                else
+                {
+                    this.useVersionChecker = false;
+                }
+            }
+            else
+            {
+                this.useVersionChecker = false;
             }
         }
         public bool check(WithTime<T> data) 
@@ -88,9 +103,9 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 {
                     return false;
                 }
-                if (versionChecker != null) 
+                if (useVersionChecker) 
                 {
-                    if (!versionChecker.check(data))
+                    if (!versionChecker.check(data.value))
                     {
                         return false;
                     }
@@ -151,7 +166,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     {
         private object lockObj = new object();
         private List<IHandler<Env,T>> handlers = new List<IHandler<Env, T>>();
-        private static bool canClone = (typeof(T) is ICloneable);
+        private static bool canClone = (!(typeof(T).IsValueType)) && (typeof(T) is ICloneable);
         public void addHandler(IHandler<Env,T> handler)
         {
             lock (lockObj)
@@ -176,14 +191,14 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                     default:
                         if (canClone)
                         {
-                            dynamic v = data.timedData.value;
+                            ICloneable v = (ICloneable) data.timedData.value;
                             foreach (var h in handlers)
                             {
                                 h.handle(new TimedDataWithEnvironment<Env, T>(
                                     data.environment
                                     , new WithTime<T>(
                                         data.timedData.timePoint
-                                        , v.Clone()
+                                        , (T) v.Clone()
                                         , data.timedData.finalFlag
                                     )
                                 ));
@@ -392,12 +407,10 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
             {
                 var res = func(data);
-                res.Match(
-                    some : (yVal) => {
-                        publish(yVal);
-                    }
-                    , none : () => {}
-                );
+                if (res.HasValue)
+                {
+                    publish(res.ValueOrFailure());
+                }
             }
             private IHandler<Env,T1> realHandler;
             public KleisliAction(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> func, bool threaded)
@@ -423,25 +436,24 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
             {
                 var res = func(data);
-                res.Match(
-                    some : (yVal) => {
-                        var itemCount = yVal.timedData.value.Count;
-                        var ii = 0;
-                        foreach (var item in yVal.timedData.value)
-                        {
-                            publish(new TimedDataWithEnvironment<Env, T2>(
-                                yVal.environment
-                                , new WithTime<T2>(
-                                    yVal.timedData.timePoint
-                                    , item
-                                    , (yVal.timedData.finalFlag && (ii == (itemCount-1)))
-                                )
-                            ));
-                            ++ii;
-                        }
+                if (res.HasValue)
+                {
+                    var yVal = res.ValueOrFailure();
+                    var itemCount = yVal.timedData.value.Count;
+                    var ii = 0;
+                    foreach (var item in yVal.timedData.value)
+                    {
+                        publish(new TimedDataWithEnvironment<Env, T2>(
+                            yVal.environment
+                            , new WithTime<T2>(
+                                yVal.timedData.timePoint
+                                , item
+                                , (yVal.timedData.finalFlag && (ii == (itemCount-1)))
+                            )
+                        ));
+                        ++ii;
                     }
-                    , none : () => {}
-                );
+                }
             }
             private IHandler<Env,T1> realHandler;
             public KleisliMultiAction(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> func, bool threaded)
