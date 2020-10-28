@@ -1532,127 +1532,188 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 infra::withtime_utils::keyify<T,StateT>(std::move(t))
             );
         }
-        template <class T>
+        template <class T, bool HasOwnThread=true>
         static std::tuple<std::shared_ptr<Importer<T>>,std::function<void()>> constTriggerImporter(T &&t = T()) {
-            class LocalI final : public AbstractImporter<T> {
-            private:
-                T t_;
-                StateT *env_;
-                std::condition_variable cond_;
-                std::mutex mutex_;
-                std::thread th_;
-                std::atomic<bool> running_;
-                void run() {
-                    running_ = true;
-                    while (running_) {
-                        std::unique_lock<std::mutex> lock(mutex_);
-                        cond_.wait(lock);
-                        lock.unlock();
-                        if (!running_) {
-                            break;
+            if constexpr (HasOwnThread) {
+                class LocalI final : public AbstractImporter<T> {
+                private:
+                    T t_;
+                    StateT *env_;
+                    uint64_t count_;
+                    std::condition_variable cond_;
+                    std::mutex mutex_;
+                    std::thread th_;
+                    std::atomic<bool> running_;
+                    void run() {
+                        running_ = true;
+                        while (running_) {
+                            std::unique_lock<std::mutex> lock(mutex_);
+                            cond_.wait(lock);
+                            auto countCopy = count_;
+                            count_ = 0;
+                            lock.unlock();
+                            if (!running_) {
+                                break;
+                            }
+                            for (auto ii=0; ii<countCopy; ++ii) {
+                                T oneCopy = infra::withtime_utils::makeValueCopy<T>(t_);
+                                this->publish(env_, std::move(oneCopy));
+                            }
                         }
-                        T oneCopy {t_};
+                    }
+                public:
+                    LocalI(T &&t) : t_(std::move(t)), env_(nullptr), count_(0), cond_(), mutex_(), th_(), running_(false) {
+                    }
+                    ~LocalI() {
+                        if (running_) {
+                            running_ = false;
+                            cond_.notify_one();
+                            if (th_.joinable()) {
+                                th_.join();
+                            }
+                        }
+                    }
+                    virtual void start(StateT *env) override final {
+                        env_ = env;
+                        th_ = std::thread(&LocalI::run, this);
+                        th_.detach();
+                    }
+                    void trigger() {
+                        if (running_) {
+                            {
+                                std::lock_guard<std::mutex> _(mutex_);
+                                ++count_;
+                            }
+                            cond_.notify_one();
+                        }
+                    }
+                };
+                auto *p = new LocalI(std::move(t));
+                return {
+                    std::make_shared<Importer<T>>(p)
+                    , [p]() {
+                        p->trigger();
+                    }
+                };
+            } else {
+                class LocalI final : public AbstractImporter<T> {
+                private:
+                    T t_;
+                    StateT *env_;
+                public:
+                    LocalI(T &&t) : t_(std::move(t)), env_(nullptr) {
+                    }
+                    ~LocalI() {
+                    }
+                    virtual void start(StateT *env) override final {
+                        env_ = env;
+                    }
+                    void trigger() {
+                        T oneCopy = infra::withtime_utils::makeValueCopy<T>(t_);
                         this->publish(env_, std::move(oneCopy));
                     }
-                }
-            public:
-                LocalI(T &&t) : t_(std::move(t)), env_(nullptr), cond_(), mutex_(), th_(), running_(false) {
-                }
-                ~LocalI() {
-                    if (running_) {
-                        running_ = false;
-                        cond_.notify_one();
-                        if (th_.joinable()) {
-                            th_.join();
-                        }
+                };
+                auto *p = new LocalI(std::move(t));
+                return {
+                    std::make_shared<Importer<T>>(p)
+                    , [p]() {
+                        p->trigger();
                     }
-                }
-                virtual void start(StateT *env) override final {
-                    env_ = env;
-                    th_ = std::thread(&LocalI::run, this);
-                    th_.detach();
-                }
-                void trigger() {
-                    if (running_) {
-                        cond_.notify_one();
-                    }
-                }
-            };
-            auto *p = new LocalI(std::move(t));
-            return {
-                std::make_shared<Importer<T>>(p)
-                , [p]() {
-                    p->trigger();
-                }
-            };
+                };
+            }
         }
-        template <class T>
+        template <class T, bool HasOwnThread=true>
         static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(T&&)>> triggerImporter() {
-            class LocalI final : public AbstractImporter<T> {
-            private:
-                std::list<T> incoming_, processing_;
-                StateT *env_;
-                std::condition_variable cond_;
-                std::mutex mutex_;
-                std::thread th_;
-                std::atomic<bool> running_;
-                void run() {
-                    running_ = true;
-                    while (running_) {
-                        std::unique_lock<std::mutex> lock(mutex_);
-                        cond_.wait(lock);
+            if constexpr (HasOwnThread) {
+                class LocalI final : public AbstractImporter<T> {
+                private:
+                    std::list<T> incoming_, processing_;
+                    StateT *env_;
+                    std::condition_variable cond_;
+                    std::mutex mutex_;
+                    std::thread th_;
+                    std::atomic<bool> running_;
+                    void run() {
+                        running_ = true;
+                        while (running_) {
+                            std::unique_lock<std::mutex> lock(mutex_);
+                            cond_.wait(lock);
+                            if (!running_) {
+                                lock.unlock();
+                                break;
+                            }
+                            if (incoming_.empty()) {
+                                lock.unlock();
+                                continue;
+                            }
+                            processing_.splice(processing_.end(), incoming_);
+                            lock.unlock();
+                            while (!processing_.empty()) {
+                                T &data = processing_.front();
+                                this->publish(env_, std::move(data));
+                                processing_.pop_front();
+                            }
+                        }
+                    }
+                public:
+                    LocalI() : incoming_(), processing_(), env_(nullptr), cond_(), mutex_(), th_(), running_(false) {
+                    }
+                    ~LocalI() {
+                        if (running_) {
+                            running_ = false;
+                            cond_.notify_one();
+                            if (th_.joinable()) {
+                                th_.join();
+                            }
+                        }
+                    }
+                    virtual void start(StateT *env) override final {
+                        env_ = env;
+                        th_ = std::thread(&LocalI::run, this);
+                        th_.detach();
+                    }
+                    void trigger(T &&t) {
                         if (!running_) {
-                            lock.unlock();
-                            break;
+                            return;
                         }
-                        if (incoming_.empty()) {
-                            lock.unlock();
-                            continue;
+                        {
+                            std::lock_guard<std::mutex> _(mutex_);
+                            incoming_.push_back(std::move(t));
                         }
-                        processing_.splice(processing_.end(), incoming_);
-                        lock.unlock();
-                        while (!processing_.empty()) {
-                            T &data = processing_.front();
-                            this->publish(env_, std::move(data));
-                            processing_.pop_front();
-                        }
-                    }
-                }
-            public:
-                LocalI() : incoming_(), processing_(), env_(nullptr), cond_(), mutex_(), th_(), running_(false) {
-                }
-                ~LocalI() {
-                    if (running_) {
-                        running_ = false;
                         cond_.notify_one();
-                        if (th_.joinable()) {
-                            th_.join();
-                        }
                     }
-                }
-                virtual void start(StateT *env) override final {
-                    env_ = env;
-                    th_ = std::thread(&LocalI::run, this);
-                    th_.detach();
-                }
-                void trigger(T &&t) {
-                    if (!running_) {
-                        return;
+                };
+                auto *p = new LocalI();
+                return {
+                    std::make_shared<Importer<T>>(p)
+                    , [p](T &&t) {
+                        p->trigger(std::move(t));
                     }
-                    {
-                        std::lock_guard<std::mutex> _(mutex_);
-                        incoming_.push_back(std::move(t));
+                };
+            } else {
+                class LocalI final : public AbstractImporter<T> {
+                private:
+                    StateT *env_;
+                public:
+                    LocalI() : env_(nullptr) {
                     }
-                    cond_.notify_one();
-                }
-            };
-            auto *p = new LocalI();
-            return {
-                std::make_shared<Importer<T>>(p)
-                , [p](T &&t) {
-                    p->trigger(std::move(t));
-                }
-            };
+                    ~LocalI() {
+                    }
+                    virtual void start(StateT *env) override final {
+                        env_ = env;
+                    }
+                    void trigger(T &&t) {
+                        this->publish(env_, std::move(t));
+                    }
+                };
+                auto *p = new LocalI();
+                return {
+                    std::make_shared<Importer<T>>(p)
+                    , [p](T &&t) {
+                        p->trigger(std::move(t));
+                    }
+                };
+            }
         }
     public:
         template <class T>
