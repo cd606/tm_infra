@@ -3,11 +3,11 @@ using Optional;
 
 namespace Dev.CD606.TM.Infra
 {
-    public static class KleisliUtils 
+    public static class KleisliUtils<Env>
     {
         public static 
             Func<TimedDataWithEnvironment<Env,T1>, Option<TimedDataWithEnvironment<Env,T2>>> 
-            liftPure<Env,T1,T2>(Func<T1,T2> f) where Env : EnvBase
+            liftPure<T1,T2>(Func<T1,T2> f)
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 return Option.Some(
@@ -17,7 +17,7 @@ namespace Dev.CD606.TM.Infra
         }
         public static 
             Func<TimedDataWithEnvironment<Env,T1>, Option<TimedDataWithEnvironment<Env,T2>>> 
-            liftMaybe<Env,T1,T2>(Func<T1,Option<T2>> f) where Env : EnvBase
+            liftMaybe<T1,T2>(Func<T1,Option<T2>> f) 
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f(x.timedData.value);
@@ -38,7 +38,7 @@ namespace Dev.CD606.TM.Infra
         }
         public static 
             Func<TimedDataWithEnvironment<Env,T1>, Option<TimedDataWithEnvironment<Env,T2>>> 
-            enhancedMaybe<Env,T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f) where Env : EnvBase
+            enhancedMaybe<T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f) 
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f(x.timedData.timePoint, x.timedData.value);
@@ -59,10 +59,10 @@ namespace Dev.CD606.TM.Infra
         }
         public static 
             Func<TimedDataWithEnvironment<Env,T1>, Option<TimedDataWithEnvironment<Env,T3>>> 
-            compose<Env,T1,T2,T3>(
+            compose<T1,T2,T3>(
                 Func<TimedDataWithEnvironment<Env,T1>, Option<TimedDataWithEnvironment<Env,T2>>> f1
                 , Func<TimedDataWithEnvironment<Env,T2>, Option<TimedDataWithEnvironment<Env,T3>>> f2
-            ) where Env : EnvBase
+            ) 
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f1(x);

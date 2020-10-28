@@ -269,9 +269,9 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         }
     }
 
-    public static class RealTimeAppUtils
+    public static class RealTimeAppUtils<Env> where Env : EnvBase
     {
-        class SimpleImporter<Env,T> : AbstractImporter<Env,T> where Env : EnvBase
+        class SimpleImporter<T> : AbstractImporter<Env,T>
         {
             private Env env;
             private Action<Env, Action<T, bool>> generator;
@@ -291,14 +291,14 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 new Thread(this.run).Start();
             }
         }
-        public static AbstractImporter<Env,T> simpleImporter<Env,T>(
+        public static AbstractImporter<Env,T> simpleImporter<T>(
             Action<Env, Action<T, bool>> generator
-        ) where Env : EnvBase
+        ) 
         {
-            return new SimpleImporter<Env,T>(generator);
+            return new SimpleImporter<T>(generator);
         }
 
-        public class TriggerImporter<Env, T> : AbstractImporter<Env, T> where Env : EnvBase
+        public class TriggerImporter<T> : AbstractImporter<Env, T> 
         {
             private Env env;
             public override void start(Env env)
@@ -310,11 +310,11 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 publish(InfraUtils.pureTimedDataWithEnvironment(env, t, false));
             }
         }
-        public static TriggerImporter<Env,T> triggerImporter<Env,T>() where Env : EnvBase
+        public static TriggerImporter<T> triggerImporter<T>()
         {
-            return new TriggerImporter<Env, T>();
+            return new TriggerImporter<T>();
         }
-        public class ConstTriggerImporter<Env, T> : AbstractImporter<Env, T> where Env : EnvBase
+        public class ConstTriggerImporter<T> : AbstractImporter<Env, T> 
         {
             private Env env;
             private T t;
@@ -331,27 +331,27 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 publish(InfraUtils.pureTimedDataWithEnvironment(env, t, false));
             }
         }
-        public static ConstTriggerImporter<Env,T> constTriggerImporter<Env,T>(T t) where Env : EnvBase
+        public static ConstTriggerImporter<T> constTriggerImporter<T>(T t) 
         {
-            return new ConstTriggerImporter<Env, T>(t);
+            return new ConstTriggerImporter<T>(t);
         }
-        public static AbstractImporter<Env,T> constFirstPushImporter<Env,T>(T t) where Env : EnvBase
+        public static AbstractImporter<Env,T> constFirstPushImporter<T>(T t) 
         {
-            return simpleImporter<Env,T>(
+            return simpleImporter<T>(
                 (Env env, Action<T, bool> pub) => {
                     pub(t, true);
                 }
             );
         }
-        public static AbstractImporter<Env,Key<T>> constFirstPushKeyImporter<Env,T>(T t) where Env : EnvBase
+        public static AbstractImporter<Env,Key<T>> constFirstPushKeyImporter<T>(T t) 
         {
-            return simpleImporter<Env,Key<T>>(
+            return simpleImporter<Key<T>>(
                 (Env env, Action<Key<T>, bool> pub) => {
                     pub(InfraUtils.keyify<T>(t), true);
                 }
             );
         }
-        class SimpleExporter<Env, T> : AbstractExporter<Env, T> where Env : EnvBase
+        class SimpleExporter<T> : AbstractExporter<Env, T>
         {
             private IHandler<Env,T> realHandler;
             public SimpleExporter(Action<TimedDataWithEnvironment<Env,T>> f, bool threaded)
@@ -373,20 +373,20 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 realHandler.handle(data);
             }
         }
-        public static AbstractExporter<Env,T> simpleExporter<Env,T>(Action<TimedDataWithEnvironment<Env,T>> f, bool threaded) where Env : EnvBase
+        public static AbstractExporter<Env,T> simpleExporter<T>(Action<TimedDataWithEnvironment<Env,T>> f, bool threaded) 
         {
-            return new SimpleExporter<Env,T>(f, threaded);
+            return new SimpleExporter<T>(f, threaded);
         }
-        public static AbstractExporter<Env,T> pureExporter<Env,T>(Action<T> f, bool threaded) where Env : EnvBase
+        public static AbstractExporter<Env,T> pureExporter<T>(Action<T> f, bool threaded)
         {
-            return simpleExporter<Env,T>(
+            return simpleExporter<T>(
                 (TimedDataWithEnvironment<Env,T> data) => {
                     f(data.timedData.value);
                 }
                 , threaded
             );
         }
-        class KleisliAction<Env,T1,T2> : AbstractAction<Env,T1,T2> where Env : EnvBase
+        class KleisliAction<T1,T2> : AbstractAction<Env,T1,T2>
         {
             private Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> func;
             public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
@@ -417,7 +417,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 realHandler.handle(data);
             }
         }
-        class KleisliMultiAction<Env,T1,T2> : AbstractAction<Env,T1,T2> where Env : EnvBase
+        class KleisliMultiAction<T1,T2> : AbstractAction<Env,T1,T2>
         {
             private Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> func;
             public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
@@ -461,37 +461,75 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 realHandler.handle(data);
             }
         }
-        public static AbstractAction<Env,T1,T2> liftPure<Env,T1,T2>(Func<T1,T2> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> liftPure<T1,T2>(Func<T1,T2> f, bool threaded) 
         {
-            return new KleisliAction<Env,T1,T2>(KleisliUtils.liftPure<Env,T1,T2>(f), threaded);
+            return new KleisliAction<T1,T2>(KleisliUtils<Env>.liftPure<T1,T2>(f), threaded);
         }
-        public static AbstractAction<Env,T1,T2> liftMaybe<Env,T1,T2>(Func<T1,Option<T2>> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> liftMaybe<T1,T2>(Func<T1,Option<T2>> f, bool threaded) 
         {
-            return new KleisliAction<Env,T1,T2>(KleisliUtils.liftMaybe<Env,T1,T2>(f), threaded);
+            return new KleisliAction<T1,T2>(KleisliUtils<Env>.liftMaybe<T1,T2>(f), threaded);
         }
-        public static AbstractAction<Env,T1,T2> enhancedMaybe<Env,T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> enhancedMaybe<T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f, bool threaded) 
         {
-            return new KleisliAction<Env,T1,T2>(KleisliUtils.enhancedMaybe<Env,T1,T2>(f), threaded);
+            return new KleisliAction<T1,T2>(KleisliUtils<Env>.enhancedMaybe<T1,T2>(f), threaded);
         }
-        public static AbstractAction<Env,T1,T2> kleisli<Env,T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> kleisli<T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> f, bool threaded) 
         {
-            return new KleisliAction<Env,T1,T2>(f, threaded);
+            return new KleisliAction<T1,T2>(f, threaded);
         }
-        public static AbstractAction<Env,T1,T2> liftMulti<Env,T1,T2>(Func<T1,List<T2>> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> liftMulti<T1,T2>(Func<T1,List<T2>> f, bool threaded)
         {
-            return new KleisliMultiAction<Env,T1,T2>(KleisliUtils.liftPure<Env,T1,List<T2>>(f), threaded);
+            return new KleisliMultiAction<T1,T2>(KleisliUtils<Env>.liftPure<T1,List<T2>>(f), threaded);
         }
-        public static AbstractAction<Env,T1,T2> enhancedMulti<Env,T1,T2>(Func<DateTimeOffset,T1,List<T2>> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> enhancedMulti<T1,T2>(Func<DateTimeOffset,T1,List<T2>> f, bool threaded)
         {
-            return new KleisliMultiAction<Env,T1,T2>(KleisliUtils.enhancedMaybe<Env,T1,List<T2>>(
+            return new KleisliMultiAction<T1,T2>(KleisliUtils<Env>.enhancedMaybe<T1,List<T2>>(
                 (DateTimeOffset d, T1 x) => {
                     return Option.Some<List<T2>>(f(d, x));
                 }
             ), threaded);
         }
-        public static AbstractAction<Env,T1,T2> kleisliMulti<Env,T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> f, bool threaded) where Env : EnvBase
+        public static AbstractAction<Env,T1,T2> kleisliMulti<T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> f, bool threaded)
         {
-            return new KleisliMultiAction<Env,T1,T2>(f, threaded);
+            return new KleisliMultiAction<T1,T2>(f, threaded);
+        }
+
+        public static void terminateAtTimePoint(Env env, DateTimeOffset tp)
+        {
+            Thread.Sleep(tp-DateTimeOffset.Now);
+            env.exit();
+        }
+        public static void terminateAfterDuration(Env env, TimeSpan d)
+        {
+            Thread.Sleep(d);
+            env.exit();
+        }
+        public static void immediatelyTerminate(Env env)
+        {
+            env.exit();
+        }
+        public static void runForever(Env env, Func<bool> checker, TimeSpan d)
+        {
+            while (checker())
+            {
+                Thread.Sleep(d);
+            }
+            env.exit();
+        }
+        public static void runForever(Env env, Func<bool> checker)
+        {
+            while (checker())
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(100));
+            }
+            env.exit();
+        }
+        public static void runForever(Env env)
+        {
+            while (true)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(100));
+            }
         }
     }
 }
