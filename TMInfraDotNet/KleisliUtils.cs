@@ -43,7 +43,7 @@ namespace Dev.CD606.TM.Infra
         }
         public static 
             Func<TimedDataWithEnvironment<Env,T1>, Option<TimedDataWithEnvironment<Env,T2>>> 
-            enhancedMaybe<T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f) 
+            enhancedMaybe<T1,T2>(Func<long,T1,Option<T2>> f) 
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
                 var y = f(x.timedData.timePoint, x.timedData.value);

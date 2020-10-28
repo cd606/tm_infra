@@ -65,7 +65,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     {
         private readonly bool useVersionChecker;
         private SecondaryChecker versionChecker = null;
-        private Option<DateTimeOffset> lastTime = Option.None<DateTimeOffset>();
+        private long lastTime = 0;
         private object lockObj = new object();
         public TimeChecker()
         {
@@ -99,7 +99,8 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             lock (lockObj)
             {
-                if (lastTime.HasValue && lastTime.ValueOrFailure() > data.timePoint)
+                var t = data.timePoint;
+                if (lastTime > t)
                 {
                     return false;
                 }
@@ -110,7 +111,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                         return false;
                     }
                 }
-                lastTime = Option.Some(data.timePoint);
+                lastTime = t;
                 return true;
             }
         }
@@ -481,7 +482,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             return new KleisliAction<T1,T2>(KleisliUtils<Env>.liftMaybe<T1,T2>(f), threaded);
         }
-        public static AbstractAction<Env,T1,T2> enhancedMaybe<T1,T2>(Func<DateTimeOffset,T1,Option<T2>> f, bool threaded) 
+        public static AbstractAction<Env,T1,T2> enhancedMaybe<T1,T2>(Func<long,T1,Option<T2>> f, bool threaded) 
         {
             return new KleisliAction<T1,T2>(KleisliUtils<Env>.enhancedMaybe<T1,T2>(f), threaded);
         }
@@ -493,10 +494,10 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             return new KleisliMultiAction<T1,T2>(KleisliUtils<Env>.liftPure<T1,List<T2>>(f), threaded);
         }
-        public static AbstractAction<Env,T1,T2> enhancedMulti<T1,T2>(Func<DateTimeOffset,T1,List<T2>> f, bool threaded)
+        public static AbstractAction<Env,T1,T2> enhancedMulti<T1,T2>(Func<long,T1,List<T2>> f, bool threaded)
         {
             return new KleisliMultiAction<T1,T2>(KleisliUtils<Env>.enhancedMaybe<T1,List<T2>>(
-                (DateTimeOffset d, T1 x) => {
+                (long d, T1 x) => {
                     return Option.Some<List<T2>>(f(d, x));
                 }
             ), threaded);

@@ -50,10 +50,15 @@ namespace Dev.CD606.TM.Infra
 
     public class WithTime<T> 
     {
-        public readonly DateTimeOffset timePoint;
+        public readonly long timePoint;
         public readonly T value;
         public readonly bool finalFlag;
         public WithTime(DateTimeOffset timePoint, T value, bool finalFlag) {
+            this.timePoint = timePoint.ToUnixTimeMilliseconds();
+            this.value = value;
+            this.finalFlag = finalFlag;
+        }
+        public WithTime(long timePoint, T value, bool finalFlag) {
             this.timePoint = timePoint;
             this.value = value;
             this.finalFlag = finalFlag;
