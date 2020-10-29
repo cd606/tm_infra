@@ -1,6 +1,5 @@
 using System;
-using Optional;
-using Optional.Unsafe;
+using Here;
 
 namespace Dev.CD606.TM.Infra
 {
@@ -11,9 +10,7 @@ namespace Dev.CD606.TM.Infra
             liftPure<T1,T2>(Func<T1,T2> f)
         {
             return (TimedDataWithEnvironment<Env,T1> x) => {
-                return Option.Some(
-                    InfraUtils.mapTimedDataWithEnvironment(f, x)
-                );
+                return InfraUtils.mapTimedDataWithEnvironment(f, x);
             };
         }
         public static 
@@ -24,20 +21,18 @@ namespace Dev.CD606.TM.Infra
                 var y = f(x.timedData.value);
                 if (y.HasValue)
                 {
-                    return Option.Some(
-                        new TimedDataWithEnvironment<Env, T2>(
-                            x.environment
-                            , new WithTime<T2>(
-                                x.timedData.timePoint
-                                , y.ValueOrFailure()
-                                , x.timedData.finalFlag
-                            )
+                    return new TimedDataWithEnvironment<Env, T2>(
+                        x.environment
+                        , new WithTime<T2>(
+                            x.timedData.timePoint
+                            , y.Unwrap()
+                            , x.timedData.finalFlag
                         )
                     );
                 }
                 else
                 {
-                    return Option.None<TimedDataWithEnvironment<Env,T2>>();
+                    return Option.None;
                 }
             };
         }
@@ -49,20 +44,18 @@ namespace Dev.CD606.TM.Infra
                 var y = f(x.timedData.timePoint, x.timedData.value);
                 if (y.HasValue)
                 {
-                    return Option.Some(
-                        new TimedDataWithEnvironment<Env, T2>(
-                            x.environment
-                            , new WithTime<T2>(
-                                x.timedData.timePoint
-                                , y.ValueOrFailure()
-                                , x.timedData.finalFlag
-                            )
+                    return new TimedDataWithEnvironment<Env, T2>(
+                        x.environment
+                        , new WithTime<T2>(
+                            x.timedData.timePoint
+                            , y.Unwrap()
+                            , x.timedData.finalFlag
                         )
                     );
                 }
                 else
                 {
-                    return Option.None<TimedDataWithEnvironment<Env,T2>>();
+                    return Option.None;
                 }
             };
         }
@@ -71,14 +64,12 @@ namespace Dev.CD606.TM.Infra
             liftPure2<T1,T2,OutT>(Func<int,T1,T2,OutT> f)
         {
             return (int which, TimedDataWithEnvironment<Env,T1> x1, TimedDataWithEnvironment<Env,T2> x2) => {
-                return Option.Some(
-                    new TimedDataWithEnvironment<Env, OutT>(
-                        (which == 0? x1.environment : x2.environment)
-                        , new WithTime<OutT>(
-                            (which == 0? x1.timedData.timePoint : x2.timedData.timePoint)
-                            , f(which, x1.timedData.value, x2.timedData.value)
-                            , (x1.timedData.finalFlag && x2.timedData.finalFlag)
-                        )
+                return new TimedDataWithEnvironment<Env, OutT>(
+                    (which == 0? x1.environment : x2.environment)
+                    , new WithTime<OutT>(
+                        (which == 0? x1.timedData.timePoint : x2.timedData.timePoint)
+                        , f(which, x1.timedData.value, x2.timedData.value)
+                        , (x1.timedData.finalFlag && x2.timedData.finalFlag)
                     )
                 );
             };
@@ -91,20 +82,18 @@ namespace Dev.CD606.TM.Infra
                 var y = f(which, x1.timedData.value, x2.timedData.value);
                 if (y.HasValue)
                 {
-                    return Option.Some(
-                        new TimedDataWithEnvironment<Env, OutT>(
-                            (which == 0? x1.environment : x2.environment)
-                            , new WithTime<OutT>(
-                                (which == 0? x1.timedData.timePoint : x2.timedData.timePoint)
-                                , y.ValueOrFailure()
-                                , (x1.timedData.finalFlag && x2.timedData.finalFlag)
-                            )
+                    return new TimedDataWithEnvironment<Env, OutT>(
+                        (which == 0? x1.environment : x2.environment)
+                        , new WithTime<OutT>(
+                            (which == 0? x1.timedData.timePoint : x2.timedData.timePoint)
+                            , y.Unwrap()
+                            , (x1.timedData.finalFlag && x2.timedData.finalFlag)
                         )
                     );
                 }
                 else
                 {
-                    return Option.None<TimedDataWithEnvironment<Env,OutT>>();
+                    return Option.None;
                 }
             };
         }
@@ -116,20 +105,18 @@ namespace Dev.CD606.TM.Infra
                 var y = f(which, (which==0? x1.timedData.timePoint : x2.timedData.timePoint), x1.timedData.value, x2.timedData.value);
                 if (y.HasValue)
                 {
-                    return Option.Some(
-                        new TimedDataWithEnvironment<Env, OutT>(
-                            (which == 0? x1.environment : x2.environment)
-                            , new WithTime<OutT>(
-                                (which == 0? x1.timedData.timePoint : x2.timedData.timePoint)
-                                , y.ValueOrFailure()
-                                , (x1.timedData.finalFlag && x2.timedData.finalFlag)
-                            )
+                    return new TimedDataWithEnvironment<Env, OutT>(
+                        (which == 0? x1.environment : x2.environment)
+                        , new WithTime<OutT>(
+                            (which == 0? x1.timedData.timePoint : x2.timedData.timePoint)
+                            , y.Unwrap()
+                            , (x1.timedData.finalFlag && x2.timedData.finalFlag)
                         )
                     );
                 }
                 else
                 {
-                    return Option.None<TimedDataWithEnvironment<Env,OutT>>();
+                    return Option.None;
                 }
             };
         }
@@ -144,11 +131,11 @@ namespace Dev.CD606.TM.Infra
                 var y = f1(x);
                 if (y.HasValue)
                 {
-                    return f2(y.ValueOrFailure());
+                    return f2(y.Unwrap());
                 }
                 else
                 {
-                    return Option.None<TimedDataWithEnvironment<Env,T3>>();
+                    return Option.None;
                 }
             };
         }

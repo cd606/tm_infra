@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
-using Optional;
-using Optional.Unsafe;
+using Here;
 
 namespace Dev.CD606.TM.Infra.RealTimeApp
 {
@@ -35,15 +34,15 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     }
     class VersionedDataChecker<Version,T> : SecondaryChecker where Version : IComparable
     {
-        private Option<Version> lastVersion = Option.None<Version>();
+        private Option<Version> lastVersion = Option.None;
         public bool check(object x)
         {
             var d = (VersionedData<Version,T>) x;
-            if (lastVersion.HasValue && d.version.CompareTo(lastVersion.ValueOrFailure()) <= 0)
+            if (lastVersion.HasValue && d.version.CompareTo(lastVersion.Unwrap()) <= 0)
             {
                 return false;
             }
-            lastVersion = Option.Some(d.version);
+            lastVersion = d.version;
             return true;
         }
     }
@@ -692,7 +691,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 var res = func(data);
                 if (res.HasValue)
                 {
-                    publish(res.ValueOrFailure());
+                    publish(res.Unwrap());
                 }
             }
             private IHandler<Env,T1> realHandler;
@@ -721,7 +720,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 var res = func(data);
                 if (res.HasValue)
                 {
-                    var yVal = res.ValueOrFailure();
+                    var yVal = res.Unwrap();
                     var itemCount = yVal.timedData.value.Count;
                     var ii = 0;
                     foreach (var item in yVal.timedData.value)
@@ -780,7 +779,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             return new KleisliMultiAction<T1,T2>(KleisliUtils<Env>.enhancedMaybe<T1,List<T2>>(
                 (long d, T1 x) => {
-                    return Option.Some<List<T2>>(f(d, x));
+                    return f(d, x);
                 }
             ), threaded);
         }
@@ -804,7 +803,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 );
                 if (res.HasValue)
                 {
-                    publish(res.ValueOrFailure());
+                    publish(res.Unwrap());
                 }
             }
             private IHandler2<Env,T1,T2> realHandler;
@@ -859,7 +858,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 );
                 if (res.HasValue)
                 {
-                    var yVal = res.ValueOrFailure();
+                    var yVal = res.Unwrap();
                     var count = yVal.timedData.value.Count;
                     var ii = 0;
                     foreach (var item in yVal.timedData.value)
@@ -936,7 +935,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe2<T1,T2,List<OutT>>(
                 (int which, long d, T1 x1, T2 x2) => {
-                    return Option.Some(f(which, d, x1, x2));
+                    return f(which, d, x1, x2);
                 }
             ), threaded, mask);
         }
