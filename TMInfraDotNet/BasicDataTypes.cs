@@ -26,25 +26,26 @@ namespace Dev.CD606.TM.Infra
         }
     }
 
-    public class VersionedData<Version, T> where Version : IComparable
+    public interface VersionedData<Version, T> where Version : IComparable
     {
-        public readonly Version version;
-        public readonly T data;
-        public VersionedData(Version version, T data) {
-            this.version = version;
-            this.data = data;
+        Version version {
+            get;
+        }
+        T data {
+            get;
         }
     }
 
-    public class GroupedVersionedData<GroupID, Version, T> where Version : IComparable
+    public interface GroupedVersionedData<GroupID, Version, T> where Version : IComparable
     {
-        public readonly GroupID groupID;
-        public readonly Version version;
-        public readonly T data;
-        public GroupedVersionedData(GroupID groupID, Version version, T data) {
-            this.groupID = groupID;
-            this.version = version;
-            this.data = data;
+        GroupID groupID {
+            get;
+        }
+        Version version {
+            get;
+        }
+        T data {
+            get;
         }
     }
 

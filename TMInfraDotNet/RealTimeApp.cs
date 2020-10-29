@@ -83,30 +83,51 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         public TimeChecker()
         {
             var tType = typeof(T);
-            if (tType.IsGenericType)
+            bool useVersionChecker = false;
+            if (tType.IsInterface)
             {
-                if (tType.Name.Equals("VersionedData`2"))
+                if (tType.IsGenericType)
                 {
-                    var p = tType.GenericTypeArguments;
-                    var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
-                    this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
-                    this.useVersionChecker = true;
-                } else if (tType.Name.Equals("GroupedVersionedData`3"))
-                {
-                    var p = tType.GenericTypeArguments;
-                    var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
-                    this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
-                    this.useVersionChecker = true;
-                }
-                else
-                {
-                    this.useVersionChecker = false;
+                    if (tType.Name.Equals("VersionedData`2"))
+                    {
+                        var p = tType.GenericTypeArguments;
+                        var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
+                        this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                        useVersionChecker = true;
+                    } else if (tType.Name.Equals("GroupedVersionedData`3"))
+                    {
+                        var p = tType.GenericTypeArguments;
+                        var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
+                        this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                        useVersionChecker = true;
+                    }
                 }
             }
-            else
+            if (!useVersionChecker)
             {
-                this.useVersionChecker = false;
+                foreach (var interf in tType.GetInterfaces())
+                {
+                    if (interf.IsGenericType)
+                    {
+                        if (interf.Name.Equals("VersionedData`2"))
+                        {
+                            var p = interf.GenericTypeArguments;
+                            var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
+                            this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                            useVersionChecker = true;
+                            break;
+                        } else if (interf.Name.Equals("GroupedVersionedData`3"))
+                        {
+                            var p = interf.GenericTypeArguments;
+                            var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
+                            this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                            useVersionChecker = true;
+                            break;
+                        }
+                    }
+                }
             }
+            this.useVersionChecker = useVersionChecker;
         }
         public bool check(WithTime<T> data) 
         {
