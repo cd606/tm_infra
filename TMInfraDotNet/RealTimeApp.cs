@@ -442,7 +442,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     {
         private object lockObj = new object();
         private List<IHandler<Env,T>> handlers = new List<IHandler<Env, T>>();
-        private static bool canClone = (!(typeof(T).IsValueType)) && (typeof(T) is ICloneable);
+        private static bool canClone = (!(typeof(T).IsValueType)) && (typeof(T).GetInterface("ICloneable") != null);
         public void addHandler(IHandler<Env,T> handler)
         {
             lock (lockObj)
