@@ -537,7 +537,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                         , new WithTime<KeyedData<T1, T2>>(
                             data.timedData.timePoint
                             , new KeyedData<T1, T2>(
-                                new Key<T1>(handler.Item1)
+                                new Key<T1>(data.timedData.value.id, handler.Item1)
                                 , data.timedData.value.key
                             )
                             , data.timedData.finalFlag
