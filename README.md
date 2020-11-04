@@ -32,6 +32,8 @@ This particular package (tm_infra) only provides the basic node and graph defini
 
 Some Typescript codes that aim at providing a small subset of the C++ functionality are also provided, so that if it is desirable to write some Typescript codes for interacting with C++ code, they can be written in a similar fashion to the C++ code.
 
+Some C# codes, similar in functionalities to the Typescript codes, are also provided.
+
 INSTALLATION NOTES:
 
 The requirements of tm_infra are:
@@ -43,3 +45,5 @@ The requirements of tm_infra are:
 No third party library is required
 
 Typescript codes have been tested with Typescript 4.0.2 and NodeJS 14.13.1.
+
+C# codes have been tested with .NET Core 3.1.403.
