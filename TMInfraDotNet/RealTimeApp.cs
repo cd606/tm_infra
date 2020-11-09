@@ -755,6 +755,31 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 realHandler.handle(data);
             }
         }
+        class ContinuationAction<T1,T2> : AbstractAction<Env,T1,T2>
+        {
+            private Action<TimedDataWithEnvironment<Env,T1>,Action<TimedDataWithEnvironment<Env,T2>>> func;
+            public void actuallyHandle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                func(data, this.publish);
+            }
+            private IHandler<Env,T1> realHandler;
+            public ContinuationAction(Action<TimedDataWithEnvironment<Env,T1>,Action<TimedDataWithEnvironment<Env,T2>>> func, bool threaded)
+            {
+                this.func = func;
+                if (threaded)
+                {
+                    this.realHandler = new ThreadedHandler<Env,T1>(this.actuallyHandle);
+                }
+                else
+                {
+                    this.realHandler = new NonThreadedHandler<Env,T1>(this.actuallyHandle);
+                }
+            }
+            public override void handle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                realHandler.handle(data);
+            }
+        }
         public static AbstractAction<Env,T1,T2> liftPure<T1,T2>(Func<T1,T2> f, bool threaded) 
         {
             return new KleisliAction<T1,T2>(KleisliUtils<Env>.liftPure<T1,T2>(f), threaded);
@@ -786,6 +811,10 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         public static AbstractAction<Env,T1,T2> kleisliMulti<T1,T2>(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,List<T2>>>> f, bool threaded)
         {
             return new KleisliMultiAction<T1,T2>(f, threaded);
+        }
+        public static AbstractAction<Env,T1,T2> continuationAction<T1,T2>(Action<TimedDataWithEnvironment<Env,T1>,Action<TimedDataWithEnvironment<Env,T2>>> f, bool threaded)
+        {
+            return new ContinuationAction<T1,T2>(f, threaded);
         }
         class KleisliAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
         {

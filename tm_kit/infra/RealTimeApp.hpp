@@ -1138,6 +1138,107 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         }
+    private:
+        template <class A, class B, bool Threaded, bool FireOnceOnly>
+        class ContinuationActionCore {};
+        template <class A, class B, bool FireOnceOnly>
+        class ContinuationActionCore<A, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
+        private:
+            TimedAppModelContinuation<A, B, EnvironmentType> cont_;
+            bool done_;
+        protected:
+            virtual void actuallyHandle(InnerData<A> &&data) override final {
+                if constexpr (FireOnceOnly) {
+                    if (done_) {
+                        return;
+                    }
+                }
+                if (!this->timeCheckGood(data)) {
+                    return;
+                }
+                cont_(std::move(data), [this](InnerData<B> &&x) {
+                    if constexpr (FireOnceOnly) {
+                        done_ = true;
+                    }
+                    Producer<B>::publish(std::move(x));
+                });
+            }
+        public:
+            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(requireMask), cont_(cont), done_(false) {
+            }
+            virtual ~ContinuationActionCore() {
+            }
+            virtual bool isThreaded() const override final {
+                return true;
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return FireOnceOnly;
+            }
+            virtual FanInParamMask fanInParamMask() const override final {
+                return this->timeChecker().fanInParamMask();
+            }
+        };
+        template <class A, class B, bool FireOnceOnly>
+        class ContinuationActionCore<A,B,false,FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
+        private:
+            typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
+            TimedAppModelContinuation<A, B, EnvironmentType> cont_;
+            std::atomic<bool> done_;
+        public:
+            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), cont_(cont), done_(false) {
+            }
+            virtual ~ContinuationActionCore() {
+            }
+            virtual void handle(InnerData<A> &&data) override final {
+                if constexpr (FireOnceOnly) {
+                    if (done_) {
+                        return;
+                    }
+                }
+                if (timeChecker_(data)) {
+                    cont_(std::move(data), [this](InnerData<B> &&x) {
+                        if constexpr (FireOnceOnly) {
+                            done_ = true;
+                        }
+                        Producer<B>::publish(std::move(x));
+                    });
+                }
+            }
+            virtual bool isThreaded() const override final {
+                return false;
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return FireOnceOnly;
+            }
+            virtual FanInParamMask fanInParamMask() const override final {
+                return timeChecker_.fanInParamMask();
+            }
+        };
+    public:
+        template <class A, class B>
+        static auto continuationAction(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
+            if (liftParam.suggestThreaded) {
+                if (liftParam.fireOnceOnly) {
+                    return std::make_shared<Action<A,B>>(
+                        new ContinuationActionCore<A,B,true,true>(cont, liftParam.requireMask)
+                    );
+                } else {
+                    return std::make_shared<Action<A,B>>(
+                        new ContinuationActionCore<A,B,true,false>(cont, liftParam.requireMask)
+                    );
+                }
+            } else {
+                if (liftParam.fireOnceOnly) {
+                    return std::make_shared<Action<A,B>>(
+                        new ContinuationActionCore<A,B,false,true>(cont, liftParam.requireMask)
+                    );
+                } else {
+                    return std::make_shared<Action<A,B>>(
+                        new ContinuationActionCore<A,B,false,false>(cont, liftParam.requireMask)
+                    );
+                }
+            }
+        }
     public:
         template <class A, class B, bool Threaded>
         class OnOrderFacilityCore {};

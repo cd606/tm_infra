@@ -70,6 +70,7 @@ export function mapTimedDataWithEnvironment<Env extends EnvBase,T1,T2>(f : (t : 
 
 export namespace Kleisli {
     export type F<Env extends EnvBase,T1,T2> = (x : TimedDataWithEnvironment<Env,T1>) => TimedDataWithEnvironment<Env,T2>;
+    export type Cont<Env extends EnvBase,T1,T2> = (x : TimedDataWithEnvironment<Env,T1>, f : (t2: TimedDataWithEnvironment<Env,T2>) => void) => void;
     export class Utils {
         public static liftPure<Env extends EnvBase,T,OutT>(f : (a : T) => OutT) : F<Env,T,OutT> {
             return function (x : TimedDataWithEnvironment<Env,T>) : TimedDataWithEnvironment<Env,OutT> {
@@ -778,6 +779,14 @@ export namespace RealTimeApp {
                             }
                         });
                     }
+                }
+            };
+            return new LocalA();
+        }
+        export function continuationAction<Env extends EnvBase,T,OutT>(f : Kleisli.Cont<Env,T,OutT>) : Action<Env,T,OutT> {
+            class LocalA extends Action<Env,T,OutT> {
+                public handle(data : TimedDataWithEnvironment<Env, T>) : void {
+                    f(data, this.publish);
                 }
             };
             return new LocalA();

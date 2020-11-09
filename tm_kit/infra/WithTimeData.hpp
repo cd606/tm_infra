@@ -454,6 +454,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class T, class Environment, class TimePoint=typename Environment::TimePointType>
     using TimedAppMultiData = std::optional<TimedDataWithEnvironment<std::vector<T>, Environment, TimePoint>>;
 
+    template <class A, class B, class Environment, class TimePoint=typename Environment::TimePointType>
+    using TimedAppModelContinuation = std::function<
+        void(
+            TimedDataWithEnvironment<A, Environment, TimePoint> &&
+            , std::function<void(TimedDataWithEnvironment<B, Environment, TimePoint> &&)>
+        )
+    >;
+
     namespace withtime_utils {
         template <class T, class Environment, class TimePoint=typename Environment::TimePointType>
         inline TimedAppData<T,Environment,TimePoint> clone(TimedAppData<T,Environment,TimePoint> const &data) {

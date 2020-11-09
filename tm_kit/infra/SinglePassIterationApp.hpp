@@ -1000,6 +1000,69 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>(new KleisliMultiActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
+    private:
+        template <class A, class B>
+        class ContinuationActionCore final : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual BufferedProvider<B> {
+        private:
+            bool hasA_;
+            TimePoint aTime_;
+            VersionChecker<A> versionChecker_;
+            TimedAppModelContinuation<A, B, EnvironmentType> cont_;
+            DelaySimulatorType delaySimulator_;
+            bool fireOnceOnly_;
+            bool done_;
+        protected:
+            virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
+                Certificate<A> t { this->source()->poll() };
+                if (!t.check()) {
+                    return std::nullopt;
+                }
+                auto tp = fetchTimePointUnsafe(t);
+                auto produce = [tp,t=std::move(t),this]() -> Data<B> {
+                    Certificate<A> t1 {std::move(t)};
+                    auto input = this->source()->next(std::move(t1));
+                    if (!input) {
+                        return std::nullopt;
+                    }
+                    if (!versionChecker_.checkVersion(input->timedData.value)) {
+                        return std::nullopt;
+                    }
+                    if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
+                        hasA_ = true;
+                        aTime_ = tp;
+                        Data<B> ret = std::nullopt;
+                        if (fireOnceOnly_ && done_) {
+                            return ret;
+                        }
+                        cont_(std::move(*input), [this,&ret](InnerData<B> &&b) {
+                            ret = applyDelaySimulator<B>(0, std::move(b), delaySimulator_);
+                            if (fireOnceOnly_) {
+                                done_ = true;
+                            }
+                        });
+                        return ret;
+                    } else {
+                        return std::nullopt;
+                    }    
+                };
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp, produce};
+            }       
+        public:
+            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {}           
+            virtual FanInParamMask fanInParamMask() const override final {
+                return FanInParamMask {};
+            }
+            virtual bool isOneTimeOnly() const override final {
+                return fireOnceOnly_;
+            }
+        };
+    public:
+        template <class A, class B>
+        static auto continuationAction(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
+            return std::make_shared<Action<A,B>>(
+                new ContinuationActionCore<A,B>(cont, liftParam.delaySimulator, liftParam.fireOnceOnly)
+            );
+        }
     
     private:
         template <class A, class B, class C>
