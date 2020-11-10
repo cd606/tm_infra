@@ -2331,6 +2331,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             sink(*this, actionAsSource(connector));
             return actionAsSink(connector);
         }
+        template <class A>
+        void connect(Sourceoid<A> const &src, Sink<A> const &sink) {
+            src(*this, sink);
+        }
+        template <class A>
+        void connect(Source<A> &&src, Sinkoid<A> const &sink) {
+            sink(*this, std::move(src));
+        }
     };
 
     template <class T, class Environment, class TimePoint>
