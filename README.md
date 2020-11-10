@@ -6,11 +6,11 @@ The basic concept is that, a data-flow code can be visualized as a graph, in whi
 
 * "importers": nodes that do not take any input from any other nodes (usually because they have inputs from a source not shown inside the data-flow graph), but provide results that can be used as inputs by other nodes. These nodes "import" data from the outside world into the graph.
 
-* "exporters": the dual of importers, nodes that do not take inputs from other nodes, but do not provide any results to be used as inputs by other nodes. Usually these nodes do something that has side-effects outside the data-flow graph, e.g. print the input data. So, these nodes "export" data from the graph to the outside world.
+* "exporters": the dual of importers, nodes that take inputs from other nodes, but do not provide any results to be used as inputs by other nodes. Usually these nodes do something that has side-effects outside the data-flow graph, e.g. print the input data. So, these nodes "export" data from the graph to the outside world.
 
 * "actions": nodes that take inputs from other nodes and provide results to other nodes.
 
-An exporter or an action that takes multiple inputs are modelled internally as taking a <code>std::variant</code> input (which means if you **actually** wants to pass <code>std::variant</code> between two nodes, you need to wrap it in some outer data structure), the underlying thought is that in reality, different inputs from such multiplitude arrive at **different times**, therefore any actual processing always faces one input among such multiplitude only, so <code>std::variant</code> is a proper way to model that.
+An exporter or an action that takes multiple inputs are modelled internally as taking a <code>std::variant</code> input (which means if you **actually** want to pass <code>std::variant</code> between two nodes, you need to wrap it in some outer data structure), the underlying thought is that in reality, different inputs from such multiplitude arrive at **different times**, therefore any actual processing always faces one input among such multiplitude only, so <code>std::variant</code> is a proper way to model that.
 
 Such internal modelling is mostly abstracted away through the package, but the abstraction is leaky in the sense that if you actually wants to pass <code>std::variant</code> between two nodes, you need to take some additional measure. This hopefully is not a very big problem.
 
