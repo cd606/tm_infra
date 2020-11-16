@@ -1478,6 +1478,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractImporterCore() : BufferedProvider<T>() {}
         };
 
+        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
+        class ConcreteImporterCore : public AbstractImporterCore<T> {
+        private:
+            std::deque<InnerData<T>> q_;
+        public:
+            ConcreteImporterCore() : q_() {}
+            virtual Data<T> generate(T const *notUsed=nullptr) override final {
+                if (q_.empty()) {
+                    return std::nullopt;
+                }
+                Data<T> ret = std::move(q_.front());
+                q_.pop_front();
+                return ret;
+            }
+            void publish(InnerData<T> &&data) {
+                q_.push_back(std::move(data));
+            }
+            void publish(StateT *env, T &&data, bool finalFlag=false) {
+                q_.push_back(InnerData<T> {
+                    env, {env->resolveTime(), std::move(data), finalFlag}
+                });
+            }
+        };
+
         template <class T>
         using AbstractImporter = AbstractImporterCore<T>;
 
@@ -1881,7 +1905,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         class AbstractIntegratedLocalOnOrderFacility 
             : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<DataInputType> 
-        {};
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ExporterParent = AbstractExporter<DataInputType>;
+        };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
             AbstractIntegratedLocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType> *p) {
@@ -1947,13 +1975,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(t,e);
         }
                 
-        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        template <class QueryKeyType, class QueryResultType, class DataInputType, bool HasConcretePublishForImporter=false>
         class AbstractIntegratedOnOrderFacilityWithExternalEffects 
-            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractImporter<DataInputType> 
-        {};
-        template <class QueryKeyType, class QueryResultType, class DataInputType>
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<DataInputType>, AbstractImporter<DataInputType>> 
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ImporterParent = std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<DataInputType>, AbstractImporter<DataInputType>>;
+        };
+        template <class QueryKeyType, class QueryResultType, class DataInputType, bool HasConcretePublishForImporter=false>
+        using AbstractIntegratedOnOrderFacilityWithExternalEffectsWithPublish = AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType, true>;
+        template <class QueryKeyType, class QueryResultType, class DataInputType, bool HasConcretePublishForImporter=false>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
-            AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType> *p) {
+            AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType, HasConcretePublishForImporter> *p) {
             return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(p,p);
         }
         
@@ -2019,13 +2053,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(t,i,o);
         }
                 
-        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType, bool HasConcretePublishForImporter=false>
         class AbstractIntegratedVIEOnOrderFacility 
-            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<ExtraInputType>, public AbstractImporter<ExtraOutputType>
-        {};
-        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<ExtraInputType>, public std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<ExtraOutputType>, AbstractImporter<ExtraOutputType>>
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ExporterParent = AbstractExporter<ExtraInputType>;
+            using ImporterParent = std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<ExtraOutputType>, AbstractImporter<ExtraOutputType>>;
+        };
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType, bool HasConcretePublishForImporter=false>
+        using AbstractIntegratedVIEOnOrderFacilityWithPublish = AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType, true>;
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType, bool HasConcretePublishForImporter=false>
         static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
-            AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType> *p) {
+            AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType, HasConcretePublishForImporter> *p) {
             return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(p,p,p);
         }
         
@@ -2105,8 +2146,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<IExternalComponent *> externalComponents_;
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         InputMultiplexer<SpecialOutputDataTypeForExporters> joinedSource_, joinedSpecialSource_;
-        std::unordered_map<ProviderBase *, OutputMultiplexerBase *> outputMultiplexerMap_;
-        std::unordered_map<ProviderBase *, std::unordered_set<ConsumerBase *>> connectionMap_;
+        std::unordered_map<std::size_t, std::unordered_map<ProviderBase *, OutputMultiplexerBase *>> outputMultiplexerMap_;
+        std::unordered_map<std::size_t, std::unordered_map<ProviderBase *, std::unordered_set<ConsumerBase *>>> connectionMap_;
 
         SinglePassIterationApp() : externalComponents_(), externalComponentsSet_(), joinedSource_(), joinedSpecialSource_(), outputMultiplexerMap_(), connectionMap_() {}
         ~SinglePassIterationApp() {}
@@ -2119,9 +2160,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A>
         Provider<A> *getMultiplexerOutput(Provider<A> *p) {
-            auto iter = outputMultiplexerMap_.find(p);
-            if (iter == outputMultiplexerMap_.end()) {
-                iter = outputMultiplexerMap_.insert(
+            auto &m = outputMultiplexerMap_[typeid(A).hash_code()];
+            auto iter = m.find(p);
+            if (iter == m.end()) {
+                iter = m.insert(
                     {p, new OutputMultiplexer<A>(p)}
                 ).first;
             }
@@ -2130,12 +2172,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A>
         void innerConnect(AbstractConsumer<A> *consumer, Provider<A> *provider) {
-            auto iter = connectionMap_.find(dynamic_cast<ProviderBase *>(provider));
-            if (iter != connectionMap_.end() && iter->second.find(dynamic_cast<ConsumerBase *>(consumer)) != iter->second.end()) {
+            auto &m = connectionMap_[typeid(A).hash_code()];
+            auto iter = m.find(dynamic_cast<ProviderBase *>(provider));
+            if (iter != m.end() && iter->second.find(dynamic_cast<ConsumerBase *>(consumer)) != iter->second.end()) {
                 return;
             }
             consumer->connectToSource(getMultiplexerOutput(provider));
-            connectionMap_[dynamic_cast<ProviderBase *>(provider)].insert(dynamic_cast<ConsumerBase *>(consumer));
+            m[dynamic_cast<ProviderBase *>(provider)].insert(dynamic_cast<ConsumerBase *>(consumer));
         }
         template <class A, class B>
         void innerConnectFacility(Provider<Key<A>> *provider, OnOrderFacilityCore<A,B> *facility, AbstractConsumer<KeyedData<A,B>> *consumer) {
@@ -2268,12 +2311,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             innerConnectFacility(input.provider, facility.core1_, (AbstractConsumer<KeyedData<A,B>> *) nullptr);
         } 
         template <class A, class B, class C, class D>
-        Source<D> vieFacilityWithExternalEffectsAsSource(VIEOnOrderFacility<A,B,C,D> &facility) {
+        Source<D> vieFacilityAsSource(VIEOnOrderFacility<A,B,C,D> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core3_));
             return {dynamic_cast<Provider<D> *>(facility.core3_)};
         }
         template <class A, class B, class C, class D>
-        Sink<C> vieFacilityWithExternalEffectsAsSink(VIEOnOrderFacility<A,B,C,D> &facility) {
+        Sink<C> vieFacilityAsSink(VIEOnOrderFacility<A,B,C,D> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_));
             joinedSource_.addSource(getMultiplexerOutput(facility.core2_));
             return {dynamic_cast<AbstractConsumer<C> *>(facility.core2_)};

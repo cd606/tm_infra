@@ -1972,7 +1972,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         class AbstractIntegratedLocalOnOrderFacility 
             : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<DataInputType> 
-        {};
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ExporterParent = AbstractExporter<DataInputType>;
+        };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
             AbstractIntegratedLocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType> *p) {
@@ -2048,7 +2052,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         class AbstractIntegratedOnOrderFacilityWithExternalEffects 
             : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractImporter<DataInputType> 
-        {};
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ImporterParent = AbstractImporter<DataInputType>;
+        };
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        using AbstractIntegratedOnOrderFacilityWithExternalEffectsWithPublish = AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>;
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
             AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType> *p) {
@@ -2123,7 +2133,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         class AbstractIntegratedVIEOnOrderFacility 
             : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<ExtraInputType>, public AbstractImporter<ExtraOutputType> 
-        {};
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ExporterParent = AbstractExporter<ExtraInputType>;
+            using ImporterParent = AbstractImporter<ExtraOutputType>;
+        };
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        using AbstractIntegratedVIEOnOrderFacilityWithPublish = AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>; 
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
             AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType> *p) {

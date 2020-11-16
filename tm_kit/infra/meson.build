@@ -36,7 +36,6 @@ tm_infra_headers = [
     , 'Environments.hpp'
     , 'TerminationController.hpp'
     , 'ChronoUtils.hpp'
-    , 'IntIDComponent.hpp'
     , 'KleisliUtils.hpp'
     , 'VersionedData.hpp'
     ]
