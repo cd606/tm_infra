@@ -2103,6 +2103,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class C, class D>
         using VIEFacilityWrapper =
             std::optional<std::function<void(AppRunner &, VIEOnOrderFacilityPtr<A,B,C,D> const &)>>;
+        template <class A, class B>
+        using FacilitioidConnectorWrapper =
+            std::optional<std::function<void(AppRunner &, FacilitioidConnector<A,B> const &)>>;
 
         template <class A, class B>
         static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityPtr<A,B> const &facility) {
@@ -2143,6 +2146,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     r.placeOrderWithVIEFacilityAndForget(std::move(source), facility);
                 }
             };
+        }
+        template <class A, class B, class C>
+        static FacilitioidConnector<A,B> facilityConnector(LocalOnOrderFacilityPtr<A,B,C> const &facility) {
+            return localFacilityConnector<A,B,C>(facility);
+        }
+        template <class A, class B, class C>
+        static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &facility) {
+            return facilityWithExternalEffectsConnector<A,B,C>(facility);
+        }
+        template <class A, class B, class C, class D>
+        static FacilitioidConnector<A,B> facilityConnector(VIEOnOrderFacilityPtr<A,B,C,D> const &facility) {
+            return vieFacilityConnector<A,B,C,D>(facility);
         }
 
         template <class A>
