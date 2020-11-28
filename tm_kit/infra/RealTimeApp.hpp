@@ -605,6 +605,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using KeyedData = KeyedData<A,B,StateT>;
 
         template <class T>
+        static Key<T> keyify(T &&t) {
+            return withtime_utils::keyify<T,StateT>(std::move(t));
+        }
+
+        template <class T>
         using InnerData = TimedDataWithEnvironment<T, StateType, TimePoint>;
 
         template <class T>
