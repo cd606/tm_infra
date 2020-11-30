@@ -1758,9 +1758,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::lock_guard<std::mutex> _(mutex_);
             os << "digraph " << graphName << "{\n";
             int counter = 1;
+            int subclusterCounter = 1;
             std::unordered_map<std::string, int> m;
+            std::unordered_map<std::string, int> subclusterCountMap;
             for (auto const &item : nameMap_) {
                 m[item.second.name] = counter;
+                int clusterLevel = 0;
+                std::string nodeLabel = item.second.name;
+                if (item.second.name.find('/') != std::string::npos) {
+                    std::vector<std::string> parts;
+                    std::istringstream iss(item.second.name);
+                    std::string s;
+                    while (std::getline(iss, s, '/')) {
+                        if (s != "") {
+                            parts.push_back(s);
+                        }
+                    }
+                    nodeLabel = parts.back();
+                    parts.pop_back();
+                    s = "";
+                    for (auto ii=0; ii<parts.size(); ++ii) {
+                        if (ii != 0) {
+                            s += "/";
+                        }
+                        s += parts[ii];
+                        auto iter = subclusterCountMap.find(s);
+                        if (iter == subclusterCountMap.end()) {
+                            int currentSubcluster = subclusterCounter;
+                            ++subclusterCounter;
+                            subclusterCountMap[s] = currentSubcluster;
+                            os << "\tsubgraph cluster_" << currentSubcluster << "{\n";
+                            os << "\tlabel=\"" << parts[ii] << "\";\n";
+                            os << "\tcolor=blue;\n";
+                        } else {
+                            os << "\tsubgraph cluster_" << iter->second << "{\n";
+                        }
+                    }
+                    clusterLevel = parts.size();
+                }
                 os << "\t action" << counter << " [";
                 if (item.second.hasAltOutput) {
                     if (item.second.paramCount > 1) {
@@ -1771,11 +1806,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             }
                             os << "<arg" << ii << "> arg" << ii;
                         }
-                        os << "}|" << std::regex_replace(item.second.name, std::regex(">"), "\\>");
+                        os << "}|" << std::regex_replace(nodeLabel, std::regex(">"), "\\>");
                         os << "|{<out0> out0|<out1> out1}}\",shape=record";
                     } else {
                         os << "label=\"{";
-                        os << std::regex_replace(item.second.name, std::regex(">"), "\\>");
+                        os << std::regex_replace(nodeLabel, std::regex(">"), "\\>");
                         os << "|{<out0> out0|<out1> out1}}\",shape=record";
                     }
                 } else if (item.second.paramCount > 1) {
@@ -1786,11 +1821,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                         os << "<arg" << ii << "> arg" << ii;
                     }
-                    os << "}|" << std::regex_replace(item.second.name, std::regex(">"), "\\>") << "}\",shape=record";
+                    os << "}|" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "}\",shape=record";
                 } else if (item.second.isImporter || item.second.isExporter) {
-                    os << "label=\"" << item.second.name << "\",shape=oval";                   
+                    os << "label=\"" << nodeLabel << "\",shape=oval";                   
                 } else {
-                    os << "label=\"" << item.second.name << "\",shape=box";
+                    os << "label=\"" << nodeLabel << "\",shape=box";
                 }
                 std::vector<std::string> styleStrings;
                 if (item.second.isFacility) {
@@ -1807,10 +1842,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                 }
-                if (item.second.name.find('/') != std::string::npos) {
-                    styleStrings.push_back("filled");
-                    os << ",fillcolor=gray60";
-                }
                 if (!styleStrings.empty()) {
                     os << ",style=\"";
                     for (size_t ii=0; ii<styleStrings.size(); ++ii) {
@@ -1823,6 +1854,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 os << "];\n";
                 ++counter;
+                if (clusterLevel > 0) {
+                    for (auto ii=0; ii<clusterLevel; ++ii) {
+                        os << "\t}\n";
+                    }
+                }
             }
             for (auto const &item : nameMap_) { 
                 FanInParamMask paramMask;
@@ -1847,9 +1883,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 srcConnectorStr = std::string(":out")+std::to_string(srcConnector);
                             }
                             if (item.second.paramCount > 1) {
-                                os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name] << ":arg" << ii;
+                                os << "\t action" << m[src.first] << srcConnectorStr << ":s -> action" << m[item.second.name] << ":arg" << ii << ":n";
                             } else {
-                                os << "\t action" << m[src.first] << srcConnectorStr << " -> action" << m[item.second.name];
+                                os << "\t action" << m[src.first] << srcConnectorStr << ":s -> action" << m[item.second.name] << ":n";
                             }   
                             bool hasStyles = false;
                             if (color != 0 && isExternal && ii == 0) {
