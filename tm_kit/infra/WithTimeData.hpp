@@ -1799,29 +1799,36 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 os << "\t action" << counter << " [";
                 if (item.second.hasAltOutput) {
                     if (item.second.paramCount > 1) {
-                        os << "label=\"{{";
-                        for (int ii=0; ii<item.second.paramCount; ++ii) {
-                            if (ii > 0) {
-                                os << '|';
-                            }
-                            os << "<arg" << ii << "> arg" << ii;
+                        os << "label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR>";
+                        int colSpan = 1;
+                        if (item.second.paramCount %2 == 1) {
+                            colSpan = 2;
                         }
-                        os << "}|" << std::regex_replace(nodeLabel, std::regex(">"), "\\>");
-                        os << "|{<out0> out0|<out1> out1}}\",shape=record";
+                        for (int ii=0; ii<item.second.paramCount; ++ii) {
+                            os << "<TD PORT=\"arg" << ii << "\" COLSPAN=\"" << colSpan << "\">arg" << ii << "</TD>";
+                        }
+                        if (item.second.paramCount %2 == 1) {
+                            colSpan = item.second.paramCount*2;
+                        } else {
+                            colSpan = item.second.paramCount;
+                        }
+                        os << "</TR><TR><TD COLSPAN=\"" << colSpan << "\">" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "</TD></TR>";
+                        colSpan /= 2;
+                        os << "<TR><TD PORT=\"out0\" COLSPAN=\"" << colSpan << "\">out0</TD><TD PORT=\"out1\" COLSPAN=\"" << colSpan << "\">out1</TD></TR>";
+                        os << "</TABLE>>,shape=none";
                     } else {
-                        os << "label=\"{";
-                        os << std::regex_replace(nodeLabel, std::regex(">"), "\\>");
-                        os << "|{<out0> out0|<out1> out1}}\",shape=record";
+                        os << "label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">";
+                        os << "<TR><TD COLSPAN=\"2\">" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "</TD></TR>";
+                        os << "<TR><TD PORT=\"out0\">out0</TD><TD PORT=\"out1\">out1</TD></TR>";
+                        os << "</TABLE>>,shape=none";
                     }
                 } else if (item.second.paramCount > 1) {
-                    os << "label=\"{{";
+                    os << "label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR>";
                     for (int ii=0; ii<item.second.paramCount; ++ii) {
-                        if (ii > 0) {
-                            os << '|';
-                        }
-                        os << "<arg" << ii << "> arg" << ii;
+                        os << "<TD PORT=\"arg" << ii << "\">arg" << ii << "</TD>";
                     }
-                    os << "}|" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "}\",shape=record";
+                    os << "</TR><TR><TD COLSPAN=\"" << item.second.paramCount << "\">" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "</TD></TR>";
+                    os << "</TABLE>>,shape=none";
                 } else if (item.second.isImporter || item.second.isExporter) {
                     os << "label=\"" << nodeLabel << "\",shape=oval";                   
                 } else {
