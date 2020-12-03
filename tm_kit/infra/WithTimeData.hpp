@@ -1836,7 +1836,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 std::vector<std::string> styleStrings;
                 if (item.second.isFacility) {
-                    os << ",color=blue";
+                    os << ",color=darkgreen";
                 } else {
                     //actionPropertiesMap is not applicable for facilities
                     auto propIter = actionPropertiesMap_.find(item.second.name);
@@ -1937,7 +1937,45 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             for (auto const &item : stateNames) {
-                os << "\t state" << item.second << " [label=\"" << item.first << "\",shape=house];\n";
+                int clusterLevel = 0;
+                std::string nodeLabel = item.first;
+                if (item.first.find('/') != std::string::npos) {
+                    std::vector<std::string> parts;
+                    std::istringstream iss(item.first);
+                    std::string s;
+                    while (std::getline(iss, s, '/')) {
+                        if (s != "") {
+                            parts.push_back(s);
+                        }
+                    }
+                    nodeLabel = parts.back();
+                    parts.pop_back();
+                    s = "";
+                    for (auto ii=0; ii<parts.size(); ++ii) {
+                        if (ii != 0) {
+                            s += "/";
+                        }
+                        s += parts[ii];
+                        auto iter = subclusterCountMap.find(s);
+                        if (iter == subclusterCountMap.end()) {
+                            int currentSubcluster = subclusterCounter;
+                            ++subclusterCounter;
+                            subclusterCountMap[s] = currentSubcluster;
+                            os << "\tsubgraph cluster_" << currentSubcluster << "{\n";
+                            os << "\tlabel=\"" << parts[ii] << "\";\n";
+                            os << "\tcolor=blue;\n";
+                        } else {
+                            os << "\tsubgraph cluster_" << iter->second << "{\n";
+                        }
+                    }
+                    clusterLevel = parts.size();
+                }
+                os << "\t state" << item.second << " [label=\"" << nodeLabel << "\",shape=house];\n";
+                if (clusterLevel > 0) {
+                    for (auto ii=0; ii<clusterLevel; ++ii) {
+                        os << "\t}\n";
+                    }
+                }
             }
             std::set<std::tuple<int,int>> nameStateSet, nameNameSet;
             for (auto const &sharing : stateSharingRecords_) {

@@ -164,7 +164,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class A>
     class VersionChecker<std::unique_ptr<A>> {
     private:
-        VersionChecker<A> a_;
+        VersionChecker<std::decay_t<A>> a_;
     public:
         VersionChecker() : a_() {}
         bool checkVersion(std::unique_ptr<A> const &t) {
@@ -177,7 +177,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class A>
     class VersionChecker<std::shared_ptr<A>> {
     private:
-        VersionChecker<A> a_;
+        VersionChecker<std::decay_t<A>> a_;
     public:
         VersionChecker() : a_() {}
         bool checkVersion(std::shared_ptr<A> const &t) {
@@ -190,8 +190,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class A, class B>
     class VersionChecker<std::tuple<A,B>> {
     private:
-        VersionChecker<A> a_;
-        VersionChecker<B> b_;
+        VersionChecker<std::decay_t<A>> a_;
+        VersionChecker<std::decay_t<B>> b_;
     public:
         VersionChecker() : a_(), b_() {}
         bool checkVersion(std::tuple<A,B> const &t) {
