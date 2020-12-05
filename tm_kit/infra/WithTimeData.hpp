@@ -1879,10 +1879,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     for (auto const &src : item.second.paramConnectedFrom[ii]) {
                         auto iter1 = reverseLookup_.find(src.first);
                         auto iter2 = nameMap_.find(iter1->second);
-                        bool isExternal = iter2->second.isImporter || item.second.isExporter;
                         for (auto const &connector : src.second) {
                             auto color = std::get<0>(connector);
                             auto srcConnector = std::get<1>(connector);
+                            bool isExternal = 
+                                iter2->second.isImporter || item.second.isExporter
+                                || (iter2->second.isFacility && srcConnector == 1)
+                                || (item.second.isFacility && ii == 1);
                             std::string srcConnectorStr;
                             if (srcConnector < 0) {
                                 srcConnectorStr = "";
@@ -1895,10 +1898,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 os << "\t action" << m[src.first] << srcConnectorStr << ":s -> action" << m[item.second.name] << ":n";
                             }   
                             bool hasStyles = false;
-                            if (color != 0 && isExternal && ii == 0) {
+                            if (color != 0 && isExternal) {
                                 os << " [style=dotted,colorscheme=spectral11,color=" << color;
                                 hasStyles = true;
-                            } else if (isExternal && ii == 0) {
+                            } else if (isExternal) {
                                 os << " [style=dotted";
                                 hasStyles = true;
                             } else if (color != 0) {
