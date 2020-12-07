@@ -90,6 +90,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return p->fanInParamMask;
         }
 
+        template <class A, class B>
+        static auto emptyAction(LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<Action<A, B>> {
+            return std::make_shared<Action<A, B>>(liftParam);
+        }
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, decltype(f(A()))>> {
