@@ -9,8 +9,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class BasicWithTimeApp {
     private:
         friend class AppRunner<BasicWithTimeApp>;
-        BasicWithTimeApp() = default;
-        ~BasicWithTimeApp() = default;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
@@ -57,122 +55,84 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         using Data = TimedAppData<T,StateT>;
 
-        //we don't allow any action to manufacture KeyedData "out of the blue"
-        //, but it is ok to manipulate Keys, so the check is one-sided
-        //Moreover, we allow manipulation of keyed datas
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
-        using Action = TimedAppModelKleisli<A,B,StateT>;
+        template <class T>
+        using MultiData = TimedAppMultiData<T,StateT>;
+
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
+        struct Action {
+            bool threaded;
+            bool oneTimeOnly;
+            FanInParamMask fanInParamMask;
+
+            Action() : threaded(false), oneTimeOnly(false), fanInParamMask() {}
+            Action(bool t, bool o, FanInParamMask const &m) : threaded(t), oneTimeOnly(o), fanInParamMask(m) {}
+            Action(LiftParameters<TimePoint> const &liftParam)
+                : threaded(liftParam.suggestThreaded)
+                , oneTimeOnly(liftParam.fireOnceOnly)
+                , fanInParamMask(liftParam.requireMask)
+            {}
+            ~Action() = default;
+        };
 
         template <class A, class B>
-        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &) {
-            return false; 
+        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &p) {
+            return p->threaded;
         }
         template <class A, class B>
-        static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &) {
-            return false; 
+        static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &p) {
+            return p->oneTimeOnly;
         }
         template <class A, class B>
-        static FanInParamMask actionFanInParamMask(std::shared_ptr<Action<A,B>> const &) {
-            return FanInParamMask {}; 
+        static FanInParamMask actionFanInParamMask(std::shared_ptr<Action<A,B>> const &p) {
+            return p->fanInParamMask;
         }
 
-        template <class A, class B>
-        using OnOrderFacility = TimedAppModelKleisli<Key<A>,KeyedData<A,B>,StateT>;
-
-        template <class T1, class T2, class T3>
-        static std::shared_ptr<Action<T1,T3>> compose(Action<T1,T2> &&f1, Action<T2,T3> &&f2) {
-            return std::make_shared<Action<T1,T3>>();
-        }
-
-        //This lifts A->B to Action<A,B>
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, decltype(f(A()))>> {
-            return std::make_shared<Action<A, decltype(f(A()))>>();
+            return std::make_shared<Action<A, decltype(f(A()))>>(liftParam);
         }
-        //This lifts A->optional<B> to Action<A,B>
         template <class A, class F>
         static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>();
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(liftParam);
         }
-        //This lifts (time,A)->optional<B> to Action<A,B>
         template <class A, class F>
         static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(liftParam);
         }
-        //This lifts InnerData<A>->Data<B> to Action<A,B>
         template <class A, class F>
         static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
-            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>();
+            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(liftParam);
         }
-        //This lifts A->[B] to Action<A,B>
         template <class A, class F>
         static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>();
+            return std::make_shared<Action<A, typename decltype(f(A()))::value_type>>(liftParam);
         }
-        //This lifts (time,A)->[B] to Action<A,B>
         template <class A, class F>
         static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
+            return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(liftParam);
         }
-        //This lifts InnerData<A>->Data<[B]> to Action<A,B>
         template <class A, class F>
         static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>> {
-            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>();
+            return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>(liftParam);
         }
-        //this lifts A->B to OnOrderFacility<A,B>
-        template <class A, class F>
-        static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
-            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>();
+        template <class A, class B>
+        static auto continuationAction(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
+            return std::make_shared<Action<A,B>>(liftParam);
         }
-        //this lifts A->optional<B> to OnOrderFacility<A,B>
-        template <class A, class F>
-        static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>();
-        }
-        //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
-        template <class A, class F>
-        static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
-        }
-        //This lifts InnerData<A>->Data<B> to Action<A,B>
-        template <class A, class F>
-        static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>();
-        }
-        //this lifts A->B to OnOrderFacility<A,B>
-        template <class A, class F, class StartF>
-        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
-            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>();
-        }
-        //this lifts A->optional<B> to OnOrderFacility<A,B>
-        template <class A, class F, class StartF>
-        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>();
-        }
-        //this lifts (time,A)->optional<B> to OnOrderFacility<A,B>
-        template <class A, class F, class StartF>
-        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
-        }
-        //This lifts InnerData<A>->Data<B> to Action<A,B>
-        template <class A, class F, class StartF>
-        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
-            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>();
+        template <class A, class B, class C>
+        static std::shared_ptr<Action<A,C>> compose(Action<A,B> &&x, Action<B,C> &&y) {
+            return std::make_shared<Action<A,C>>(
+                x.threaded || y.threaded
+                , x.oneTimeOnly && y.oneTimeOnly
+                , x.fanInParamMask
+            );
         }
 
         class IExternalComponent {
@@ -183,61 +143,83 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         class AbstractOnOrderFacility {
-        protected:
+        private:
             void publish(InnerData<Key<B>> &&response) {
             }   
             void publish(StateT *env, Key<B> &&data, bool isFinal) {
             }  
-        public:
+        public:   
             virtual void handle(InnerData<Key<A>> &&input) = 0;
         };
 
         template <class A, class B>
-        static std::shared_ptr<OnOrderFacility<A,B>> fromAbstractOnOrderFacility(AbstractOnOrderFacility<A,B> *t) {
+        struct OnOrderFacility {};
+
+        template <class A, class F>
+        static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
+            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>();
+        }
+        template <class A, class F>
+        static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>();
+        }
+        template <class A, class F>
+        static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
+        }
+        template <class A, class F>
+        static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>();
+        }
+        template <class A, class F, class StartF>
+        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
+            return std::make_shared<OnOrderFacility<A, decltype(f(A()))>>();
+        }
+        template <class A, class F, class StartF>
+        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>();
+        }
+        template <class A, class F, class StartF>
+        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>();
+        }
+        template <class A, class F, class StartF>
+        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
+            return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>();
+        }
+        template <class A, class B>
+        static auto fromAbstractOnOrderFacility(AbstractOnOrderFacility<A,B> *)
+            -> std::shared_ptr<OnOrderFacility<A,B>> {
             return std::make_shared<OnOrderFacility<A,B>>();
         }
 
-        template <class I0, class O0, class I1, class O1>
-        static auto wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) 
-            -> std::shared_ptr<OnOrderFacility<I0,O0>> {
-            return std::make_shared<OnOrderFacility<I0,O0>>();
-        }
-    
-    #include <tm_kit/infra/BasicWithTimeApp_VariantAndMerge_Piece.hpp>
-    #include <tm_kit/infra/BasicWithTimeApp_Pure_Maybe_Kleisli_Piece.hpp>
-    
-    public:   
-        template <class T>
-        class Source {
-        private:
-            friend class BasicWithTimeApp;
-            Data<T> data;
-            Source() : data(std::nullopt) {}
-            Source(Data<T> &&d) : data(std::move(d)) {}
+        #include <tm_kit/infra/BasicWithTimeApp_VariantAndMerge_Piece.hpp>
+        #include <tm_kit/infra/BasicWithTimeApp_Pure_Maybe_Kleisli_Piece.hpp>
+
+        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
+        class AbstractImporter : public virtual IExternalComponent {
         public:
-            Source clone() const {
-                return Source {
-                    withtime_utils::clone(data)
-                };
+            void publish(InnerData<T> &&data) {
+            }
+            void publish(StateT *env, T &&data, bool finalFlag=false) {
             }
         };
-        template <class T>
-        class Sink {
-        private:
-            friend class BasicWithTimeApp;
-            std::function<void(Source<T> &&)> action;
-            Sink() : action() {}
-            Sink(std::function<void(Source<T> &&)> f) : action(f) {}
-        };
 
-        //KeyedData cannot be imported "out of the blue"
-        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
-        using Importer = std::function<Data<T>(StateT * const)>;
-
-        //Keys and KeyedData can be exported, for example to be written to database,
-        //so there is no check on the exporter
         template <class T>
-        using Exporter = std::function<void(InnerData<T> &&)>;
+        struct Importer {};
+
+        template <class T>
+        static std::shared_ptr<Importer<T>> importer(AbstractImporter<T> *) {
+            return std::make_shared<Importer<T>>();
+        }
 
         template <class T>
         static std::shared_ptr<Importer<T>> vacuousImporter() {
@@ -248,12 +230,42 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Importer<T>>();
         }
         template <class T>
-        static std::shared_ptr<Importer<T>> constFirstPushImporter(T const &t = T()) {
+        static std::shared_ptr<Importer<T>> constFirstPushImporter(T &&t = T()) {
             return std::make_shared<Importer<T>>();
         }
         template <class T>
         static std::shared_ptr<Importer<Key<T>>> constFirstPushKeyImporter(T &&t = T()) {
-            return std::make_shared<Importer<T>>();
+            return constFirstPushImporter<Key<T>>(
+                infra::withtime_utils::keyify<T,StateT>(std::move(t))
+            );
+        }
+        template <class T>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void()>> constTriggerImporter(T &&t = T()) {
+            return {
+                std::make_shared<Importer<T>>()
+                , []() {}
+            };
+        }
+        template <class T>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(T&&)>> triggerImporter() {
+            return {
+                std::make_shared<Importer<T>>()
+                , [](T &&) {}
+            };
+        }
+    
+        template <class T>
+        class AbstractExporter : public virtual IExternalComponent {
+        public:
+            virtual void handle(InnerData<T> &&) = 0;
+        };
+
+        template <class T>
+        struct Exporter {};
+
+        template <class T>
+        static std::shared_ptr<Exporter<T>> exporter(AbstractExporter<T> *) {
+            return std::make_shared<Exporter<T>>();
         }
         template <class T, class F>
         static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
@@ -266,7 +278,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {
             return std::make_shared<Exporter<T>>();
-        }          
+        }        
 
         template <class T1, class T2>
         static std::shared_ptr<Importer<T2>> composeImporter(Importer<T1> &&orig, Action<T1,T2> &&post) {
@@ -276,63 +288,196 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Exporter<T1>> composeExporter(Action<T1,T2> &&pre, Exporter<T2> &&orig) {
             return std::make_shared<Exporter<T1>>();
         }
-    
-    public:
-        template <class A, class B, class C>
-        struct LocalOnOrderFacility {
-            OnOrderFacility<A,B> facility;
-            Exporter<C> exporter;
+
+        template <class I0, class O0, class I1, class O1>
+        static std::shared_ptr<OnOrderFacility<I0,O0>> wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
+            return std::make_shared<OnOrderFacility<I0,O0>>();
         };
 
-        template <class A, class B, class C>
-        static std::shared_ptr<LocalOnOrderFacility<A,B,C>> localOnOrderFacility(
-            OnOrderFacility<A,B> &&facility, Exporter<C> &&exporter
-        ) {
-            return std::make_shared<LocalOnOrderFacility<A,B,C>>();
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        struct LocalOnOrderFacility {};
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
+            AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            , AbstractExporter<DataInputType> *e) {
+            return std::make_shared<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>>();
+        }
+                
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        class AbstractIntegratedLocalOnOrderFacility 
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<DataInputType> 
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ExporterParent = AbstractExporter<DataInputType>;
+        };
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
+            AbstractIntegratedLocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType> *) {
+            return std::make_shared<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>>();
         }
         
-        template <class I0, class O0, class I1, class O1, class C>
-        static std::shared_ptr<LocalOnOrderFacility<I0,O0,C>> wrappedLocalOnOrderFacility(LocalOnOrderFacility<I1,O1,C> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
-            return std::make_shared<LocalOnOrderFacility<I0,O0,C>>();
+        template <class Fac, class Exp>
+        static std::shared_ptr<LocalOnOrderFacility<
+            typename Fac::InputType
+            , typename Fac::OutputType
+            , typename Exp::DataType>> localOnOrderFacility(
+            Fac &&t, Exp &&e) {
+            return std::make_shared<LocalOnOrderFacility<
+                typename Fac::InputType
+                , typename Fac::OutputType
+                , typename Exp::DataType>>(
+            );
+        }
+        template <class Fac, class Action1, class Action2
+            , std::enable_if_t<std::is_same_v<typename Action1::OutputType::KeyType, typename Fac::InputType>,int> = 0
+            , std::enable_if_t<std::is_same_v<typename Action2::InputType::KeyType, typename Fac::OutputType>,int> = 0
+            >
+        static std::shared_ptr<LocalOnOrderFacility<
+            typename Action1::InputType::KeyType
+            , typename Action2::OutputType::KeyType
+            , typename Fac::DataType>> wrappedLocalOnOrderFacility(Fac &&toWrap, Action1 &&inputT, Action2 &&outputT) {
+            return std::make_shared<LocalOnOrderFacility<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Fac::DataType>>(
+            );
         }
 
-        template <class A, class B, class C>
-        struct OnOrderFacilityWithExternalEffects {
-            OnOrderFacility<A,B> facility;
-            Importer<C> importer;
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        struct OnOrderFacilityWithExternalEffects {};
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
+            AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            , AbstractImporter<DataInputType> *e) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>();
+        }
+                
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        class AbstractIntegratedOnOrderFacilityWithExternalEffects 
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractImporter<DataInputType> 
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ImporterParent = AbstractImporter<DataInputType>;
+        };
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        using AbstractIntegratedOnOrderFacilityWithExternalEffectsWithPublish = AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>;
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
+            AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType> *p) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>();
+        }
+        
+        template <class Fac, class Imp>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<
+            typename Fac::InputType
+            , typename Fac::OutputType
+            , typename Imp::DataType>> onOrderFacilityWithExternalEffects(
+            Fac &&t, Imp &&i) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<
+                typename Fac::InputType
+                , typename Fac::OutputType
+                , typename Imp::DataType>>(
+            );
+        }
+        template <class Fac, class Action1, class Action2
+            , std::enable_if_t<std::is_same_v<typename Action1::OutputType::KeyType, typename Fac::InputType>,int> = 0
+            , std::enable_if_t<std::is_same_v<typename Action2::InputType::KeyType, typename Fac::OutputType>,int> = 0
+            >
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<
+            typename Action1::InputType::KeyType
+            , typename Action2::OutputType::KeyType
+            , typename Fac::DataType>> wrappedOnOrderFacilityWithExternalEffects(Fac &&toWrap, Action1 &&inputT, Action2 &&outputT) {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Fac::DataType>>(
+            );
+        }
+
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        struct VIEOnOrderFacility {};
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
+            AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
+            , AbstractExporter<ExtraInputType> *i
+            , AbstractImporter<ExtraOutputType> *o) {
+            return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>();
+        }
+                
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        class AbstractIntegratedVIEOnOrderFacility 
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<ExtraInputType>, public AbstractImporter<ExtraOutputType>
+        {
+        public:
+            using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
+            using ExporterParent = AbstractExporter<ExtraInputType>;
+            using ImporterParent = AbstractImporter<ExtraOutputType>;
+        };
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        using AbstractIntegratedVIEOnOrderFacilityWithPublish = AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>;
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
+            AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType> *p) {
+            return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>();
+        }
+        
+        template <class Fac, class Exp, class Imp>
+        static std::shared_ptr<VIEOnOrderFacility<
+            typename Fac::InputType
+            , typename Fac::OutputType
+            , typename Exp::DataType
+            , typename Imp::DataType>> vieOnOrderFacility(
+            Fac &&t, Exp &&i, Imp &&o) {
+            return std::make_shared<VIEOnOrderFacility<
+                typename Fac::InputType
+                , typename Fac::OutputType
+                , typename Exp::DataType
+                , typename Imp::DataType>>(
+            );
+        }
+        template <class Fac, class Action1, class Action2
+            , std::enable_if_t<std::is_same_v<typename Action1::OutputType::KeyType, typename Fac::InputType>,int> = 0
+            , std::enable_if_t<std::is_same_v<typename Action2::InputType::KeyType, typename Fac::OutputType>,int> = 0
+            >
+        static std::shared_ptr<VIEOnOrderFacility<
+            typename Action1::InputType::KeyType
+            , typename Action2::OutputType::KeyType
+            , typename Fac::ExtraInputType
+            , typename Fac::ExtraOutputType>> wrappedVIEOnOrderFacility(Fac &&toWrap, Action1 &&inputT, Action2 &&outputT) {
+            return std::make_shared<VIEOnOrderFacility<
+                typename Action1::InputType::KeyType
+                , typename Action2::OutputType::KeyType
+                , typename Fac::ExtraInputType
+                , typename Fac::ExtraOutputType>>(
+            );
+        }
+
+        template <class T>
+        class Source {
+        private:
+            friend class BasicWithTimeApp;
+            Source() {}
+        public:
+            Source clone() const {
+                return Source {};
+            }
+        };
+        template <class T>
+        class Sink {
+        private:
+            friend class BasicWithTimeApp;
+            Sink() {}
         };
 
-        template <class A, class B, class C>
-        static std::shared_ptr<OnOrderFacilityWithExternalEffects<A,B,C>> onOrderFacilityWithExternalEffects(
-            OnOrderFacility<A,B> &&facility, Importer<C> &&importer
-        ) {
-            return std::make_shared<OnOrderFacilityWithExternalEffects<A,B,C>>();
-        }
-        
-        template <class I0, class O0, class I1, class O1, class C>
-        static std::shared_ptr<OnOrderFacilityWithExternalEffects<I0,O0,C>> wrappedOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<I1,O1,C> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
-            return std::make_shared<OnOrderFacilityWithExternalEffects<I0,O0,C>>();
+    private:
+        BasicWithTimeApp() {}
+        ~BasicWithTimeApp() {}
+
+        void registerExternalComponent(IExternalComponent *c) {
         }
 
-        template <class A, class B, class C, class D>
-        struct VIEOnOrderFacility {
-            OnOrderFacility<A,B> facility;
-            Exporter<C> exporter;
-            Importer<D> importer;
-        };
-
-        template <class A, class B, class C, class D>
-        static std::shared_ptr<VIEOnOrderFacility<A,B,C,D>> vieOnOrderFacility(
-            OnOrderFacility<A,B> &&facility, Exporter<C> &&exporter, Importer<D> &&importer
-        ) {
-            return std::make_shared<VIEOnOrderFacility<A,B,C,D>>();
-        }
-        
-        template <class I0, class O0, class I1, class O1, class C, class D>
-        static std::shared_ptr<VIEOnOrderFacility<I0,O0,C,D>> wrappedOnOrderFacilityWithExternalEffects(VIEOnOrderFacility<I1,O1,C,D> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
-            return std::make_shared<VIEOnOrderFacility<I0,O0,C,D>>();
-        }
-   
     private:
         template <class T>
         Source<T> importerAsSource(StateT *env, Importer<T> &importer) {
@@ -347,8 +492,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
 
-        #include <tm_kit/infra/BasicWithTimeApp_ExecuteAction_Piece.hpp> 
-
+        #include <tm_kit/infra/BasicWithTimeApp_ExecuteAction_Piece.hpp>
+   
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
             return {};
@@ -365,11 +510,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }  
         template <class A, class B>
         void placeOrderWithFacilityAndForget(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility) {
-        }  
+        }
 
         template <class A, class B, class C>
         void placeOrderWithLocalFacility(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility, Sink<KeyedData<A,B>> const &sink) {
-        } 
+         } 
         template <class A, class B, class C>
         void placeOrderWithLocalFacilityAndForget(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility) {
         } 
@@ -380,7 +525,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B, class C>
         void placeOrderWithFacilityWithExternalEffects(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility, Sink<KeyedData<A,B>> const &sink) {
-        } 
+         } 
         template <class A, class B, class C>
         void placeOrderWithFacilityWithExternalEffectsAndForget(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
         } 
@@ -407,10 +552,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
         }
-
-        std::function<void(StateT *)> finalize() {   
-            return [](StateT *) {
-            };        
+    
+        std::function<void(StateT *)> finalize() { 
+            return [](StateT *) {};
         }
 
     public:
