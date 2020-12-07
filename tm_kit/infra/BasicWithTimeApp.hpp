@@ -146,12 +146,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         class AbstractOnOrderFacility {
-        private:
+        public: 
             void publish(InnerData<Key<B>> &&response) {
             }   
             void publish(StateT *env, Key<B> &&data, bool isFinal) {
             }  
-        public:   
             virtual void handle(InnerData<Key<A>> &&input) = 0;
         };
 
@@ -161,6 +160,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using OutputType = B;
         };
 
+        template <class A, class B>
+        static auto emptyOnOrderFacility() 
+            -> std::shared_ptr<OnOrderFacility<A, B>> {
+            return std::make_shared<OnOrderFacility<A, B>>();
+        }
         template <class A, class F>
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A, decltype(f(A()))>> {
@@ -311,6 +315,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using DataType = DataInputType;
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static auto emptyLocalOnOrderFacility() 
+            -> std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> {
+            return std::make_shared<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>>();
+        }
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
             AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
             , AbstractExporter<DataInputType> *e) {
@@ -364,6 +373,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using OutputType = QueryResultType;
             using DataType = DataInputType;
         };
+        template <class QueryKeyType, class QueryResultType, class DataInputType>
+        static auto emptyOnOrderFacilityWithExternalEffects() 
+            -> std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> {
+            return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>();
+        }
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
             AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
@@ -421,6 +435,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = ExtraInputT;
             using ExtraOutputType = ExtraOutputT;
         };
+        template <class QueryKeyType, class QueryResultType, class ExtraInputT, class ExtraOutputT>
+        static auto emptyVIEOnOrderFacility() 
+            -> std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputT, ExtraOutputT>> {
+            return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputT, ExtraOutputT>>();
+        }
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
             AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
