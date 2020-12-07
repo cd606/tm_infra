@@ -60,6 +60,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
         struct Action {
+            using InputType = A;
+            using OutputType = B;
+
             bool threaded;
             bool oneTimeOnly;
             FanInParamMask fanInParamMask;
@@ -153,7 +156,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class A, class B>
-        struct OnOrderFacility {};
+        struct OnOrderFacility {
+            using InputType = A;
+            using OutputType = B;
+        };
 
         template <class A, class F>
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
@@ -214,7 +220,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class T>
-        struct Importer {};
+        struct Importer {
+            using DataType = T;
+        };
 
         template <class T>
         static std::shared_ptr<Importer<T>> importer(AbstractImporter<T> *) {
@@ -261,7 +269,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class T>
-        struct Exporter {};
+        struct Exporter {
+            using DataType = T;
+        };
 
         template <class T>
         static std::shared_ptr<Exporter<T>> exporter(AbstractExporter<T> *) {
@@ -295,7 +305,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class QueryKeyType, class QueryResultType, class DataInputType>
-        struct LocalOnOrderFacility {};
+        struct LocalOnOrderFacility {
+            using InputType = QueryKeyType;
+            using OutputType = QueryResultType;
+            using DataType = DataInputType;
+        };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>> localOnOrderFacility(
             AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
@@ -345,7 +359,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class QueryKeyType, class QueryResultType, class DataInputType>
-        struct OnOrderFacilityWithExternalEffects {};
+        struct OnOrderFacilityWithExternalEffects {
+            using InputType = QueryKeyType;
+            using OutputType = QueryResultType;
+            using DataType = DataInputType;
+        };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>> onOrderFacilityWithExternalEffects(
             AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
@@ -396,8 +414,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
 
-        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
-        struct VIEOnOrderFacility {};
+        template <class QueryKeyType, class QueryResultType, class ExtraInputT, class ExtraOutputT>
+        struct VIEOnOrderFacility {
+            using InputType = QueryKeyType;
+            using OutputType = QueryResultType;
+            using ExtraInputType = ExtraInputT;
+            using ExtraOutputType = ExtraOutputT;
+        };
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
             AbstractOnOrderFacility<QueryKeyType, QueryResultType> *t
@@ -560,58 +583,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     public:
         template <class X>
         struct GetDataType {
-        };
-        template <class T>
-        struct GetDataType<Importer<T>> {
-            using DataType = T;
-        };
-        template <class T>
-        struct GetDataType<Exporter<T>> {
-            using DataType = T;
-        };
-        template <class A, class B, class C>
-        struct GetDataType<LocalOnOrderFacility<A,B,C>> {
-            using DataType = C;
-        };
-        template <class A, class B, class C>
-        struct GetDataType<OnOrderFacilityWithExternalEffects<A,B,C>> {
-            using DataType = C;
+            using DataType = typename X::DataType;
         };
         template <class X>
         struct GetInputOutputType {
-        };
-        template <class A, class B>
-        struct GetInputOutputType<Action<A,B>> {
-            using InputType = A;
-            using OutputType = B;
-        };
-        template <class A, class B>
-        struct GetInputOutputType<OnOrderFacility<A,B>> {
-            using InputType = A;
-            using OutputType = B;
-        };
-        template <class A, class B, class C>
-        struct GetInputOutputType<LocalOnOrderFacility<A,B,C>> {
-            using InputType = A;
-            using OutputType = B;
-        };
-        template <class A, class B, class C>
-        struct GetInputOutputType<OnOrderFacilityWithExternalEffects<A,B,C>> {
-            using InputType = A;
-            using OutputType = B;
-        };
-        template <class A, class B, class C, class D>
-        struct GetInputOutputType<VIEOnOrderFacility<A,B,C,D>> {
-            using InputType = A;
-            using OutputType = B;
+            using InputType = typename X::InputType;
+            using OutputType = typename X::OutputType;
         };
         template <class X>
         struct GetExtraInputOutputType {
-        };
-        template <class A, class B, class C, class D>
-        struct GetExtraInputOutputType<VIEOnOrderFacility<A,B,C,D>> {
-            using ExtraInputType = C;
-            using ExtraOutputType = D;
+            using ExtraInputType = typename X::ExtraInputType;
+            using ExtraOutputType = typename X::ExtraOutputType;
         };
     };
 
