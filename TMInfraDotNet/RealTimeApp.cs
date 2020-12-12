@@ -154,9 +154,8 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
     {
         private readonly bool[] useVersionChecker;
         private SecondaryChecker[] versionChecker = {null, null};
-        private long lastTime = 0;
-        private WithTime<T1> copy1 = null;
-        private WithTime<T2> copy2 = null;
+        private Option<long> time1 = Option.None;
+        private Option<long> time2 = Option.None;
         public TimeChecker2()
         {
             var tType = typeof(T1);
@@ -196,41 +195,35 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             }
             this.useVersionChecker = flags;
         }
-        public (bool, WithTime<T1>,WithTime<T2>) check1(WithTime<T1> data) 
+        public bool check(WithTime<Either<T1,T2>> data) 
         {
             var t = data.timePoint;
-            if (lastTime > t)
-            {
-                return (false, copy1, copy2);
-            }
-            if (useVersionChecker[0]) 
-            {
-                if (!versionChecker[0].check(data.value))
-                {
-                    return (false, copy1, copy2);
+            return data.value.Match(
+                (T2 t2) => {
+                    if (t >= time2.Unwrap(0)) {
+                        time2 = t;
+                        if (useVersionChecker[1]) {
+                            return versionChecker[1].check(t2);
+                        } else {
+                            return true;
+                        }
+                    } else {
+                        return false;
+                    }
+                }, 
+                (T1 t1) => {
+                    if (t >= time1.Unwrap(0)) {
+                        time1 = t;
+                        if (useVersionChecker[0]) {
+                            return versionChecker[0].check(t1);
+                        } else {
+                            return true;
+                        }
+                    } else {
+                        return false;
+                    }
                 }
-            }
-            lastTime = t;
-            copy1 = data;
-            return (true, copy1, copy2);
-        }
-        public (bool, WithTime<T1>, WithTime<T2>) check2(WithTime<T2> data) 
-        {
-            var t = data.timePoint;
-            if (lastTime > t)
-            {
-                return (false, copy1, copy2);
-            }
-            if (useVersionChecker[1]) 
-            {
-                if (!versionChecker[1].check(data.value))
-                {
-                    return (false, copy1, copy2);
-                }
-            }
-            lastTime = t;
-            copy2 = data;
-            return (true, copy1, copy2);
+            );
         }
     }
 
@@ -288,23 +281,10 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
 
     class ThreadedHandler2<Env,T1,T2> : IHandler2<Env,T1,T2>
     {
-        private bool[] mask;
-        private Action<Env,int,WithTime<T1>,WithTime<T2>> actuallyHandle;
+        private Action<TimedDataWithEnvironment<Env,Either<T1,T2>>> actuallyHandle;
 
         private Channel<(Env,int,object)> channel = Channel.CreateUnbounded<(Env,int,object)>();
         private TimeChecker2<T1,T2> checker = new TimeChecker2<T1,T2>();
-        private bool ready(WithTime<T1> x1, WithTime<T2> x2)
-        {
-            if (mask[0] && x1 == null)
-            {
-                return false;
-            }
-            if (mask[1] && x2 == null)
-            {
-                return false;
-            }
-            return true;
-        }
         private async void run()
         {
             while (await channel.Reader.WaitToReadAsync())
@@ -316,20 +296,34 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                         case 0:
                         {
                             var d = (WithTime<T1>) item.Item3;
-                            var checkRes = checker.check1(d);
-                            if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                            var data = new WithTime<Either<T1, T2>>(
+                                d.timePoint, Either.Left(d.value), d.finalFlag
+                            );
+                            var checkRes = checker.check(data);
+                            if (checkRes)
                             {
-                                actuallyHandle(item.Item1, item.Item2, checkRes.Item2, checkRes.Item3);
+                                actuallyHandle(
+                                    new TimedDataWithEnvironment<Env, Either<T1, T2>>(
+                                        item.Item1, data
+                                    )
+                                );
                             }
                             break;
                         }
                         case 1:
                         {
                             var d = (WithTime<T2>) item.Item3;
-                            var checkRes = checker.check2(d);
-                            if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                            var data = new WithTime<Either<T1, T2>>(
+                                d.timePoint, Either.Right(d.value), d.finalFlag
+                            );
+                            var checkRes = checker.check(data);
+                            if (checkRes)
                             {
-                                actuallyHandle(item.Item1, item.Item2, checkRes.Item2, checkRes.Item3);
+                                actuallyHandle(
+                                    new TimedDataWithEnvironment<Env, Either<T1, T2>>(
+                                        item.Item1, data
+                                    )
+                                );
                             }
                             break;   
                         }
@@ -339,16 +333,9 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 }
             }
         }
-        public ThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler, bool[] mask)
+        public ThreadedHandler2(Action<TimedDataWithEnvironment<Env,Either<T1,T2>>> actualHandler)
         {
             this.actuallyHandle = actualHandler;
-            this.mask = mask;
-            new Thread(this.run).Start();
-        }
-        public ThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler)
-        {
-            this.actuallyHandle = actualHandler;
-            this.mask = new bool[] {true, true};
             new Thread(this.run).Start();
         }
         public void handle1(TimedDataWithEnvironment<Env,T1> data)
@@ -377,41 +364,27 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
 
     public class NonThreadedHandler2<Env,T1,T2> : IHandler2<Env,T1,T2>
     {
-        private bool[] mask;
-        private Action<Env,int,WithTime<T1>,WithTime<T2>> actuallyHandle;
+        private Action<TimedDataWithEnvironment<Env,Either<T1,T2>>> actuallyHandle;
 
         private TimeChecker2<T1,T2> checker = new TimeChecker2<T1,T2>();
         private object lockObj = new object();
-        private bool ready(WithTime<T1> x1, WithTime<T2> x2)
-        {
-            if (mask[0] && x1 == null)
-            {
-                return false;
-            }
-            if (mask[1] && x2 == null)
-            {
-                return false;
-            }
-            return true;
-        }
-        public NonThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler, bool[] mask)
+        public NonThreadedHandler2(Action<TimedDataWithEnvironment<Env,Either<T1,T2>>> actualHandler)
         {
             this.actuallyHandle = actualHandler;
-            this.mask = mask;
-        }
-        public NonThreadedHandler2(Action<Env,int,WithTime<T1>,WithTime<T2>> actualHandler)
-        {
-            this.actuallyHandle = actualHandler;
-            this.mask = new bool[] {true, true};
         }
         public void handle1(TimedDataWithEnvironment<Env,T1> data)
         {
             lock (lockObj)
             {
-                var checkRes = checker.check1(data.timedData);
-                if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                var eitherData = new TimedDataWithEnvironment<Env,Either<T1,T2>>(
+                    data.environment, new WithTime<Either<T1, T2>>(
+                        data.timedData.timePoint, Either.Left(data.timedData.value), data.timedData.finalFlag
+                    )
+                );
+                var checkRes = checker.check(eitherData.timedData);
+                if (checkRes)
                 {
-                    actuallyHandle(data.environment, 0, checkRes.Item2, checkRes.Item3);
+                    actuallyHandle(eitherData);
                 }
             }
         }
@@ -419,10 +392,15 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             lock (lockObj)
             {
-                var checkRes = checker.check2(data.timedData);
-                if (checkRes.Item1 && ready(checkRes.Item2, checkRes.Item3))
+                var eitherData = new TimedDataWithEnvironment<Env,Either<T1,T2>>(
+                    data.environment, new WithTime<Either<T1, T2>>(
+                        data.timedData.timePoint, Either.Right(data.timedData.value), data.timedData.finalFlag
+                    )
+                );
+                var checkRes = checker.check(eitherData.timedData);
+                if (checkRes)
                 {
-                    actuallyHandle(data.environment, 1, checkRes.Item2, checkRes.Item3);
+                    actuallyHandle(eitherData);
                 }
             }
         }
@@ -818,17 +796,11 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         }
         class KleisliAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
         {
-            private Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> func;
-            public void actuallyHandle(Env env, int which, WithTime<T1> t1, WithTime<T2> t2)
+            private Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,OutT>>> func;
+            public void actuallyHandle(TimedDataWithEnvironment<Env,Either<T1,T2>> data)
             {
                 var res = func(
-                    which 
-                    , new TimedDataWithEnvironment<Env, T1>(
-                        env, t1
-                    )
-                    , new TimedDataWithEnvironment<Env, T2>(
-                        env, t2
-                    )
+                    data
                 );
                 if (res.HasValue)
                 {
@@ -836,19 +808,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 }
             }
             private IHandler2<Env,T1,T2> realHandler;
-            public KleisliAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> func, bool threaded, bool[] mask)
-            {
-                this.func = func;
-                if (threaded)
-                {
-                    this.realHandler = new ThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
-                }
-                else
-                {
-                    this.realHandler = new NonThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
-                }
-            }
-            public KleisliAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> func, bool threaded)
+            public KleisliAction2(Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,OutT>>> func, bool threaded)
             {
                 this.func = func;
                 if (threaded)
@@ -873,17 +833,11 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         }
         class KleisliMultiAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
         {
-            private Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func;
-            public void actuallyHandle(Env env, int which, WithTime<T1> t1, WithTime<T2> t2)
+            private Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func;
+            public void actuallyHandle(TimedDataWithEnvironment<Env,Either<T1,T2>> data)
             {
                 var res = func(
-                    which 
-                    , new TimedDataWithEnvironment<Env, T1>(
-                        env, t1
-                    )
-                    , new TimedDataWithEnvironment<Env, T2>(
-                        env, t2
-                    )
+                    data
                 );
                 if (res.HasValue)
                 {
@@ -905,19 +859,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 }
             }
             private IHandler2<Env,T1,T2> realHandler;
-            public KleisliMultiAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func, bool threaded, bool[] mask)
-            {
-                this.func = func;
-                if (threaded)
-                {
-                    this.realHandler = new ThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
-                }
-                else
-                {
-                    this.realHandler = new NonThreadedHandler2<Env,T1,T2>(this.actuallyHandle, mask);
-                }
-            }
-            public KleisliMultiAction2(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func, bool threaded)
+            public KleisliMultiAction2(Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> func, bool threaded)
             {
                 this.func = func;
                 if (threaded)
@@ -940,37 +882,37 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 }
             }
         }
-        public static AbstractAction2<Env,T1,T2,OutT> liftPure2<T1,T2,OutT>(Func<int,T1,T2,OutT> f, bool threaded, bool[] mask) 
+        public static AbstractAction2<Env,T1,T2,OutT> liftPure2<T1,T2,OutT>(Func<Either<T1,T2>,OutT> f, bool threaded) 
         {
-            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.liftPure2<T1,T2,OutT>(f), threaded, mask);
+            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.liftPure<Either<T1,T2>,OutT>(f), threaded);
         }
-        public static AbstractAction2<Env,T1,T2,OutT> liftMaybe<T1,T2,OutT>(Func<int,T1,T2,Option<OutT>> f, bool threaded, bool[] mask) 
+        public static AbstractAction2<Env,T1,T2,OutT> liftMaybe<T1,T2,OutT>(Func<Either<T1,T2>,Option<OutT>> f, bool threaded) 
         {
-            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.liftMaybe2<T1,T2,OutT>(f), threaded, mask);
+            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.liftMaybe<Either<T1,T2>,OutT>(f), threaded);
         }
-        public static AbstractAction2<Env,T1,T2,OutT> enhancedMaybe2<T1,T2,OutT>(Func<int,long,T1,T2,Option<OutT>> f, bool threaded, bool[] mask) 
+        public static AbstractAction2<Env,T1,T2,OutT> enhancedMaybe2<T1,T2,OutT>(Func<long,Either<T1,T2>,Option<OutT>> f, bool threaded) 
         {
-            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe2<T1,T2,OutT>(f), threaded);
+            return new KleisliAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe<Either<T1,T2>,OutT>(f), threaded);
         }
-        public static AbstractAction2<Env,T1,T2,OutT> kleisli2<T1,T2,OutT>(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,OutT>>> f, bool threaded, bool[] mask) 
+        public static AbstractAction2<Env,T1,T2,OutT> kleisli2<T1,T2,OutT>(Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,OutT>>> f, bool threaded) 
         {
-            return new KleisliAction2<T1,T2,OutT>(f, threaded, mask);
+            return new KleisliAction2<T1,T2,OutT>(f, threaded);
         }
-        public static AbstractAction2<Env,T1,T2,OutT> liftMulti2<T1,T2,OutT>(Func<int,T1,T2,List<OutT>> f, bool threaded, bool[] mask)
+        public static AbstractAction2<Env,T1,T2,OutT> liftMulti2<T1,T2,OutT>(Func<Either<T1,T2>,List<OutT>> f, bool threaded)
         {
-            return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.liftPure2<T1,T2,List<OutT>>(f), threaded, mask);
+            return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.liftPure<Either<T1,T2>,List<OutT>>(f), threaded);
         }
-        public static AbstractAction2<Env,T1,T2,OutT> enhancedMulti2<T1,T2,OutT>(Func<int,long,T1,T2,List<OutT>> f, bool threaded, bool[] mask)
+        public static AbstractAction2<Env,T1,T2,OutT> enhancedMulti2<T1,T2,OutT>(Func<long,Either<T1,T2>,List<OutT>> f, bool threaded)
         {
-            return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe2<T1,T2,List<OutT>>(
-                (int which, long d, T1 x1, T2 x2) => {
-                    return f(which, d, x1, x2);
+            return new KleisliMultiAction2<T1,T2,OutT>(KleisliUtils<Env>.enhancedMaybe<Either<T1,T2>,List<OutT>>(
+                (long d, Either<T1,T2> x) => {
+                    return f(d, x);
                 }
-            ), threaded, mask);
+            ), threaded);
         }
-        public static AbstractAction2<Env,T1,T2,OutT> kleisliMulti2<T1,T2,OutT>(Func<int,TimedDataWithEnvironment<Env,T1>,TimedDataWithEnvironment<Env,T2>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> f, bool threaded, bool[] mask)
+        public static AbstractAction2<Env,T1,T2,OutT> kleisliMulti2<T1,T2,OutT>(Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,List<OutT>>>> f, bool threaded)
         {
-            return new KleisliMultiAction2<T1,T2,OutT>(f, threaded, mask);
+            return new KleisliMultiAction2<T1,T2,OutT>(f, threaded);
         }
 
         public static void terminateAtTimePoint(Env env, DateTimeOffset tp)
