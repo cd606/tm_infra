@@ -43,7 +43,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             typename StateT::TimePointType lastTime_;
             VersionChecker<T> versionChecker_;
         public:
-            TimeChecker(FanInParamMask const &notUsed=FanInParamMask()) : hasData_(false), lastTime_(), versionChecker_() {}
+            TimeChecker() : hasData_(false), lastTime_(), versionChecker_() {}
             inline bool operator()(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> const &data) {
                 if (!versionChecker_.checkVersion(data.timedData.value)) {
                     return false;
@@ -60,9 +60,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             inline bool good() const {
                 return hasData_;
             }
-            FanInParamMask fanInParamMask() const {
-                return FanInParamMask {};
-            }
         };
         template <class T>
         class TimeChecker<true, T> {
@@ -72,7 +69,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             typename StateT::TimePointType lastTime_;
             VersionChecker<T> versionChecker_;
         public:
-            TimeChecker(FanInParamMask const &notUsed=FanInParamMask()) : hasData_(false), mutex_(), lastTime_(), versionChecker_() {}
+            TimeChecker() : hasData_(false), mutex_(), lastTime_(), versionChecker_() {}
             inline bool operator()(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> const &data) {
                 std::lock_guard<std::mutex> _(mutex_);
                 if (!versionChecker_.checkVersion(data.timedData.value)) {
@@ -89,9 +86,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             inline bool good() const {
                 return hasData_;
-            }
-            FanInParamMask fanInParamMask() const {
-                return FanInParamMask {};
             }
         };
 
@@ -145,7 +139,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void idleWork() {}
             virtual void actuallyHandle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
         public:
-            ThreadedHandlerBase(FanInParamMask const &requireMask=FanInParamMask()) : timeChecker_(requireMask), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_() {
+            ThreadedHandlerBase() : timeChecker_(), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_() {
                 running_ = true;
                 th_ = std::thread(&ThreadedHandlerBase::runThread, this);
                 th_.detach();
@@ -175,7 +169,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class ThreadedHandler : public virtual IHandler<T>, public ThreadedHandlerBase<T> {
         public:
-            ThreadedHandler(FanInParamMask const &requireMask=FanInParamMask()) : ThreadedHandlerBase<T>(requireMask) {
+            ThreadedHandler() : ThreadedHandlerBase<T>() {
             }
             virtual ~ThreadedHandler() {
             }
@@ -390,7 +384,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             virtual bool isThreaded() const = 0;
             virtual bool isOneTimeOnly() const = 0;
-            virtual FanInParamMask fanInParamMask() const = 0;
         };
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
@@ -766,7 +759,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(requireMask), done_(false) {
+            ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false) {
             }
             virtual ~ActionCore() {
             }
@@ -776,9 +769,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return this->timeChecker().fanInParamMask();
-            }
         };
         template <class A, class B, bool FireOnceOnly>
         class ActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
@@ -786,7 +776,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
             std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
         public:
-            ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), done_(false) {
+            ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), done_(false) {
             }
             virtual ~ActionCore() {
             }
@@ -815,15 +805,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return timeChecker_.fanInParamMask();
-            }
         };
         //PureActionCore will be specialized so it is not defined with mixin
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
         class PureActionCore final : public virtual RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>, public ActionCore<A,B,Threaded,FireOnceOnly> {
         public:
-            PureActionCore(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded,FireOnceOnly>(requireMask) {}
+            PureActionCore(F &&f) : RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded,FireOnceOnly>() {}
             PureActionCore(PureActionCore const &) = delete;
             PureActionCore &operator=(PureActionCore const &) = delete;
             PureActionCore(PureActionCore &&) = default;
@@ -869,24 +856,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
             return a->core_->isOneTimeOnly(); 
         }
-        template <class A, class B>
-        static FanInParamMask actionFanInParamMask(std::shared_ptr<Action<A,B>> const &a) {
-            return a->core_->fanInParamMask();
-        }
         
         template <class A, class F>
         static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false,false>(std::move(f)));
                 }
             }
         }     
@@ -894,15 +877,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false,false>(std::move(f)));
                 }
             }
         }
@@ -910,15 +893,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f)));
                 }
             }  
         }
@@ -927,21 +910,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
-                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true, true>(std::move(f), liftParam.requireMask)
+                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true, true>(std::move(f))
                     );
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
-                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false, true>(std::move(f), liftParam.requireMask)
+                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false, true>(std::move(f))
                     );
                 }
             } else {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
-                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true, false>(std::move(f), liftParam.requireMask)
+                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true, false>(std::move(f))
                     );
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
-                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false, false>(std::move(f), liftParam.requireMask)
+                        new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false, false>(std::move(f))
                     );
                 }
             }
@@ -994,7 +977,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(requireMask), done_(false) {
+            MultiActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false) {
             }
             virtual ~MultiActionCore() {
             }
@@ -1004,9 +987,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return this->timeChecker().fanInParamMask();
-            }
         };
         template <class A, class B, bool FireOnceOnly>
         class MultiActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
@@ -1015,7 +995,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool fireOnceOnly_;
             std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
         public:
-            MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), done_(false) {
+            MultiActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), done_(false) {
             }
             virtual ~MultiActionCore() {
             }
@@ -1062,9 +1042,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return timeChecker_.fanInParamMask();
-            }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
         using SimpleMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
@@ -1091,15 +1068,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false,false>(std::move(f)));
                 }
             }
         }     
@@ -1107,15 +1084,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f), liftParam.requireMask));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f)));
                 }
             }
         }
@@ -1124,21 +1101,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
-                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true, true>(std::move(f), liftParam.requireMask)
+                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true, true>(std::move(f))
                     );
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
-                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false, true>(std::move(f), liftParam.requireMask)
+                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false, true>(std::move(f))
                     );
                 }
             } else {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
-                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true, false>(std::move(f), liftParam.requireMask)
+                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true, false>(std::move(f))
                     );
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
-                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false, false>(std::move(f), liftParam.requireMask)
+                        new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false, false>(std::move(f))
                     );
                 }
             }
@@ -1169,7 +1146,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 });
             }
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(requireMask), cont_(cont), done_(false) {
+            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), cont_(cont), done_(false) {
             }
             virtual ~ContinuationActionCore() {
             }
@@ -1179,9 +1156,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return this->timeChecker().fanInParamMask();
-            }
         };
         template <class A, class B, bool FireOnceOnly>
         class ContinuationActionCore<A,B,false,FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
@@ -1190,7 +1164,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TimedAppModelContinuation<A, B, EnvironmentType> cont_;
             std::atomic<bool> done_;
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(requireMask), cont_(cont), done_(false) {
+            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), cont_(cont), done_(false) {
             }
             virtual ~ContinuationActionCore() {
             }
@@ -1215,9 +1189,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return timeChecker_.fanInParamMask();
-            }
         };
     public:
         template <class A, class B>
@@ -1225,21 +1196,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (liftParam.suggestThreaded) {
                 if (liftParam.fireOnceOnly) {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,true,true>(cont, liftParam.requireMask)
+                        new ContinuationActionCore<A,B,true,true>(cont)
                     );
                 } else {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,true,false>(cont, liftParam.requireMask)
+                        new ContinuationActionCore<A,B,true,false>(cont)
                     );
                 }
             } else {
                 if (liftParam.fireOnceOnly) {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,false,true>(cont, liftParam.requireMask)
+                        new ContinuationActionCore<A,B,false,true>(cont)
                     );
                 } else {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,false,false>(cont, liftParam.requireMask)
+                        new ContinuationActionCore<A,B,false,false>(cont)
                     );
                 }
             }
@@ -1266,7 +1237,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>>(requireMask) {
+            OnOrderFacilityCore() : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>>() {
             }
             virtual ~OnOrderFacilityCore() {
             }
@@ -1276,7 +1247,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, Key<A>> timeChecker_;
         public:
-            OnOrderFacilityCore(FanInParamMask const &requireMask=FanInParamMask()) : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_(requireMask) {
+            OnOrderFacilityCore() : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_() {
             }
             virtual ~OnOrderFacilityCore() {
             }
@@ -1358,9 +1329,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
             -> std::shared_ptr<OnOrderFacility<A,decltype(f(A()))>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F,true>(std::move(f), liftParam.requireMask));
+                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F,true>(std::move(f)));
             } else {
-                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F,false>(std::move(f), liftParam.requireMask));
+                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F,false>(std::move(f)));
             }
         }     
         template <class A, class F>
@@ -1549,9 +1520,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual bool isOneTimeOnly() const override final {
                 return f_->isOneTimeOnly() || g_->isOneTimeOnly();
-            }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return f_->fanInParamMask();
             }
         };
     public:   

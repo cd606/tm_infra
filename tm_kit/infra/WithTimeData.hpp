@@ -36,13 +36,9 @@
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     constexpr std::size_t MAX_FAN_IN_BRANCH_COUNT = 10;   
-    using FanInParamMask = std::bitset<MAX_FAN_IN_BRANCH_COUNT>;
 
     template <class T>
     struct LiftParameters {
-        //This is only relevant in multi-input lifts, it specifies which ones are
-        //required before the logic can apply
-        FanInParamMask requireMask = FanInParamMask();
         //This is only relevant in real-time monad, it specifies whether the logic
         //shall be executed in its own thread
         bool suggestThreaded = false;
@@ -57,10 +53,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //This only applies to actions, not to on-order facilities
         bool fireOnceOnly = false;
 
-        LiftParameters &RequireMask(FanInParamMask m) {
-            requireMask = m;
-            return *this;
-        }
         LiftParameters &SuggestThreaded(bool s) {
             suggestThreaded = s;
             return *this;
@@ -685,7 +677,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionProperties {
             bool threaded;
             bool oneTimeOnly;
-            FanInParamMask fanInParamMask;
         };
         std::unordered_map<std::string, ActionProperties> actionPropertiesMap_;
         bool restrictFacilityOutputConnectionByDefault_;
@@ -718,7 +709,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ActionProperties prop;
             prop.threaded = AppType::actionIsThreaded(f);
             prop.oneTimeOnly = AppType::actionIsOneTimeOnly(f);
-            prop.fanInParamMask = AppType::actionFanInParamMask(f);
             actionPropertiesMap_.insert({name, prop});
         }
         template <class A>
@@ -1868,13 +1858,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             for (auto const &item : nameMap_) { 
-                FanInParamMask paramMask;
-                if (item.second.paramCount > 1) {
-                    auto propIter = actionPropertiesMap_.find(item.second.name);
-                    if (propIter != actionPropertiesMap_.end()) {
-                        paramMask = propIter->second.fanInParamMask;
-                    }
-                }  
                 for (int ii=0; ii<item.second.paramCount; ++ii) {
                     for (auto const &src : item.second.paramConnectedFrom[ii]) {
                         auto iter1 = reverseLookup_.find(src.first);
@@ -1907,13 +1890,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             } else if (color != 0) {
                                 os << " [style=dashed,colorscheme=spectral11,color=" << color;
                                 hasStyles = true;
-                            }
-                            if (paramMask[ii]) {
-                                if (hasStyles) {
-                                    os << ",arrowhead=diamond";
-                                } else {
-                                    os << " [arrowhead=diamond]";
-                                }
                             }
                             if (hasStyles) {
                                 os << "];\n";

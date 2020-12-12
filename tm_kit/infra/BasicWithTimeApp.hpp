@@ -65,14 +65,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             bool threaded;
             bool oneTimeOnly;
-            FanInParamMask fanInParamMask;
 
-            Action() : threaded(false), oneTimeOnly(false), fanInParamMask() {}
-            Action(bool t, bool o, FanInParamMask const &m) : threaded(t), oneTimeOnly(o), fanInParamMask(m) {}
+            Action() : threaded(false), oneTimeOnly(false) {}
+            Action(bool t, bool o) : threaded(t), oneTimeOnly(o) {}
             Action(LiftParameters<TimePoint> const &liftParam)
                 : threaded(liftParam.suggestThreaded)
                 , oneTimeOnly(liftParam.fireOnceOnly)
-                , fanInParamMask(liftParam.requireMask)
             {}
             ~Action() = default;
         };
@@ -84,10 +82,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &p) {
             return p->oneTimeOnly;
-        }
-        template <class A, class B>
-        static FanInParamMask actionFanInParamMask(std::shared_ptr<Action<A,B>> const &p) {
-            return p->fanInParamMask;
         }
 
         template <class A, class B>
@@ -139,7 +133,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Action<A,C>>(
                 x.threaded || y.threaded
                 , x.oneTimeOnly && y.oneTimeOnly
-                , x.fanInParamMask
             );
         }
 

@@ -4,27 +4,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti2(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti2(F &&f) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti2() {}
     };
 public:
     template <class A0, class A1, class F>
-    static auto kleisliMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti2<A0,A1,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -34,27 +34,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti3(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti3(F &&f) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti3() {}
     };
 public:
     template <class A0, class A1, class A2, class F>
-    static auto kleisliMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti3<A0,A1,A2,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -64,27 +64,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti4(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti4(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti4() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class F>
-    static auto kleisliMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti4<A0,A1,A2,A3,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -94,27 +94,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti5(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti5(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti5() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
-    static auto kleisliMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti5<A0,A1,A2,A3,A4,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -124,27 +124,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti6(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti6(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti6() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
-    static auto kleisliMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti6<A0,A1,A2,A3,A4,A5,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -154,27 +154,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti7(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti7(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti7() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
-    static auto kleisliMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti7<A0,A1,A2,A3,A4,A5,A6,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -184,27 +184,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti8(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti8(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti8() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
-    static auto kleisliMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti8<A0,A1,A2,A3,A4,A5,A6,A7,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -214,27 +214,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti9(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti9(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti9() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
-    static auto kleisliMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti9<A0,A1,A2,A3,A4,A5,A6,A7,A8,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }
@@ -244,27 +244,27 @@ private:
     private:
         F f_;
     protected:
-        virtual MultiData<B> action(StateT *env, int which, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
-            return f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) });
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+            return f_(std::move(data));
         }
     public:
-        KleisliMulti10(F &&f, FanInParamMask const &requireMask=FanInParamMask()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(requireMask), f_(std::move(f)) {}
+        KleisliMulti10(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti10() {}
     };
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
-    static auto kleisliMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type>> {
+    static auto kleisliMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type>> {
         if (liftParam.fireOnceOnly) {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type,F,true,true>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type,F,false,true>(std::move(f)) );
             }
         } else {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type,F,true,false>(std::move(f)) );
             } else {
-                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(0,std::move(*((InnerData<A0> *) nullptr)),std::move(*((InnerData<A1> *) nullptr)),std::move(*((InnerData<A2> *) nullptr)),std::move(*((InnerData<A3> *) nullptr)),std::move(*((InnerData<A4> *) nullptr)),std::move(*((InnerData<A5> *) nullptr)),std::move(*((InnerData<A6> *) nullptr)),std::move(*((InnerData<A7> *) nullptr)),std::move(*((InnerData<A8> *) nullptr)),std::move(*((InnerData<A9> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f), liftParam.requireMask) );
+                return std::make_shared<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type>> ( new KleisliMulti10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type,F,false,false>(std::move(f)) );
             }
         }
     }

@@ -470,7 +470,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractActionCore : public virtual AbstractConsumer<A>, public virtual Provider<B> {
         public:
             virtual bool isOneTimeOnly() const = 0;
-            virtual FanInParamMask fanInParamMask() const = 0;
         };
 
         #include <tm_kit/infra/SinglePassIterationApp_AbstractActionCore_Piece.hpp>
@@ -545,9 +544,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual Data<B> handle(InnerData<A> &&) = 0;
         public:
             ActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
-            virtual FanInParamMask fanInParamMask() const override final {
-                return FanInParamMask {};
-            }
         };
 
         template <class B>
@@ -656,9 +652,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual MultiData<B> handle(InnerData<A> &&) = 0;
         public:
             MultiActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
-            virtual FanInParamMask fanInParamMask() const override final {
-                return FanInParamMask {};
-            }
         };
 
     private:
@@ -852,10 +845,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
             return a->core_->isOneTimeOnly(); 
-        }
-        template <class A, class B>
-        static FanInParamMask actionFanInParamMask(std::shared_ptr<Action<A,B>> const &a) {
-            return a->core_->fanInParamMask();
         }
 
     public:
@@ -1054,9 +1043,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }       
         public:
             ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {}           
-            virtual FanInParamMask fanInParamMask() const override final {
-                return FanInParamMask {};
-            }
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
             }
@@ -1098,9 +1084,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual bool isOneTimeOnly() const override final {
                 return x_->isOneTimeOnly() || y_->isOneTimeOnly();
-            }
-            virtual FanInParamMask fanInParamMask() const override final {
-                return x_->fanInParamMask();
             }
         };
 

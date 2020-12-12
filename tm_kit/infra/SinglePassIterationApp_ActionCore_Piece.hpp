@@ -1,13 +1,11 @@
 template <class A0, class A1, class B>
 class ActionCore<std::variant<A0,A1>,B> : public virtual AbstractActionCore<std::variant<A0,A1>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp1_;
+    std::bitset<2> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -37,19 +35,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -68,19 +60,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -93,24 +79,22 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class B>
 class MultiActionCore<std::variant<A0,A1>,B> : public virtual AbstractActionCore<std::variant<A0,A1>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp1_;
+    std::bitset<2> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -140,19 +124,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -171,19 +149,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -196,12 +168,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class B, class F>
@@ -212,26 +184,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -245,18 +209,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -271,29 +235,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -307,18 +263,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -333,29 +289,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -369,18 +317,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -395,23 +343,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -426,34 +377,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -463,18 +406,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -489,34 +432,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -526,18 +461,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -552,12 +487,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -565,11 +502,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -579,16 +517,13 @@ public:
 template <class A0, class A1, class A2, class B>
 class ActionCore<std::variant<A0,A1,A2>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp2_;
+    std::bitset<3> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -622,20 +557,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -654,20 +582,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -686,20 +607,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -712,27 +626,24 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class B>
 class MultiActionCore<std::variant<A0,A1,A2>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp2_;
+    std::bitset<3> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -766,20 +677,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -798,20 +702,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -830,20 +727,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -856,12 +746,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class B, class F>
@@ -872,29 +762,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -908,18 +787,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -934,32 +813,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -973,18 +841,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -999,32 +867,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -1038,18 +895,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1064,23 +921,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1095,37 +955,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -1135,18 +984,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1161,37 +1010,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -1201,18 +1039,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1227,12 +1065,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -1240,11 +1080,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1254,19 +1095,15 @@ public:
 template <class A0, class A1, class A2, class A3, class B>
 class ActionCore<std::variant<A0,A1,A2,A3>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp3_;
+    std::bitset<4> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -1304,21 +1141,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1337,21 +1166,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1370,21 +1191,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1403,21 +1216,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1430,30 +1235,26 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp3_;
+    std::bitset<4> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -1491,21 +1292,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1524,21 +1317,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1557,21 +1342,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1590,21 +1367,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -1617,12 +1386,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class B, class F>
@@ -1633,32 +1402,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -1672,18 +1427,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1698,35 +1453,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -1740,18 +1481,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1766,35 +1507,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -1808,18 +1535,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1834,23 +1561,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1865,40 +1595,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -1908,18 +1624,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1934,40 +1650,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -1977,18 +1679,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2003,12 +1705,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -2016,11 +1720,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2030,22 +1735,17 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp4_;
+    std::bitset<5> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -2087,22 +1787,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2121,22 +1812,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2155,22 +1837,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2189,22 +1862,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2223,22 +1887,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2251,33 +1906,28 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp4_;
+    std::bitset<5> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -2319,22 +1969,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2353,22 +1994,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2387,22 +2019,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2421,22 +2044,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2455,22 +2069,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -2483,12 +2088,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, class F>
@@ -2499,35 +2104,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -2541,18 +2129,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2567,38 +2155,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -2612,18 +2183,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2638,38 +2209,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -2683,18 +2237,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2709,23 +2263,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2740,43 +2297,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -2786,18 +2326,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2812,43 +2352,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -2858,18 +2381,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2884,12 +2407,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -2897,11 +2422,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2911,25 +2437,19 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp5_;
+    std::bitset<6> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -2975,23 +2495,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3010,23 +2520,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3045,23 +2545,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3080,23 +2570,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3115,23 +2595,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3150,23 +2620,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3179,36 +2639,30 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp5_;
+    std::bitset<6> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -3254,23 +2708,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3289,23 +2733,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3324,23 +2758,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3359,23 +2783,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3394,23 +2808,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3429,23 +2833,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -3458,12 +2852,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F>
@@ -3474,38 +2868,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -3519,18 +2893,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3545,41 +2919,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -3593,18 +2947,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3619,41 +2973,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -3667,18 +3001,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3693,23 +3027,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3724,46 +3061,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -3773,18 +3090,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3799,46 +3116,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -3848,18 +3145,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3874,12 +3171,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -3887,11 +3186,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3901,28 +3201,21 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp6_;
+    std::bitset<7> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -3972,24 +3265,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4008,24 +3290,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4044,24 +3315,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4080,24 +3340,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4116,24 +3365,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4152,24 +3390,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4188,24 +3415,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4218,39 +3434,32 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp6_;
+    std::bitset<7> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -4300,24 +3509,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4336,24 +3534,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4372,24 +3559,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4408,24 +3584,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4444,24 +3609,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4480,24 +3634,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4516,24 +3659,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -4546,12 +3678,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F>
@@ -4562,41 +3694,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -4610,18 +3719,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4636,44 +3745,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -4687,18 +3773,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4713,44 +3799,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -4764,18 +3827,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4790,23 +3853,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4821,49 +3887,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -4873,18 +3916,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4899,49 +3942,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -4951,18 +3971,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4977,12 +3997,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -4990,11 +4012,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5004,31 +4027,23 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    WithTime<A7,TimePoint> a7_;
-    bool hasA7_;
+    std::optional<TimePoint> tp6_;
     VersionChecker<A7> versionChecker7_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp7_;
+    std::bitset<8> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -5082,25 +4097,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5119,25 +4122,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5156,25 +4147,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5193,25 +4172,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5230,25 +4197,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5267,25 +4222,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5304,25 +4247,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5341,25 +4272,13 @@ protected:
                     if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
-                        a7_ = std::move(x7->timedData);
-                        hasA7_ = true;
+                    if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
+                        tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x7->timedData.finalFlag) {
+                            finalMask_.set(7);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5372,42 +4291,34 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    WithTime<A7,TimePoint> a7_;
-    bool hasA7_;
+    std::optional<TimePoint> tp6_;
     VersionChecker<A7> versionChecker7_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp7_;
+    std::bitset<8> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -5461,25 +4372,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5498,25 +4397,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5535,25 +4422,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5572,25 +4447,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5609,25 +4472,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5646,25 +4497,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5683,25 +4522,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5720,25 +4547,13 @@ protected:
                     if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
-                        a7_ = std::move(x7->timedData);
-                        hasA7_ = true;
+                    if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
+                        tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_));
-                        } else {
-                            return std::nullopt;
+                        if (x7->timedData.finalFlag) {
+                            finalMask_.set(7);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -5751,12 +4566,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F>
@@ -5767,44 +4582,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -5818,18 +4607,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5844,47 +4633,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -5898,18 +4661,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5924,47 +4687,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -5978,18 +4715,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6004,23 +4741,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6035,52 +4775,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -6090,18 +4804,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6116,52 +4830,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -6171,18 +4859,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6197,12 +4885,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -6210,11 +4900,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6224,34 +4915,25 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    WithTime<A7,TimePoint> a7_;
-    bool hasA7_;
+    std::optional<TimePoint> tp6_;
     VersionChecker<A7> versionChecker7_;
-    WithTime<A8,TimePoint> a8_;
-    bool hasA8_;
+    std::optional<TimePoint> tp7_;
     VersionChecker<A8> versionChecker8_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp8_;
+    std::bitset<9> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -6309,26 +4991,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6347,26 +5016,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6385,26 +5041,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6423,26 +5066,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6461,26 +5091,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6499,26 +5116,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6537,26 +5141,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6575,26 +5166,13 @@ protected:
                     if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
-                        a7_ = std::move(x7->timedData);
-                        hasA7_ = true;
+                    if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
+                        tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x7->timedData.finalFlag) {
+                            finalMask_.set(7);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6613,26 +5191,13 @@ protected:
                     if (!versionChecker8_.checkVersion(x8->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
-                        a8_ = std::move(x8->timedData);
-                        hasA8_ = true;
+                    if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
+                        tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x8->timedData.finalFlag) {
+                            finalMask_.set(8);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6645,45 +5210,36 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    WithTime<A7,TimePoint> a7_;
-    bool hasA7_;
+    std::optional<TimePoint> tp6_;
     VersionChecker<A7> versionChecker7_;
-    WithTime<A8,TimePoint> a8_;
-    bool hasA8_;
+    std::optional<TimePoint> tp7_;
     VersionChecker<A8> versionChecker8_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp8_;
+    std::bitset<9> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -6741,26 +5297,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6779,26 +5322,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6817,26 +5347,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6855,26 +5372,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6893,26 +5397,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6931,26 +5422,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -6969,26 +5447,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7007,26 +5472,13 @@ protected:
                     if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
-                        a7_ = std::move(x7->timedData);
-                        hasA7_ = true;
+                    if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
+                        tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x7->timedData.finalFlag) {
+                            finalMask_.set(7);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7045,26 +5497,13 @@ protected:
                     if (!versionChecker8_.checkVersion(x8->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
-                        a8_ = std::move(x8->timedData);
-                        hasA8_ = true;
+                    if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
+                        tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_));
-                        } else {
-                            return std::nullopt;
+                        if (x8->timedData.finalFlag) {
+                            finalMask_.set(8);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7077,12 +5516,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F>
@@ -7093,47 +5532,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -7147,18 +5557,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7173,50 +5583,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -7230,18 +5611,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7256,50 +5637,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)}, std::tuple<TimePoint, A8> {a8.timePoint, std::move(a8.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -7313,18 +5665,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7339,23 +5691,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7370,55 +5725,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -7428,18 +5754,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7454,55 +5780,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)}, std::tuple<TimePoint, A8> {a8.timePoint, std::move(a8.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -7512,18 +5809,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7538,12 +5835,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -7551,11 +5850,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7565,37 +5865,27 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual Consumer<A9>, public virtual BufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    WithTime<A7,TimePoint> a7_;
-    bool hasA7_;
+    std::optional<TimePoint> tp6_;
     VersionChecker<A7> versionChecker7_;
-    WithTime<A8,TimePoint> a8_;
-    bool hasA8_;
+    std::optional<TimePoint> tp7_;
     VersionChecker<A8> versionChecker8_;
-    WithTime<A9,TimePoint> a9_;
-    bool hasA9_;
+    std::optional<TimePoint> tp8_;
     VersionChecker<A9> versionChecker9_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp9_;
+    std::bitset<10> finalMask_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -7657,27 +5947,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7696,27 +5972,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7735,27 +5997,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7774,27 +6022,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7813,27 +6047,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7852,27 +6072,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7891,27 +6097,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7930,27 +6122,13 @@ protected:
                     if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
-                        a7_ = std::move(x7->timedData);
-                        hasA7_ = true;
+                    if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
+                        tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x7->timedData.finalFlag) {
+                            finalMask_.set(7);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -7969,27 +6147,13 @@ protected:
                     if (!versionChecker8_.checkVersion(x8->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
-                        a8_ = std::move(x8->timedData);
-                        hasA8_ = true;
+                    if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
+                        tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x8->timedData.finalFlag) {
+                            finalMask_.set(8);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8008,27 +6172,13 @@ protected:
                     if (!versionChecker9_.checkVersion(x9->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA9_ || x9->timedData.timePoint >= a9_.timePoint) {
-                        a9_ = std::move(x9->timedData);
-                        hasA9_ = true;
+                    if (!StateT::CheckTime || !tp9_ || x9->timedData.timePoint >= *tp9_) {
+                        tp9_ = x9->timedData.timePoint;
                         StateT *env = x9->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x9->timedData.finalFlag) {
+                            finalMask_.set(9);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8041,48 +6191,38 @@ protected:
             break;
         }
     }
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&, WithTime<A9,TimePoint> &&) = 0;
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&) = 0;
 public:
-    ActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), a9_(), hasA9_(false), versionChecker9_(), requireMask_(requireMask) {
+    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> : public virtual AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public virtual Consumer<A0>, public virtual Consumer<A1>, public virtual Consumer<A2>, public virtual Consumer<A3>, public virtual Consumer<A4>, public virtual Consumer<A5>, public virtual Consumer<A6>, public virtual Consumer<A7>, public virtual Consumer<A8>, public virtual Consumer<A9>, public virtual MultiBufferedProvider<B> {
 private:
-    WithTime<A0,TimePoint> a0_;
-    bool hasA0_;
     VersionChecker<A0> versionChecker0_;
-    WithTime<A1,TimePoint> a1_;
-    bool hasA1_;
+    std::optional<TimePoint> tp0_;
     VersionChecker<A1> versionChecker1_;
-    WithTime<A2,TimePoint> a2_;
-    bool hasA2_;
+    std::optional<TimePoint> tp1_;
     VersionChecker<A2> versionChecker2_;
-    WithTime<A3,TimePoint> a3_;
-    bool hasA3_;
+    std::optional<TimePoint> tp2_;
     VersionChecker<A3> versionChecker3_;
-    WithTime<A4,TimePoint> a4_;
-    bool hasA4_;
+    std::optional<TimePoint> tp3_;
     VersionChecker<A4> versionChecker4_;
-    WithTime<A5,TimePoint> a5_;
-    bool hasA5_;
+    std::optional<TimePoint> tp4_;
     VersionChecker<A5> versionChecker5_;
-    WithTime<A6,TimePoint> a6_;
-    bool hasA6_;
+    std::optional<TimePoint> tp5_;
     VersionChecker<A6> versionChecker6_;
-    WithTime<A7,TimePoint> a7_;
-    bool hasA7_;
+    std::optional<TimePoint> tp6_;
     VersionChecker<A7> versionChecker7_;
-    WithTime<A8,TimePoint> a8_;
-    bool hasA8_;
+    std::optional<TimePoint> tp7_;
     VersionChecker<A8> versionChecker8_;
-    WithTime<A9,TimePoint> a9_;
-    bool hasA9_;
+    std::optional<TimePoint> tp8_;
     VersionChecker<A9> versionChecker9_;
-    FanInParamMask requireMask_;
+    std::optional<TimePoint> tp9_;
+    std::bitset<10> finalMask_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -8144,27 +6284,13 @@ protected:
                     if (!versionChecker0_.checkVersion(x0->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA0_ || x0->timedData.timePoint >= a0_.timePoint) {
-                        a0_ = std::move(x0->timedData);
-                        hasA0_ = true;
+                    if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
+                        tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x0->timedData.finalFlag) {
+                            finalMask_.set(0);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8183,27 +6309,13 @@ protected:
                     if (!versionChecker1_.checkVersion(x1->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA1_ || x1->timedData.timePoint >= a1_.timePoint) {
-                        a1_ = std::move(x1->timedData);
-                        hasA1_ = true;
+                    if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
+                        tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x1->timedData.finalFlag) {
+                            finalMask_.set(1);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8222,27 +6334,13 @@ protected:
                     if (!versionChecker2_.checkVersion(x2->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA2_ || x2->timedData.timePoint >= a2_.timePoint) {
-                        a2_ = std::move(x2->timedData);
-                        hasA2_ = true;
+                    if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
+                        tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x2->timedData.finalFlag) {
+                            finalMask_.set(2);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8261,27 +6359,13 @@ protected:
                     if (!versionChecker3_.checkVersion(x3->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA3_ || x3->timedData.timePoint >= a3_.timePoint) {
-                        a3_ = std::move(x3->timedData);
-                        hasA3_ = true;
+                    if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
+                        tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x3->timedData.finalFlag) {
+                            finalMask_.set(3);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8300,27 +6384,13 @@ protected:
                     if (!versionChecker4_.checkVersion(x4->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA4_ || x4->timedData.timePoint >= a4_.timePoint) {
-                        a4_ = std::move(x4->timedData);
-                        hasA4_ = true;
+                    if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
+                        tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x4->timedData.finalFlag) {
+                            finalMask_.set(4);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8339,27 +6409,13 @@ protected:
                     if (!versionChecker5_.checkVersion(x5->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA5_ || x5->timedData.timePoint >= a5_.timePoint) {
-                        a5_ = std::move(x5->timedData);
-                        hasA5_ = true;
+                    if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
+                        tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x5->timedData.finalFlag) {
+                            finalMask_.set(5);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8378,27 +6434,13 @@ protected:
                     if (!versionChecker6_.checkVersion(x6->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA6_ || x6->timedData.timePoint >= a6_.timePoint) {
-                        a6_ = std::move(x6->timedData);
-                        hasA6_ = true;
+                    if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
+                        tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x6->timedData.finalFlag) {
+                            finalMask_.set(6);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8417,27 +6459,13 @@ protected:
                     if (!versionChecker7_.checkVersion(x7->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA7_ || x7->timedData.timePoint >= a7_.timePoint) {
-                        a7_ = std::move(x7->timedData);
-                        hasA7_ = true;
+                    if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
+                        tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x7->timedData.finalFlag) {
+                            finalMask_.set(7);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8456,27 +6484,13 @@ protected:
                     if (!versionChecker8_.checkVersion(x8->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA8_ || x8->timedData.timePoint >= a8_.timePoint) {
-                        a8_ = std::move(x8->timedData);
-                        hasA8_ = true;
+                    if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
+                        tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x8->timedData.finalFlag) {
+                            finalMask_.set(8);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8495,27 +6509,13 @@ protected:
                     if (!versionChecker9_.checkVersion(x9->timedData.value)) {
                         return std::nullopt;
                     }
-                    if (!StateT::CheckTime || !hasA9_ || x9->timedData.timePoint >= a9_.timePoint) {
-                        a9_ = std::move(x9->timedData);
-                        hasA9_ = true;
+                    if (!StateT::CheckTime || !tp9_ || x9->timedData.timePoint >= *tp9_) {
+                        tp9_ = x9->timedData.timePoint;
                         StateT *env = x9->environment;
-                        bool good = (
-                             (!requireMask_[0] || hasA0_) && 
-                             (!requireMask_[1] || hasA1_) && 
-                             (!requireMask_[2] || hasA2_) && 
-                             (!requireMask_[3] || hasA3_) && 
-                             (!requireMask_[4] || hasA4_) && 
-                             (!requireMask_[5] || hasA5_) && 
-                             (!requireMask_[6] || hasA6_) && 
-                             (!requireMask_[7] || hasA7_) && 
-                             (!requireMask_[8] || hasA8_) && 
-                             (!requireMask_[9] || hasA9_)
-                        );
-                        if (good) {
-                            return handle(updateIdx, env, withtime_utils::makeCopy(a0_), withtime_utils::makeCopy(a1_), withtime_utils::makeCopy(a2_), withtime_utils::makeCopy(a3_), withtime_utils::makeCopy(a4_), withtime_utils::makeCopy(a5_), withtime_utils::makeCopy(a6_), withtime_utils::makeCopy(a7_), withtime_utils::makeCopy(a8_), withtime_utils::makeCopy(a9_));
-                        } else {
-                            return std::nullopt;
+                        if (x9->timedData.finalFlag) {
+                            finalMask_.set(9);
                         }
+                        return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                     } else {
                         return std::nullopt;
                     }
@@ -8528,12 +6528,12 @@ protected:
             break;
         }
     }
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&, WithTime<A1,TimePoint> &&, WithTime<A2,TimePoint> &&, WithTime<A3,TimePoint> &&, WithTime<A4,TimePoint> &&, WithTime<A5,TimePoint> &&, WithTime<A6,TimePoint> &&, WithTime<A7,TimePoint> &&, WithTime<A8,TimePoint> &&, WithTime<A9,TimePoint> &&) = 0;
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&) = 0;
 public:
-    MultiActionCore(FanInParamMask const &requireMask=FanInParamMask()) : a0_(), hasA0_(false), versionChecker0_(), a1_(), hasA1_(false), versionChecker1_(), a2_(), hasA2_(false), versionChecker2_(), a3_(), hasA3_(false), versionChecker3_(), a4_(), hasA4_(false), versionChecker4_(), a5_(), hasA5_(false), versionChecker5_(), a6_(), hasA6_(false), versionChecker6_(), a7_(), hasA7_(false), versionChecker7_(), a8_(), hasA8_(false), versionChecker8_(), a9_(), hasA9_(false), versionChecker9_(), requireMask_(requireMask) {
+    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_() {
     }
-    virtual FanInParamMask fanInParamMask() const override final {
-        return requireMask_;
+    bool isFinalUpdate() const {
+        return finalMask_.all();
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F>
@@ -8544,50 +6544,18 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        case 9:
-            tp = a9.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        B b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value), std::move(a9.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -8601,18 +6569,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -8627,53 +6595,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        case 9:
-            tp = a9.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value), std::move(a9.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -8687,18 +6623,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -8713,53 +6649,21 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        case 9:
-            tp = a9.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::optional<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)}, std::tuple<TimePoint, A8> {a8.timePoint, std::move(a8.value)}, std::tuple<TimePoint, A9> {a9.timePoint, std::move(a9.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<B>(which, pureInnerData<B>(
+            auto x = applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
@@ -8773,18 +6677,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<B>(which, pureInnerData<B>(
+            return applyDelaySimulator<B>(index, pureInnerData<B>(
                 env
                 , {
                     tp
                     , std::move(*b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -8799,23 +6703,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual Data<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x =applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x =applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
             if (x) {
                 x->timedData.finalFlag = true;
                 done_ = true;
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<B>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<B>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -8830,58 +6737,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        case 9:
-            tp = a9.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::move(a0.value), std::move(a1.value), std::move(a2.value), std::move(a3.value), std::move(a4.value), std::move(a5.value), std::move(a6.value), std::move(a7.value), std::move(a8.value), std::move(a9.value));
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -8891,18 +6766,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -8917,58 +6792,26 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
         }
-        TimePoint tp;
-        switch (which) {
-        case 0:
-            tp = a0.timePoint;
-            break;
-        case 1:
-            tp = a1.timePoint;
-            break;
-        case 2:
-            tp = a2.timePoint;
-            break;
-        case 3:
-            tp = a3.timePoint;
-            break;
-        case 4:
-            tp = a4.timePoint;
-            break;
-        case 5:
-            tp = a5.timePoint;
-            break;
-        case 6:
-            tp = a6.timePoint;
-            break;
-        case 7:
-            tp = a7.timePoint;
-            break;
-        case 8:
-            tp = a8.timePoint;
-            break;
-        case 9:
-            tp = a9.timePoint;
-            break;
-        default:
-            return std::nullopt;
-        }
-        std::vector<B> b = f_(which, std::tuple<TimePoint, A0> {a0.timePoint, std::move(a0.value)}, std::tuple<TimePoint, A1> {a1.timePoint, std::move(a1.value)}, std::tuple<TimePoint, A2> {a2.timePoint, std::move(a2.value)}, std::tuple<TimePoint, A3> {a3.timePoint, std::move(a3.value)}, std::tuple<TimePoint, A4> {a4.timePoint, std::move(a4.value)}, std::tuple<TimePoint, A5> {a5.timePoint, std::move(a5.value)}, std::tuple<TimePoint, A6> {a6.timePoint, std::move(a6.value)}, std::tuple<TimePoint, A7> {a7.timePoint, std::move(a7.value)}, std::tuple<TimePoint, A8> {a8.timePoint, std::move(a8.value)}, std::tuple<TimePoint, A9> {a9.timePoint, std::move(a9.value)});
+        StateT *env = data.environment;
+        TimePoint tp = data.timedData.timePoint;
+        std::size_t index = data.timedData.value.index();
+        std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
         }
         if (fireOnceOnly_) {
-            auto x = applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            auto x = applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , true
                 }
             ), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
@@ -8978,18 +6821,18 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulator<std::vector<B>>(which, pureInnerData<std::vector<B>>(
+            return applyDelaySimulator<std::vector<B>>(index, pureInnerData<std::vector<B>>(
                 env
                 , {
                     tp
                     , std::move(b)
-                    , (a0.finalFlag && a1.finalFlag && a2.finalFlag && a3.finalFlag && a4.finalFlag && a5.finalFlag && a6.finalFlag && a7.finalFlag && a8.finalFlag && a9.finalFlag)
+                    , this->isFinalUpdate()
                 }
             ), delaySimulator_);
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -9004,12 +6847,14 @@ private:
     bool fireOnceOnly_;
     bool done_;
 protected:
-    virtual MultiData<B> handle(int which, StateT *env, WithTime<A0,TimePoint> &&a0, WithTime<A1,TimePoint> &&a1, WithTime<A2,TimePoint> &&a2, WithTime<A3,TimePoint> &&a3, WithTime<A4,TimePoint> &&a4, WithTime<A5,TimePoint> &&a5, WithTime<A6,TimePoint> &&a6, WithTime<A7,TimePoint> &&a7, WithTime<A8,TimePoint> &&a8, WithTime<A9,TimePoint> &&a9) override final {
+    virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
             }
-            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            auto x = applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
             if (x && x->timedData.value.size() > 0) {
                 x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                 x->timedData.finalFlag = true;
@@ -9017,11 +6862,12 @@ protected:
             }
             return x;
         } else {
-            return applyDelaySimulatorForKleisli<std::vector<B>>(which, f_(which, InnerData<A0> { env, std::move(a0) }, InnerData<A1> { env, std::move(a1) }, InnerData<A2> { env, std::move(a2) }, InnerData<A3> { env, std::move(a3) }, InnerData<A4> { env, std::move(a4) }, InnerData<A5> { env, std::move(a5) }, InnerData<A6> { env, std::move(a6) }, InnerData<A7> { env, std::move(a7) }, InnerData<A8> { env, std::move(a8) }, InnerData<A9> { env, std::move(a9) }), delaySimulator_);
+            data.timedData.finalFlag = this->isFinalUpdate();
+            return applyDelaySimulatorForKleisli<std::vector<B>>(index, f_(std::move(data)), delaySimulator_);
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.requireMask), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
