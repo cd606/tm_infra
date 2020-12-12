@@ -496,60 +496,26 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        export function liftPure2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function liftPure2<Env extends EnvBase,T1,T2,OutT>(f : (x : Either2<T1,T2>) => OutT) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : T1;
-                private snapshot2 : T2;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = data.timedData.value[1] as T1;
-                    } else {
-                        this.snapshot2 = data.timedData.value[1] as T2;
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
                     this.publish(pureTimedDataWithEnvironment(
-                        data.environment, f(data.timedData.value[0], this.snapshot1, this.snapshot2), data.timedData.finalFlag
+                        data.environment, f(data.timedData.value), data.timedData.finalFlag
                     ));
                 }
             };
             return new LocalA();
         }
-        export function liftMaybe2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function liftMaybe2<Env extends EnvBase,T1,T2,OutT>(f : (x: Either2<T1,T2>) => OutT) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : T1;
-                private snapshot2 : T2;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = data.timedData.value[1] as T1;
-                    } else {
-                        this.snapshot2 = data.timedData.value[1] as T2;
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
-                    let v = f(data.timedData.value[0], this.snapshot1, this.snapshot2);
+                    let v = f(data.timedData.value);
                     if (v === null) {
                         return;
                     }
@@ -560,85 +526,33 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        export function enhancedMaybe2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : Date, a : T1, d2 : Date, b : T2) => OutT, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function enhancedMaybe2<Env extends EnvBase,T1,T2,OutT>(f : (x : [Date, Either2<T1,T2>]) => OutT) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : TimedDataWithEnvironment<Env,T1>;
-                private snapshot2 : TimedDataWithEnvironment<Env,T2>;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T1)
-                            , data
-                        );
-                    } else {
-                        this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T2)
-                            , data
-                        );
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
                     let v = f(
-                        data.timedData.value[0]
-                        , this.snapshot1.timedData.timePoint
-                        , this.snapshot1.timedData.value
-                        , this.snapshot2.timedData.timePoint
-                        , this.snapshot2.timedData.value
+                        [data.timedData.timePoint, data.timedData.value]
                     );
                     if (v === null) {
                         return;
                     }
                     this.publish(pureTimedDataWithEnvironment(
-                        data.environment, v, (this.snapshot1.timedData.finalFlag && this.snapshot2.timedData.finalFlag)
+                        data.environment, v, data.timedData.finalFlag
                     ));
                 }
             };
             return new LocalA();
         }
-        export function kleisli2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : TimedDataWithEnvironment<Env,T1>, d2 : TimedDataWithEnvironment<Env,T2>) => TimedDataWithEnvironment<Env,OutT>, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function kleisli2<Env extends EnvBase,T1,T2,OutT>(f : (x : TimedDataWithEnvironment<Env,Either2<T1,T2>>) => TimedDataWithEnvironment<Env,OutT>) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : TimedDataWithEnvironment<Env,T1>;
-                private snapshot2 : TimedDataWithEnvironment<Env,T2>;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T1)
-                            , data
-                        );
-                    } else {
-                        this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T2)
-                            , data
-                        );
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
                     let v = f(
-                        data.timedData.value[0]
-                        , this.snapshot1
-                        , this.snapshot2
+                        data
                     );
                     if (v === null || v.timedData.value === null) {
                         return;
@@ -648,30 +562,13 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        export function liftMulti2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, a : T1, b : T2) => OutT[], reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function liftMulti2<Env extends EnvBase,T1,T2,OutT>(f : (x: Either2<T1,T2>) => OutT[]) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : T1;
-                private snapshot2 : T2;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = data.timedData.value[1] as T1;
-                    } else {
-                        this.snapshot2 = data.timedData.value[1] as T2;
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
-                    let v = f(data.timedData.value[0], this.snapshot1, this.snapshot2);
+                    let v = f(data.timedData.value);
                     if (v === null) {
                         return;
                     }
@@ -684,87 +581,35 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        export function enhancedMulti2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : Date, a : T1, d2 : Date, b : T2) => OutT[], reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function enhancedMulti2<Env extends EnvBase,T1,T2,OutT>(f : (x: [Date, Either2<T1,T2>]) => OutT[]) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : TimedDataWithEnvironment<Env,T1>;
-                private snapshot2 : TimedDataWithEnvironment<Env,T2>;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T1)
-                            , data
-                        );
-                    } else {
-                        this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T2)
-                            , data
-                        );
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
                     let v = f(
-                        data.timedData.value[0]
-                        , this.snapshot1.timedData.timePoint
-                        , this.snapshot1.timedData.value
-                        , this.snapshot2.timedData.timePoint
-                        , this.snapshot2.timedData.value
+                        [data.timedData.timePoint, data.timedData.value]
                     );
                     if (v === null) {
                         return;
                     }
                     for (let t of v) {
                         this.publish(pureTimedDataWithEnvironment(
-                            data.environment, t, (this.snapshot1.timedData.finalFlag && this.snapshot2.timedData.finalFlag)
+                            data.environment, t, data.timedData.finalFlag
                         ));
                     }
                 }
             };
             return new LocalA();
         }
-        export function kleisliMulti2<Env extends EnvBase,T1,T2,OutT>(f : (index: number, d1 : TimedDataWithEnvironment<Env,T1>, d2 : TimedDataWithEnvironment<Env,T2>) => TimedDataWithEnvironment<Env,OutT[]>, reqMask : typeof BitSet) : Action2<Env,T1,T2,OutT> {
+        export function kleisliMulti2<Env extends EnvBase,T1,T2,OutT>(f : (x: TimedDataWithEnvironment<Env,Either2<T1,T2>>) => TimedDataWithEnvironment<Env,OutT[]>) : Action2<Env,T1,T2,OutT> {
             class LocalA extends Action2<Env,T1,T2,OutT> {
-                private snapshot1 : TimedDataWithEnvironment<Env,T1>;
-                private snapshot2 : TimedDataWithEnvironment<Env,T2>;
-                private requireMask : typeof BitSet;
                 public constructor() {
                     super();
-                    this.snapshot1 = null;
-                    this.snapshot2 = null;
-                    this.requireMask = reqMask;
                 }
                 public handle(data : TimedDataWithEnvironment<Env, Either2<T1,T2>>) : void {
-                    if (data.timedData.value[0] == 0) {
-                        this.snapshot1 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T1)
-                            , data
-                        );
-                    } else {
-                        this.snapshot2 = mapTimedDataWithEnvironment(
-                            (x : Either2<T1,T2>) => (x[1] as T2)
-                            , data
-                        );
-                    }
-                    if (this.requireMask.get(0) && this.snapshot1 === null) {
-                        return;
-                    }
-                    if (this.requireMask.get(1) && this.snapshot2 === null) {
-                        return;
-                    }
                     let v = f(
-                        data.timedData.value[0]
-                        , this.snapshot1
-                        , this.snapshot2
+                        data
                     );
                     if (v === null || v.timedData.value === null) {
                         return;
