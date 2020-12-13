@@ -79,17 +79,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             std::optional<TimePoint> timePoint_;
             std::stack<Provider<T> *> signerStack_;
+            void *additionalInfo_;
             friend class SinglePassIterationApp;
             Certificate(std::optional<TimePoint> &&tp, std::stack<Provider<T> *> &&signerStack, Provider<T> *topSigner)
-                : timePoint_(std::move(tp)), signerStack_(std::move(signerStack)) 
+                : timePoint_(std::move(tp)), signerStack_(std::move(signerStack)), additionalInfo_(nullptr)
             {
                 if (topSigner != nullptr) {
                     signerStack_.push(topSigner);
                 }
             }
         public:
-            Certificate() : timePoint_(std::nullopt), signerStack_() {}
-            Certificate(std::optional<TimePoint> &&tp, Provider<T> *signer) : timePoint_(std::move(tp)), signerStack_() {
+            Certificate() : timePoint_(std::nullopt), signerStack_(), additionalInfo_(nullptr) {}
+            Certificate(std::optional<TimePoint> &&tp, Provider<T> *signer, void *additionalInfo=nullptr) : timePoint_(std::move(tp)), signerStack_(), additionalInfo_(additionalInfo) {
                 signerStack_.push(signer);
             }
             Certificate(Certificate const &c) = default;
@@ -98,6 +99,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Certificate &operator=(Certificate &&c) = default;
             Certificate push(Provider<T> *signer) {
                 auto ret = Certificate {std::move(timePoint_), std::move(signerStack_), signer};
+                ret.additionalInfo_ = additionalInfo_;
                 timePoint_ = std::nullopt;
                 while (!signerStack_.empty()) {
                     signerStack_.pop();
@@ -116,6 +118,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             Provider<T> *topSigner() const {
                 return signerStack_.empty()?nullptr:signerStack_.top();
+            }
+            void *additionalInfo() const {
+                return additionalInfo_;
+            }
+            std::optional<TimePoint> timePoint() const {
+                return timePoint_;
             }
         private:
             TimePoint timePointUnsafe() const {
@@ -138,6 +146,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual Data<T> next(Certificate<T> &&cert) = 0;
             virtual ~Provider() {}
         };
+
+        #include <tm_kit/infra/SinglePassIterationApp_Provider_Adapter_Piece.hpp>
 
         template <class T>
         class FillableProvider final : public Provider<T> {
@@ -2314,6 +2324,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void connect(Source<T> &&src, Sink<T> const &sink) {
             innerConnect(sink.consumer, src.provider);
         }
+
+        #include <tm_kit/infra/SinglePassIterationApp_ConnectN_Piece.hpp>
     
         std::function<void(StateT *)> finalize() { 
             std::list<IExternalComponent *> aCopy = std::move(externalComponents_);

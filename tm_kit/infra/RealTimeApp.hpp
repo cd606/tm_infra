@@ -306,6 +306,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
+
+        #include <tm_kit/infra/RealTimeApp_ProducerN_Piece.hpp>
+
         //In OnOrderFacility, it is NOT ALLOWED to directly publish a KeyedData<A,B> in its base producer
         //The reason is that the produced KeyedData<A,B> must come from a **STORED** Key<A>. So, the producer is 
         //only allowed to calculate and publish Key<B>'s, and the logic here will automatically
@@ -2353,6 +2356,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void connect(Source<T> &&src, Sink<T> const &sink) {
             innerConnect(sink.consumer, src.producer);
         }
+
+        #include <tm_kit/infra/RealTimeApp_ConnectN_Piece.hpp>
 
         std::function<void(StateT *)> finalize() { 
             std::list<IExternalComponent *> aCopy;

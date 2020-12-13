@@ -592,6 +592,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
         }
+
+        #include <tm_kit/infra/BasicWithTimeApp_ConnectN_Piece.hpp>
     
         std::function<void(StateT *)> finalize() { 
             return [](StateT *) {};

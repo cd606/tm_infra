@@ -408,6 +408,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
         }
+        template <class F>
+        auto mapMove(F const &f, bool preserveTime=false) && -> TimedDataWithEnvironment<decltype(f(std::move(* ((T *) nullptr)))), Environment, TimePoint> {
+            return {
+                environment,
+                {
+                    (preserveTime?timedData.timePoint:environment->resolveTime(timedData.timePoint))
+                    , f(std::move(timedData.value))
+                    , timedData.finalFlag
+                }
+            };
+        }
     };
 
     namespace withtime_utils {
@@ -569,7 +580,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionCheckData {
             std::string name;
             int paramCount;
-            std::vector<std::unordered_map<std::string,std::set<std::tuple<int,int>>>> paramConnectedFrom;
+            std::vector<std::unordered_map<std::string,std::set<std::tuple<int,int,std::string>>>> paramConnectedFrom;
             std::unordered_map<std::string,std::unordered_set<int>> outputConnectedTo;            
             bool isImporter = false;
             bool isExporter = false;
@@ -882,7 +893,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return iter->second.name;
         }
-        bool connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode, bool useAltOutput) {
+        bool connectAndCheck_(int pos, void *p, std::string const &producer, int colorCode, bool useAltOutput, std::string const &edgeLabel="") {
             auto iter = nameMap_.find(p);
             if (iter == nameMap_.end()) {
                 throw AppRunnerException(
@@ -927,16 +938,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                 }
-                if (connIter->second.find({colorCode, outputLegCode}) != connIter->second.end()) {
+                if (connIter->second.find({colorCode, outputLegCode, edgeLabel}) != connIter->second.end()) {
                     env_->log(LogLevel::Warning,
                         "Reconnecting an output of '" + producer + "' to '" + iter->second.name + "'"
                     );
                     isReconnect = true;
                 } else {
-                    connIter->second.insert({colorCode, outputLegCode});
+                    connIter->second.insert({colorCode, outputLegCode, edgeLabel});
                 }
             } else {
-                iter->second.paramConnectedFrom[pos].insert({producer, {{colorCode, outputLegCode}}});
+                iter->second.paramConnectedFrom[pos].insert({producer, {{colorCode, outputLegCode, edgeLabel}}});
             }
             
             if (useAltOutput) {
@@ -1699,6 +1710,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             m_.connect(std::move(source.mSource), sink.mSink);
         }
 
+        #include <tm_kit/infra/WithTimeData_ConnectN_Piece.hpp>
+
         template <class T>
         void setMaxOutputConnectivity(Source<T> &&source, size_t maxOutputConnectivity) {
             std::lock_guard<std::mutex> _(mutex_);
@@ -1891,11 +1904,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 os << " [style=dashed,colorscheme=spectral11,color=" << color;
                                 hasStyles = true;
                             }
-                            if (hasStyles) {
-                                os << "];\n";
+                            std::string edgeLabel = std::get<2>(connector);
+                            if (edgeLabel != "") {
+                                if (hasStyles) {
+                                    os << ",label=\"" << edgeLabel << "\"];\n";
+                                } else {
+                                    os << " [label=\"" << edgeLabel << "\"];\n";
+                                }  
                             } else {
-                                os << ";\n";
-                            }         
+                                if (hasStyles) {
+                                    os << "];\n";
+                                } else {
+                                    os << ";\n";
+                                }         
+                            }
                         }  
                     }                                                        
                 }
