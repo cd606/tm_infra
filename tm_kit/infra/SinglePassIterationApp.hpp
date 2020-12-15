@@ -556,6 +556,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
                         hasA_ = true;
                         aTime_ = tp;
+                        TraceNodesComponentWrapper<StateT> tracer(
+                            input->environment 
+                            , (void *) (static_cast<AbstractActionCore<A,B> *>(this))
+                        );
                         return handle(std::move(*input));
                     } else {
                         return std::nullopt;
@@ -664,6 +668,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
                         hasA_ = true;
                         aTime_ = tp;
+                        TraceNodesComponentWrapper<StateT> tracer(
+                            input->environment 
+                            , (void *) (static_cast<AbstractActionCore<A,B> *>(this))
+                        );
                         return handle(std::move(*input));
                     } else {
                         return std::nullopt;
@@ -1705,6 +1713,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     return std::nullopt;
                 }
+                TM_INFRA_EXPORTER_TRACER((*input));
                 handle(std::move(*input));
                 return { pureInnerData<SpecialOutputDataTypeForExporters>(
                     env,
