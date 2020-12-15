@@ -394,14 +394,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //KeyedData cannot be imported "out of the blue"
         template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
         class AbstractImporter : public virtual IExternalComponent, public Producer<T> {
+        protected:
+            static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
         };
+
         //Keys and KeyedData can be exported, for example to be written to database,
         //so there is no check on the exporter
         template <class T>
         class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
+        protected:
+            static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         };
+
         template <class A, class B>
         class AbstractOnOrderFacility: public virtual IHandler<Key<A>>, public OnOrderFacilityProducer<KeyedData<A,B>> {
+        protected:
+            static constexpr AbstractOnOrderFacility *nullptrToInheritedFacility() {return nullptr;}
         };
         
         template <class A, class B>
@@ -1248,10 +1256,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }    
-                TraceNodesComponentWrapper<StateT> tracer(
-                    data.environment 
-                    , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *>(this))
-                );
+                TM_INFRA_FACILITY_TRACER(data);
                 auto id = data.timedData.value.id();
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                 auto res = this->action(data.environment, std::move(a));
@@ -1280,10 +1285,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual void handle(InnerData<Key<A>> &&data) override final {
                 if (timeChecker_(data)) {
-                    TraceNodesComponentWrapper<StateT> tracer(
-                        data.environment 
-                        , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *>(this))
-                    );
+                    TM_INFRA_FACILITY_TRACER(data);
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                     auto res = this->action(data.environment, std::move(a));
@@ -1836,10 +1838,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(d)) {
                     return;
                 }
-                TraceNodesComponentWrapper<StateT> tracer(
-                    d.environment 
-                    , (void *) (static_cast<AbstractExporter<T> *>(this))
-                );
+                TM_INFRA_EXPORTER_TRACER(d);
                 f_(std::move(d));
             }    
         public:
@@ -1865,10 +1864,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {
                 if (timeChecker_(d)) {
-                    TraceNodesComponentWrapper<StateT> tracer(
-                        d.environment 
-                        , (void *) (static_cast<AbstractExporter<T> *>(this))
-                    );
+                    TM_INFRA_EXPORTER_TRACER(d);
                     f_(std::move(d));
                 }
             } 

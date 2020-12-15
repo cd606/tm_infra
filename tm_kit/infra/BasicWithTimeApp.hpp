@@ -147,6 +147,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         class AbstractOnOrderFacility {
+        protected:
+            static constexpr AbstractOnOrderFacility *nullptrToInheritedFacility() {return nullptr;}
         public: 
             void publish(InnerData<Key<B>> &&response) {
             }   
@@ -220,6 +222,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
         class AbstractImporter : public virtual IExternalComponent {
+        protected:
+            static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
         public:
             void publish(InnerData<T> &&data) {
             }
@@ -275,6 +279,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     
         template <class T>
         class AbstractExporter : public virtual IExternalComponent {
+        protected:
+            static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
             virtual void handle(InnerData<T> &&) = 0;
         };

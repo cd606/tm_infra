@@ -75,6 +75,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         TraceNodesComponentWrapper(Env *env, void *p, std::string const &suffix="") {}
         ~TraceNodesComponentWrapper() {}
     };
+
+    #define TM_INFRA_IMPORTER_TRACER(data) \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper<StateT> _tracer( \
+            data.environment \
+            , (void *) (static_cast<decltype(this->nullptrToInheritedImporter())>(this)) \
+        );
+    #define TM_INFRA_EXPORTER_TRACER(data) \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper<StateT> _tracer( \
+            data.environment \
+            , (void *) (static_cast<decltype(this->nullptrToInheritedExporter())>(this)) \
+        );
+    #define TM_INFRA_FACILITY_TRACER(data) \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper<StateT> _tracer( \
+            data.environment \
+            , (void *) (static_cast<decltype(this->nullptrToInheritedFacility())>(this)) \
+        );
 } } } }
 
 #endif
