@@ -1256,7 +1256,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }    
-                TM_INFRA_FACILITY_TRACER(data);
+                TM_INFRA_FACILITY_TRACER(data.environment);
                 auto id = data.timedData.value.id();
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                 auto res = this->action(data.environment, std::move(a));
@@ -1285,7 +1285,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual void handle(InnerData<Key<A>> &&data) override final {
                 if (timeChecker_(data)) {
-                    TM_INFRA_FACILITY_TRACER(data);
+                    TM_INFRA_FACILITY_TRACER(data.environment);
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                     auto res = this->action(data.environment, std::move(a));
@@ -1838,7 +1838,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(d)) {
                     return;
                 }
-                TM_INFRA_EXPORTER_TRACER(d);
+                TM_INFRA_EXPORTER_TRACER(d.environment);
                 f_(std::move(d));
             }    
         public:
@@ -1864,7 +1864,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {
                 if (timeChecker_(d)) {
-                    TM_INFRA_EXPORTER_TRACER(d);
+                    TM_INFRA_EXPORTER_TRACER(d.environment);
                     f_(std::move(d));
                 }
             } 

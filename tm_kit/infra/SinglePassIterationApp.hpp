@@ -1713,7 +1713,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     return std::nullopt;
                 }
-                TM_INFRA_EXPORTER_TRACER((*input));
+                TM_INFRA_EXPORTER_TRACER(env);
                 handle(std::move(*input));
                 return { pureInnerData<SpecialOutputDataTypeForExporters>(
                     env,
