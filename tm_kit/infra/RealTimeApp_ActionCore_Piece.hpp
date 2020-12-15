@@ -13,6 +13,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -52,6 +56,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -105,6 +113,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -144,6 +156,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -203,6 +219,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -242,6 +262,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -307,6 +331,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -346,6 +374,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -417,6 +449,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -456,6 +492,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -533,6 +573,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -572,6 +616,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -655,6 +703,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -694,6 +746,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -783,6 +839,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -822,6 +882,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {
@@ -917,6 +981,10 @@ protected:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        TraceNodesComponentWrapper<StateT> tracer(
+            data.environment
+            , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+        );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
         auto res = action(std::move(data));
         if (res) {
@@ -956,6 +1024,10 @@ protected:
             }
         }
         if (timeChecker_(data)) {
+            TraceNodesComponentWrapper<StateT> tracer(
+                data.environment
+                , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+            );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
             auto res = action(std::move(data));
             if (res) {

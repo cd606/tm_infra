@@ -658,6 +658,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TwoWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
             template <class A>
             TwoWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core_.get()};
+            }
         };
         template <class T, class Data>
         class OneWayHolder {
@@ -673,6 +676,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             OneWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
             template <class A>
             OneWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core_.get()};
+            }
         };
         template <class T1, class Input, class Output, class T2, class Data>
         class ThreeWayHolder {
@@ -700,6 +706,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ThreeWayHolder &operator=(ThreeWayHolder const &) = delete;
             ThreeWayHolder(ThreeWayHolder &&) = default;
             ThreeWayHolder &operator=(ThreeWayHolder &&) = default;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core1_, core2_};
+            }
         };
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
         class FourWayHolder {
@@ -730,6 +739,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             FourWayHolder &operator=(FourWayHolder const &) = delete;
             FourWayHolder(FourWayHolder &&) = default;
             FourWayHolder &operator=(FourWayHolder &&) = default;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core1_, core2_, core3_};
+            }
         };
     
     private:
@@ -749,6 +761,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }
+                TraceNodesComponentWrapper<StateT> tracer(
+                    data.environment 
+                    , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *>(this))
+                );
                 auto res = this->action(data.environment, std::move(data.timedData));
                 if (res) {
                     if constexpr (FireOnceOnly) {
@@ -790,6 +806,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
+                    TraceNodesComponentWrapper<StateT> tracer(
+                        data.environment 
+                        , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *>(this))
+                    );
                     auto res = this->action(data.environment, std::move(data.timedData));
                     if (res) {
                         if constexpr (FireOnceOnly) {
@@ -1228,6 +1248,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }    
+                TraceNodesComponentWrapper<StateT> tracer(
+                    data.environment 
+                    , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *>(this))
+                );
                 auto id = data.timedData.value.id();
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                 auto res = this->action(data.environment, std::move(a));
@@ -1256,6 +1280,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual void handle(InnerData<Key<A>> &&data) override final {
                 if (timeChecker_(data)) {
+                    TraceNodesComponentWrapper<StateT> tracer(
+                        data.environment 
+                        , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *>(this))
+                    );
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
                     auto res = this->action(data.environment, std::move(a));
@@ -1808,6 +1836,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(d)) {
                     return;
                 }
+                TraceNodesComponentWrapper<StateT> tracer(
+                    d.environment 
+                    , (void *) (static_cast<AbstractExporter<T> *>(this))
+                );
                 f_(std::move(d));
             }    
         public:
@@ -1833,6 +1865,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {
                 if (timeChecker_(d)) {
+                    TraceNodesComponentWrapper<StateT> tracer(
+                        d.environment 
+                        , (void *) (static_cast<AbstractExporter<T> *>(this))
+                    );
                     f_(std::move(d));
                 }
             } 

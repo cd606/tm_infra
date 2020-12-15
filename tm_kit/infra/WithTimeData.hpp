@@ -32,6 +32,7 @@
 #include <tm_kit/infra/ChronoUtils.hpp>
 #include <tm_kit/infra/LogLevel.hpp>
 #include <tm_kit/infra/VersionedData.hpp>
+#include <tm_kit/infra/TraceNodesComponent.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -691,7 +692,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         std::unordered_map<std::string, ActionProperties> actionPropertiesMap_;
         bool restrictFacilityOutputConnectionByDefault_;
+        std::unordered_map<void *, std::string> underlyingPointerNameMap_;
         mutable std::mutex mutex_;
+
+        void registerUnderlyingNames_(std::string const &name, std::unordered_set<void *> ptrs) {
+            for (auto p : ptrs) {
+                if (p == nullptr) {
+                    continue;
+                }
+                if (underlyingPointerNameMap_.find(p) != underlyingPointerNameMap_.end()) {
+                    throw AppRunnerException(
+                        "Attempt to re-use an underlying pointer already associated with name '"+name+"'"
+                    );
+                }
+                underlyingPointerNameMap_.insert({p, name});
+            }
+        }
 
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
@@ -700,6 +716,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -729,6 +746,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -754,6 +772,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -779,6 +798,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -807,6 +827,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -835,6 +856,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -863,6 +885,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Attempt to re-use already registered name '"+name+"'"
                 );
             }
+            registerUnderlyingNames_(name, f->getUnderlyingPointers());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -1003,9 +1026,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), mutex_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), mutex_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -2144,6 +2167,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         );
                     }
                 }
+            }
+            if constexpr (std::is_convertible_v<StateT *, TraceNodesComponent *>) {
+                env_->setNodeNameMap(underlyingPointerNameMap_);
             }
             m_.finalize()(env_);
         }

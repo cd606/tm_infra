@@ -73,6 +73,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , oneTimeOnly(liftParam.fireOnceOnly)
             {}
             ~Action() = default;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
 
         template <class A, class B>
@@ -156,6 +159,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct OnOrderFacility {
             using InputType = A;
             using OutputType = B;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
 
         template <class A, class B>
@@ -224,6 +230,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         struct Importer {
             using DataType = T;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
 
         template <class T>
@@ -273,6 +282,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         struct Exporter {
             using DataType = T;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
 
         template <class T>
@@ -311,6 +323,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using InputType = QueryKeyType;
             using OutputType = QueryResultType;
             using DataType = DataInputType;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static auto emptyLocalOnOrderFacility() 
@@ -370,6 +385,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using InputType = QueryKeyType;
             using OutputType = QueryResultType;
             using DataType = DataInputType;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static auto emptyOnOrderFacilityWithExternalEffects() 
@@ -432,6 +450,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using OutputType = QueryResultType;
             using ExtraInputType = ExtraInputT;
             using ExtraOutputType = ExtraOutputT;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
         };
         template <class QueryKeyType, class QueryResultType, class ExtraInputT, class ExtraOutputT>
         static auto emptyVIEOnOrderFacility() 

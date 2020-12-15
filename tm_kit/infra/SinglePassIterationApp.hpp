@@ -402,6 +402,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TwoWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
             template <class A>
             TwoWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core_.get()};
+            }
         };
         template <class T, class Data>
         class OneWayHolder {
@@ -416,6 +419,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             OneWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
             template <class A>
             OneWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core_.get()};
+            }
         };
         template <class T1, class Input, class Output, class T2, class Data>
         class ThreeWayHolder {
@@ -443,6 +449,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ThreeWayHolder &operator=(ThreeWayHolder const &) = delete;
             ThreeWayHolder(ThreeWayHolder &&) = default;
             ThreeWayHolder &operator=(ThreeWayHolder &&) = default;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core1_, core2_};
+            }
         };
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
         class FourWayHolder {
@@ -473,6 +482,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             FourWayHolder &operator=(FourWayHolder const &) = delete;
             FourWayHolder(FourWayHolder &&) = default;
             FourWayHolder &operator=(FourWayHolder &&) = default;
+            std::unordered_set<void *> getUnderlyingPointers() const {
+                return {core1_, core2_, core3_};
+            }
         };
 
     private:
