@@ -62,7 +62,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void *p_;
         std::string suffix_;
     public:
-        TraceNodesComponentWrapper(Env *env, void *p, std::string const &suffix="") : env_(env), p_(p), suffix_(suffix==""?"":(":"+suffix)) {
+        TraceNodesComponentWrapper(Env *env, void *p, std::string const &suffix="") : env_(env), p_(p), suffix_(suffix) {
             env_->template writeTrace<Env>(env_, p_, suffix_, 'B');
         }
         ~TraceNodesComponentWrapper() {
