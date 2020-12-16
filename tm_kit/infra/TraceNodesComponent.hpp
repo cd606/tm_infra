@@ -36,13 +36,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class Env>
-        void writeTrace(Env *env, void *p, std::string const &suffix, char phase) const {
-            auto const *n = nodeName(p);
-            if (!n) {
+        void writeTrace(Env *env, std::string const *name, char phase) const {
+            if (!name) {
                 return;
             }
             std::ostringstream oss;
-            oss << "{\"name\": \"" << *n << suffix << "\""
+            oss << "{\"name\": \"" << *name << "\""
                 << ",\"pid\": " << pid_
                 << ",\"tid\": " << std::hash<std::thread::id>()(std::this_thread::get_id())
                 << ",\"ph\": \"" << phase << "\""
@@ -52,61 +51,94 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     };
 
-    template <class Env, bool HasTraceComponent = std::is_convertible_v<Env *, TraceNodesComponent *>>
+    template <class Env, class BaseClass, bool HasTraceComponent = std::is_convertible_v<Env *, TraceNodesComponent *>>
     class TraceNodesComponentWrapper {};
 
-    template <class Env>
-    class TraceNodesComponentWrapper<Env, true> {
+    template <class Env, class BaseClass>
+    class TraceNodesComponentWrapper<Env, BaseClass, true> {
     private:
         Env *env_;
-        void *p_;
-        std::string suffix_;
+        bool good_;
+        std::string name_;
     public:
-        TraceNodesComponentWrapper(Env *env, void *p, std::string const &suffix="") : env_(env), p_(p), suffix_(suffix) {
-            env_->template writeTrace<Env>(env_, p_, suffix_, 'B');
+        template <class T>
+        TraceNodesComponentWrapper(Env *env, T *p, std::string const &suffix="") : env_(env), good_(false), name_() {
+            auto const *n = env_->nodeName(static_cast<BaseClass *>(p));
+            if (n == nullptr) {
+                good_ = false;
+            } else {
+                good_ = true;
+                if (suffix == "") {
+                    name_ = *n;
+                } else {
+                    name_ = (*n)+suffix;
+                }
+                env_->template writeTrace<Env>(env_, &name_, 'B');
+            }
         }
         ~TraceNodesComponentWrapper() {
-            env_->template writeTrace<Env>(env_, p_, suffix_, 'E');
+            if (good_) {
+                env_->template writeTrace<Env>(env_, &name_, 'E');
+            }
         }
     };
-    template <class Env>
-    class TraceNodesComponentWrapper<Env, false> {
+    template <class Env, class BaseClass>
+    class TraceNodesComponentWrapper<Env, BaseClass, false> {
     public:
-        TraceNodesComponentWrapper(Env *env, void *p, std::string const &suffix="") {}
+        template <class T>
+        TraceNodesComponentWrapper(Env *env, T *p, std::string const &suffix="") {}
         ~TraceNodesComponentWrapper() {}
     };
 
     #define TM_INFRA_IMPORTER_TRACER(env) \
-        dev::cd606::tm::infra::TraceNodesComponentWrapper<std::decay_t<std::remove_pointer_t<decltype(env)>>> _tracer( \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper< \
+            std::decay_t<std::remove_pointer_t<decltype(env)>> \
+            , std::decay_t<std::remove_pointer_t<decltype(this->nullptrToInheritedImporter())>> \
+        > _tracer( \
             env \
-            , (void *) (static_cast<decltype(this->nullptrToInheritedImporter())>(this)) \
+            , this \
         );
     #define TM_INFRA_EXPORTER_TRACER(env) \
-        dev::cd606::tm::infra::TraceNodesComponentWrapper<std::decay_t<std::remove_pointer_t<decltype(env)>>> _tracer( \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper< \
+            std::decay_t<std::remove_pointer_t<decltype(env)>> \
+            , std::decay_t<std::remove_pointer_t<decltype(this->nullptrToInheritedExporter())>> \
+        > _tracer( \
             env \
-            , (void *) (static_cast<decltype(this->nullptrToInheritedExporter())>(this)) \
+            , this \
         );
     #define TM_INFRA_FACILITY_TRACER(env) \
-        dev::cd606::tm::infra::TraceNodesComponentWrapper<std::decay_t<std::remove_pointer_t<decltype(env)>>> _tracer( \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper< \
+            std::decay_t<std::remove_pointer_t<decltype(env)>> \
+            , std::decay_t<std::remove_pointer_t<decltype(this->nullptrToInheritedFacility())>> \
+        > _tracer( \
             env \
-            , (void *) (static_cast<decltype(this->nullptrToInheritedFacility())>(this)) \
+            , this \
         );
-    #define TM_INFRA_IMPORTER_TRACER_WITH_SUFFIX(env,suffix) \
-        dev::cd606::tm::infra::TraceNodesComponentWrapper<std::decay_t<std::remove_pointer_t<decltype(env)>>> _tracer( \
+    #define TM_INFRA_IMPORTER_TRACER_WITH_SUFFIX(env, suffix) \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper< \
+            std::decay_t<std::remove_pointer_t<decltype(env)>> \
+            , std::decay_t<std::remove_pointer_t<decltype(this->nullptrToInheritedImporter())>> \
+        > _tracer( \
             env \
-            , (void *) (static_cast<decltype(this->nullptrToInheritedImporter())>(this)) \
+            , this \
             , suffix \
         );
-    #define TM_INFRA_EXPORTER_TRACER_WITH_SUFFIX(env,suffix) \
-        dev::cd606::tm::infra::TraceNodesComponentWrapper<std::decay_t<std::remove_pointer_t<decltype(env)>>> _tracer( \
+    #define TM_INFRA_EXPORTER_TRACER_WITH_SUFFIX(env, suffix) \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper< \
+            std::decay_t<std::remove_pointer_t<decltype(env)>> \
+            , std::decay_t<std::remove_pointer_t<decltype(this->nullptrToInheritedExporter())>> \
+        > _tracer( \
             env \
-            , (void *) (static_cast<decltype(this->nullptrToInheritedExporter())>(this)) \
+            , this \
             , suffix \
         );
-    #define TM_INFRA_FACILITY_TRACER_WITH_SUFFIX(env,suffix) \
-        dev::cd606::tm::infra::TraceNodesComponentWrapper<std::decay_t<std::remove_pointer_t<decltype(env)>>> _tracer( \
+    #define TM_INFRA_FACILITY_TRACER_WITH_SUFFIX(env, suffix) \
+        dev::cd606::tm::infra::TraceNodesComponentWrapper< \
+            std::decay_t<std::remove_pointer_t<decltype(env)>> \
+            , std::decay_t<std::remove_pointer_t<decltype(this->nullptrToInheritedFacility())>> \
+        > _tracer( \
             env \
-            , (void *) (static_cast<decltype(this->nullptrToInheritedFacility())>(this)) \
+            , this \
             , suffix \
         );
 } } } }

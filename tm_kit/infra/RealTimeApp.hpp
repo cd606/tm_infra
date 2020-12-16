@@ -769,9 +769,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }
-                TraceNodesComponentWrapper<StateT> tracer(
+                TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>> tracer(
                     data.environment 
-                    , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *>(this))
+                    , this
                 );
                 auto res = this->action(data.environment, std::move(data.timedData));
                 if (res) {
@@ -814,9 +814,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
-                    TraceNodesComponentWrapper<StateT> tracer(
+                    TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>> tracer(
                         data.environment 
-                        , (void *) (static_cast<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *>(this))
+                        , this
                     );
                     auto res = this->action(data.environment, std::move(data.timedData));
                     if (res) {

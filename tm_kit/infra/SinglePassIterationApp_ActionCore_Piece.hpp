@@ -41,9 +41,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -70,9 +70,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -138,9 +138,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -167,9 +167,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -579,9 +579,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -608,9 +608,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -637,9 +637,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -711,9 +711,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -740,9 +740,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -769,9 +769,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -1187,9 +1187,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -1216,9 +1216,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -1245,9 +1245,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -1274,9 +1274,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -1354,9 +1354,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -1383,9 +1383,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -1412,9 +1412,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -1441,9 +1441,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -1865,9 +1865,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -1894,9 +1894,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -1923,9 +1923,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -1952,9 +1952,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -1981,9 +1981,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -2067,9 +2067,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -2096,9 +2096,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -2125,9 +2125,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -2154,9 +2154,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -2183,9 +2183,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -2613,9 +2613,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -2642,9 +2642,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -2671,9 +2671,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -2700,9 +2700,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -2729,9 +2729,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -2758,9 +2758,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -2850,9 +2850,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -2879,9 +2879,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -2908,9 +2908,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -2937,9 +2937,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -2966,9 +2966,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -2995,9 +2995,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -3431,9 +3431,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -3460,9 +3460,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -3489,9 +3489,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -3518,9 +3518,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -3547,9 +3547,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -3576,9 +3576,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -3605,9 +3605,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -3703,9 +3703,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -3732,9 +3732,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -3761,9 +3761,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -3790,9 +3790,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -3819,9 +3819,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -3848,9 +3848,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -3877,9 +3877,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -4319,9 +4319,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -4348,9 +4348,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -4377,9 +4377,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -4406,9 +4406,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -4435,9 +4435,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -4464,9 +4464,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -4493,9 +4493,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -4522,9 +4522,9 @@ protected:
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
@@ -4626,9 +4626,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -4655,9 +4655,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -4684,9 +4684,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -4713,9 +4713,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -4742,9 +4742,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -4771,9 +4771,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -4800,9 +4800,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -4829,9 +4829,9 @@ protected:
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
@@ -5277,9 +5277,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -5306,9 +5306,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -5335,9 +5335,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -5364,9 +5364,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -5393,9 +5393,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -5422,9 +5422,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -5451,9 +5451,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -5480,9 +5480,9 @@ protected:
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
@@ -5509,9 +5509,9 @@ protected:
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
@@ -5619,9 +5619,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -5648,9 +5648,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -5677,9 +5677,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -5706,9 +5706,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -5735,9 +5735,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -5764,9 +5764,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -5793,9 +5793,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -5822,9 +5822,9 @@ protected:
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
@@ -5851,9 +5851,9 @@ protected:
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
@@ -6305,9 +6305,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -6334,9 +6334,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -6363,9 +6363,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -6392,9 +6392,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -6421,9 +6421,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -6450,9 +6450,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -6479,9 +6479,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -6508,9 +6508,9 @@ protected:
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
@@ -6537,9 +6537,9 @@ protected:
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
@@ -6566,9 +6566,9 @@ protected:
                         if (x9->timedData.finalFlag) {
                             finalMask_.set(9);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                     } else {
@@ -6682,9 +6682,9 @@ protected:
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                     } else {
@@ -6711,9 +6711,9 @@ protected:
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                     } else {
@@ -6740,9 +6740,9 @@ protected:
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                     } else {
@@ -6769,9 +6769,9 @@ protected:
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                     } else {
@@ -6798,9 +6798,9 @@ protected:
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                     } else {
@@ -6827,9 +6827,9 @@ protected:
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                     } else {
@@ -6856,9 +6856,9 @@ protected:
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                     } else {
@@ -6885,9 +6885,9 @@ protected:
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                     } else {
@@ -6914,9 +6914,9 @@ protected:
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                     } else {
@@ -6943,9 +6943,9 @@ protected:
                         if (x9->timedData.finalFlag) {
                             finalMask_.set(9);
                         }
-                        TraceNodesComponentWrapper<StateT> tracer(
+                        TraceNodesComponentWrapper<StateT,AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                             env
-                            , (void *) (static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this))
+                            , this
                         );
                         return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                     } else {
