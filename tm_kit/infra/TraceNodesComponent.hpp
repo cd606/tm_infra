@@ -36,14 +36,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class Env>
-        void writeTrace(Env *env, std::string const *name, char phase) const {
+        void writeTrace(Env *env, int64_t tid, std::string const *name, char phase) const {
             if (!name) {
                 return;
             }
             std::ostringstream oss;
             oss << "{\"name\": \"" << *name << "\""
                 << ",\"pid\": " << pid_
-                << ",\"tid\": " << std::hash<std::thread::id>()(std::this_thread::get_id())
+                << ",\"tid\": " << tid
                 << ",\"ph\": \"" << phase << "\""
                 << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
                 << "}";
@@ -60,9 +60,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Env *env_;
         bool good_;
         std::string name_;
+        int64_t tid_;
     public:
         template <class T>
-        TraceNodesComponentWrapper(Env *env, T *p, std::string const &suffix="") : env_(env), good_(false), name_() {
+        TraceNodesComponentWrapper(Env *env, T *p, std::string const &suffix="") : env_(env), good_(false), name_(), tid_(0) {
             auto const *n = env_->nodeName(static_cast<BaseClass *>(p));
             if (n == nullptr) {
                 good_ = false;
@@ -73,12 +74,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     name_ = (*n)+suffix;
                 }
-                env_->template writeTrace<Env>(env_, &name_, 'B');
+                tid_ = std::hash<std::thread::id>()(std::this_thread::get_id());
+                env_->template writeTrace<Env>(env_, tid_, &name_, 'B');
             }
         }
         ~TraceNodesComponentWrapper() {
             if (good_) {
-                env_->template writeTrace<Env>(env_, &name_, 'E');
+                env_->template writeTrace<Env>(env_, tid_, &name_, 'E');
             }
         }
     };
