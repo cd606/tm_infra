@@ -599,6 +599,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //because of template inheritance issues, it is actually easier
         //just to include it in each monad
         using TimePoint = typename StateT::TimePointType;
+        using Duration = decltype(TimePoint{} - TimePoint{});
         using StateType = StateT;
         using EnvironmentType = StateT;
         template <class T>

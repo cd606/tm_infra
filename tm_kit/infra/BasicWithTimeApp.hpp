@@ -14,6 +14,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
 
         using TimePoint = typename StateT::TimePointType;
+        using Duration = decltype(TimePoint{} - TimePoint{});
         using StateType = StateT;
         using EnvironmentType = StateT;
         template <class T>

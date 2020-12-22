@@ -2462,6 +2462,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void connect(Source<A> &&src, Sinkoid<A> const &sink) {
             sink(*this, std::move(src));
         }
+
+        template <class A, class B>
+        using Pathway =
+            std::function<void(AppRunner &, Source<A> &&, Sink<B> const &)>;
     };
 
     template <class T, class Environment, class TimePoint>
