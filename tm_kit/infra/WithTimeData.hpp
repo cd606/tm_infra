@@ -1823,6 +1823,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     clusterLevel = parts.size();
                 }
                 os << "\t action" << counter << " [";
+                std::string htmlNodeShape = "plain";
+                if (!item.second.isFacility) {
+                    //actionPropertiesMap is not applicable for facilities
+                    auto propIter = actionPropertiesMap_.find(item.second.name);
+                    if (propIter != actionPropertiesMap_.end()) {
+                        if (propIter->second.oneTimeOnly) {
+                            htmlNodeShape = "box";
+                        }
+                    }
+                }
                 if (item.second.hasAltOutput) {
                     if (item.second.paramCount > 1) {
                         os << "label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR>";
@@ -1841,12 +1851,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         os << "</TR><TR><TD COLSPAN=\"" << colSpan << "\">" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "</TD></TR>";
                         colSpan /= 2;
                         os << "<TR><TD PORT=\"out0\" COLSPAN=\"" << colSpan << "\">out0</TD><TD PORT=\"out1\" COLSPAN=\"" << colSpan << "\">out1</TD></TR>";
-                        os << "</TABLE>>,shape=none";
+                        os << "</TABLE>>,shape=" << htmlNodeShape;
                     } else {
                         os << "label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">";
                         os << "<TR><TD COLSPAN=\"2\">" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "</TD></TR>";
                         os << "<TR><TD PORT=\"out0\">out0</TD><TD PORT=\"out1\">out1</TD></TR>";
-                        os << "</TABLE>>,shape=none";
+                        os << "</TABLE>>,shape=" << htmlNodeShape;
                     }
                 } else if (item.second.paramCount > 1) {
                     os << "label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR>";
@@ -1854,7 +1864,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         os << "<TD PORT=\"arg" << ii << "\">arg" << ii << "</TD>";
                     }
                     os << "</TR><TR><TD COLSPAN=\"" << item.second.paramCount << "\">" << std::regex_replace(nodeLabel, std::regex(">"), "\\>") << "</TD></TR>";
-                    os << "</TABLE>>,shape=none";
+                    os << "</TABLE>>,shape=" << htmlNodeShape;
                 } else if (item.second.isImporter || item.second.isExporter) {
                     os << "label=\"" << nodeLabel << "\",shape=oval";                   
                 } else {
