@@ -532,12 +532,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
+        using DelaySimulatorType = typename LiftParameters<TimePoint>::DelaySimulatorType;
+
         template <class A, class B>
         class ActionCore : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual BufferedProvider<B> {
         private:
             bool hasA_;
             TimePoint aTime_;
             VersionChecker<A> versionChecker_;
+            DelaySimulatorType delaySimulator_;
         protected:
             virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
                 Certificate<A> t { this->source()->poll() };
@@ -566,11 +569,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return std::nullopt;
                     }    
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {tp, produce};
+                auto tp1 = tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(0, tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }       
             virtual Data<B> handle(InnerData<A> &&) = 0;
         public:
-            ActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
+            ActionCore(DelaySimulatorType const &delaySimulator) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
         };
 
         template <class B>
@@ -650,6 +657,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool hasA_;
             TimePoint aTime_;
             VersionChecker<A> versionChecker_;
+            DelaySimulatorType delaySimulator_;
         protected:
             virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
                 Certificate<A> t { this->source()->poll() };
@@ -678,16 +686,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return std::nullopt;
                     }    
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp, produce};
+                auto tp1 = tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(0, tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }       
             virtual MultiData<B> handle(InnerData<A> &&) = 0;
         public:
-            MultiActionCore() : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_() {}           
+            MultiActionCore(DelaySimulatorType const &delaySimulator) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
         };
 
     private:
-        using DelaySimulatorType = typename LiftParameters<TimePoint>::DelaySimulatorType;
-
         template <class T>
         static inline Data<T> applyDelaySimulator(int which, InnerData<T> &&input, DelaySimulatorType const &delaySimulator) {
             if (delaySimulator) {
@@ -735,7 +745,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            PureActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            PureActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~PureActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -779,7 +789,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~MaybeActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -823,7 +833,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~EnhancedMaybeActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -854,7 +864,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~KleisliActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -929,7 +939,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~SimpleMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -970,7 +980,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~EnhancedMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -1002,7 +1012,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~KleisliMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -1043,6 +1053,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
                 auto tp = fetchTimePointUnsafe(t);
+                if (delaySimulator_) {
+                    tp += (*delaySimulator_)(0, tp);
+                }
                 auto produce = [tp,t=std::move(t),this]() -> Data<B> {
                     Certificate<A> t1 {std::move(t)};
                     auto input = this->source()->next(std::move(t1));

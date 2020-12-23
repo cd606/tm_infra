@@ -6,6 +6,7 @@ private:
     VersionChecker<A1> versionChecker1_;
     std::optional<TimePoint> tp1_;
     std::bitset<2> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -50,7 +51,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -79,7 +84,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -89,7 +98,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -103,6 +112,7 @@ private:
     VersionChecker<A1> versionChecker1_;
     std::optional<TimePoint> tp1_;
     std::bitset<2> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -147,7 +157,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -176,7 +190,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -186,7 +204,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -236,7 +254,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -290,7 +308,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -344,7 +362,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -378,7 +396,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -433,7 +451,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -488,7 +506,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -523,7 +541,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -540,6 +558,7 @@ private:
     VersionChecker<A2> versionChecker2_;
     std::optional<TimePoint> tp2_;
     std::bitset<3> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -588,7 +607,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -617,7 +640,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -646,7 +673,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -656,7 +687,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -672,6 +703,7 @@ private:
     VersionChecker<A2> versionChecker2_;
     std::optional<TimePoint> tp2_;
     std::bitset<3> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -720,7 +752,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -749,7 +785,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -778,7 +818,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -788,7 +832,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -838,7 +882,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -892,7 +936,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -946,7 +990,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -980,7 +1024,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1035,7 +1079,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1090,7 +1134,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1125,7 +1169,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1144,6 +1188,7 @@ private:
     VersionChecker<A3> versionChecker3_;
     std::optional<TimePoint> tp3_;
     std::bitset<4> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -1196,7 +1241,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -1225,7 +1274,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -1254,7 +1307,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -1283,7 +1340,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -1293,7 +1354,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -1311,6 +1372,7 @@ private:
     VersionChecker<A3> versionChecker3_;
     std::optional<TimePoint> tp3_;
     std::bitset<4> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -1363,7 +1425,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -1392,7 +1458,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -1421,7 +1491,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -1450,7 +1524,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -1460,7 +1538,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -1510,7 +1588,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1564,7 +1642,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1618,7 +1696,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1652,7 +1730,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1707,7 +1785,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1762,7 +1840,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1797,7 +1875,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -1818,6 +1896,7 @@ private:
     VersionChecker<A4> versionChecker4_;
     std::optional<TimePoint> tp4_;
     std::bitset<5> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -1874,7 +1953,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -1903,7 +1986,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -1932,7 +2019,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -1961,7 +2052,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -1990,7 +2085,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -2000,7 +2099,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -2020,6 +2119,7 @@ private:
     VersionChecker<A4> versionChecker4_;
     std::optional<TimePoint> tp4_;
     std::bitset<5> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -2076,7 +2176,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -2105,7 +2209,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -2134,7 +2242,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -2163,7 +2275,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -2192,7 +2308,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -2202,7 +2322,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -2252,7 +2372,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2306,7 +2426,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2360,7 +2480,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2394,7 +2514,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2449,7 +2569,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2504,7 +2624,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2539,7 +2659,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -2562,6 +2682,7 @@ private:
     VersionChecker<A5> versionChecker5_;
     std::optional<TimePoint> tp5_;
     std::bitset<6> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -2622,7 +2743,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -2651,7 +2776,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -2680,7 +2809,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -2709,7 +2842,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -2738,7 +2875,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -2767,7 +2908,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -2777,7 +2922,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -2799,6 +2944,7 @@ private:
     VersionChecker<A5> versionChecker5_;
     std::optional<TimePoint> tp5_;
     std::bitset<6> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -2859,7 +3005,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -2888,7 +3038,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -2917,7 +3071,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -2946,7 +3104,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -2975,7 +3137,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -3004,7 +3170,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -3014,7 +3184,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -3064,7 +3234,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3118,7 +3288,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3172,7 +3342,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3206,7 +3376,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3261,7 +3431,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3316,7 +3486,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3351,7 +3521,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -3376,6 +3546,7 @@ private:
     VersionChecker<A6> versionChecker6_;
     std::optional<TimePoint> tp6_;
     std::bitset<7> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -3440,7 +3611,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -3469,7 +3644,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -3498,7 +3677,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -3527,7 +3710,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -3556,7 +3743,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -3585,7 +3776,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -3614,7 +3809,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -3624,7 +3823,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -3648,6 +3847,7 @@ private:
     VersionChecker<A6> versionChecker6_;
     std::optional<TimePoint> tp6_;
     std::bitset<7> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -3712,7 +3912,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -3741,7 +3945,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -3770,7 +3978,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -3799,7 +4011,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -3828,7 +4044,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -3857,7 +4077,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -3886,7 +4110,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -3896,7 +4124,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -3946,7 +4174,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4000,7 +4228,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4054,7 +4282,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4088,7 +4316,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4143,7 +4371,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4198,7 +4426,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4233,7 +4461,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4260,6 +4488,7 @@ private:
     VersionChecker<A7> versionChecker7_;
     std::optional<TimePoint> tp7_;
     std::bitset<8> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -4328,7 +4557,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -4357,7 +4590,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -4386,7 +4623,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -4415,7 +4656,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -4444,7 +4689,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -4473,7 +4722,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -4502,7 +4755,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 7:
@@ -4531,7 +4788,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -4541,7 +4802,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -4567,6 +4828,7 @@ private:
     VersionChecker<A7> versionChecker7_;
     std::optional<TimePoint> tp7_;
     std::bitset<8> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -4635,7 +4897,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -4664,7 +4930,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -4693,7 +4963,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -4722,7 +4996,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -4751,7 +5029,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -4780,7 +5062,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -4809,7 +5095,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 7:
@@ -4838,7 +5128,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -4848,7 +5142,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -4898,7 +5192,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -4952,7 +5246,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5006,7 +5300,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5040,7 +5334,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5095,7 +5389,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5150,7 +5444,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5185,7 +5479,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5214,6 +5508,7 @@ private:
     VersionChecker<A8> versionChecker8_;
     std::optional<TimePoint> tp8_;
     std::bitset<9> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -5286,7 +5581,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -5315,7 +5614,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -5344,7 +5647,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -5373,7 +5680,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -5402,7 +5713,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -5431,7 +5746,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -5460,7 +5779,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 7:
@@ -5489,7 +5812,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 8:
@@ -5518,7 +5845,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -5528,7 +5859,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -5556,6 +5887,7 @@ private:
     VersionChecker<A8> versionChecker8_;
     std::optional<TimePoint> tp8_;
     std::bitset<9> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -5628,7 +5960,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -5657,7 +5993,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -5686,7 +6026,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -5715,7 +6059,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -5744,7 +6092,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -5773,7 +6125,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -5802,7 +6158,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 7:
@@ -5831,7 +6191,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 8:
@@ -5860,7 +6224,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -5870,7 +6238,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -5920,7 +6288,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -5974,7 +6342,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6028,7 +6396,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6062,7 +6430,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6117,7 +6485,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6172,7 +6540,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6207,7 +6575,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -6238,6 +6606,7 @@ private:
     VersionChecker<A9> versionChecker9_;
     std::optional<TimePoint> tp9_;
     std::bitset<10> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -6314,7 +6683,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -6343,7 +6716,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -6372,7 +6749,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -6401,7 +6782,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -6430,7 +6815,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -6459,7 +6848,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -6488,7 +6881,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 7:
@@ -6517,7 +6914,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 8:
@@ -6546,7 +6947,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         case 9:
@@ -6575,7 +6980,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -6585,7 +6994,7 @@ protected:
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&) = 0;
 public:
-    ActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_() {
+    ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -6615,6 +7024,7 @@ private:
     VersionChecker<A9> versionChecker9_;
     std::optional<TimePoint> tp9_;
     std::bitset<10> finalMask_;
+    DelaySimulatorType delaySimulator_;
 protected:
     virtual typename MultiBufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
         auto cert0 = this->Consumer<A0>::source()->poll();
@@ -6691,7 +7101,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 1:
@@ -6720,7 +7134,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 2:
@@ -6749,7 +7167,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 3:
@@ -6778,7 +7200,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 4:
@@ -6807,7 +7233,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 5:
@@ -6836,7 +7266,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 6:
@@ -6865,7 +7299,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 7:
@@ -6894,7 +7332,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 8:
@@ -6923,7 +7365,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         case 9:
@@ -6952,7 +7398,11 @@ protected:
                         return std::nullopt;
                     }
                 };
-                return std::tuple<TimePoint, std::function<MultiData<B>()>> {vec[0].tp, produce};
+                auto tp1 = vec[0].tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(updateIdx, vec[0].tp);
+                }
+                return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }
             break;
         default:
@@ -6962,7 +7412,7 @@ protected:
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&) = 0;
 public:
-    MultiActionCore() : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_() {
+    MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
     bool isFinalUpdate() const {
         return finalMask_.all();
@@ -7012,7 +7462,7 @@ protected:
         }
     }
 public:
-    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~PureActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7066,7 +7516,7 @@ protected:
         }
     }
 public:
-    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~MaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7120,7 +7570,7 @@ protected:
         }
     }
 public:
-    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMaybeActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7154,7 +7604,7 @@ protected:
         }
     }
 public:
-    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7209,7 +7659,7 @@ protected:
         }
     }
 public:
-    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~SimpleMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7264,7 +7714,7 @@ protected:
         }
     }
 public:
-    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~EnhancedMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
@@ -7299,7 +7749,7 @@ protected:
         }
     }
 public:
-    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+    KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(liftParam.delaySimulator), f_(std::move(f)), delaySimulator_(liftParam.delaySimulator), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
     }
     virtual ~KleisliMultiActionCore() {}
     virtual bool isOneTimeOnly() const override final {
