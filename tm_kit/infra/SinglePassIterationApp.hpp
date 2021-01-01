@@ -1033,35 +1033,34 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class B, class ContinuationStructure>
         class ContinuationProvider : public virtual Provider<B> {
         protected:
-            using CheckAndProduceResult =
+            struct CheckAndProduceResult {
                 std::optional<
-                    std::tuple<TimePoint, std::function<std::optional<std::tuple<TimePoint, InnerData<B>>>()>>
-                >;
+                    std::tuple<TimePoint, std::function<std::tuple<CheckAndProduceResult, Data<B>>()>>
+                > content;
+            };
             virtual CheckAndProduceResult checkAndProduce() = 0;
         private:
             CheckAndProduceResult res_;
         public:
             virtual Certificate<B> poll() override final {
-                if (!res_) {
+                if (!(res_.content)) {
                     res_ = checkAndProduce();
                 }
-                if (res_) {
-                    return Certificate<B> { std::get<0>(*res_), this };
+                if (res_.content) {
+                    return Certificate<B> { std::get<0>(*(res_.content)), this };
                 } else {
                     return Certificate<B> { std::nullopt, this };
                 }
             }
             virtual Data<B> next(Certificate<B> &&cert) override final {
                 cert.consume(this);
-                if (res_) {
-                    auto ret = std::get<1>(*res_)();
-                    if (!ret) {
-                        res_ = std::nullopt;
-                        return std::nullopt;
+                if (res_.content) {
+                    auto ret = std::get<1>(*(res_.content))();
+                    if (std::get<1>(ret)) {
+                        std::get<1>(ret)->overrideTime(std::get<0>(*(res_.content)));
                     }
-                    std::get<1>(*ret)->overrideTime(std::get<0>(res_));
-                    std::get<0>(res_) = std::get<0>(*ret);
-                    return Data<B> {std::get<1>(*ret)};
+                    res_ = std::get<0>(ret);
+                    return std::move(std::get<1>(ret));
                 } else {
                     return std::nullopt;
                 }
@@ -1078,47 +1077,74 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
+            using CPR = typename ContinuationProvider<B,ContinuationStructure>::CheckAndProduceResult;
+            
+            Data<A> inputCopy_;
+            std::tuple<CPR, Data<B>> nextStep() {
+                if (fireOnceOnly_ && done_) {
+                    return std::tuple<CPR, Data<B>> {{std::nullopt}, std::nullopt};
+                }
+                Data<B> ret = std::nullopt;
+                cont_(inputCopy_->clone(), state_, [this,&ret](InnerData<B> &&b) {
+                    ret = std::move(b);
+                    if (fireOnceOnly_) {
+                        done_ = true;
+                    }
+                });
+                if (!ret) {
+                    return std::tuple<CPR, Data<B>> {{std::nullopt}, std::nullopt};
+                }
+                std::optional<TimePoint> nextTP = state_.nextTimePoint();
+                if (!nextTP) {
+                    return std::tuple<CPR, Data<B>> {{std::nullopt}, std::move(ret)};
+                }
+                return std::tuple<CPR, Data<B>> {
+                    CPR { std::tuple<TimePoint, std::function<std::tuple<CPR,Data<B>>()>> {
+                        *nextTP 
+                        , [this](){
+                            return nextStep();
+                        }
+                    }}
+                    , std::move(ret)
+                };
+            }
         protected:
-            virtual typename ContinuationProvider<B,ContinuationStructure>::CheckAndProduceResult checkAndProduce() override final {
+            virtual CPR checkAndProduce() override final {
                 Certificate<A> t { this->source()->poll() };
                 if (!t.check()) {
-                    return std::nullopt;
+                    return {std::nullopt};
                 }
                 auto tp = fetchTimePointUnsafe(t);
                 if (delaySimulator_) {
                     tp += (*delaySimulator_)(0, tp);
                 }
-                auto produce = [tp,t=std::move(t),this]() -> std::optional<std::tuple<TimePoint,InnerData<B>>> {
+                auto produce = [tp,t=std::move(t),this]() -> std::tuple<CPR,Data<B>> {
                     Certificate<A> t1 {std::move(t)};
                     auto input = this->source()->next(std::move(t1));
                     if (!input) {
-                        return std::nullopt;
+                        return {{std::nullopt}, std::nullopt};
                     }
                     if (!versionChecker_.checkVersion(input->timedData.value)) {
-                        return std::nullopt;
+                        return {{std::nullopt}, std::nullopt};
                     }
                     if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
                         hasA_ = true;
                         aTime_ = tp;
-                        Data<B> ret = std::nullopt;
-                        if (fireOnceOnly_ && done_) {
-                            return std::nullopt;
-                        }
-                        cont_(std::move(*input), state_, [this,&ret](InnerData<B> &&b) {
-                            ret = std::move(b);
-                            if (fireOnceOnly_) {
-                                done_ = true;
-                            }
-                        });
-                        return std::tuple<TimePoint,InnerData<B>> {state_.nextTimePoint(), *ret};
+                        inputCopy_ = std::move(*input);
+                        return nextStep();                        
                     } else {
-                        return std::nullopt;
+                        return {{std::nullopt}, std::nullopt};
                     }    
                 };
-                return std::tuple<TimePoint, std::function<std::optional<std::tuple<TimePoint,InnerData<B>>>()>> {tp, produce};
+                TimePoint tp1 = tp;
+                std::optional<TimePoint> tp2 = state_.nextTimePoint();
+                if (tp2 && *tp2 < tp1) {
+                    tp1 = *tp2;
+                }
+                return CPR { { std::tuple<TimePoint, std::function<std::tuple<CPR,Data<B>>()>> {tp1, produce} } };
             }       
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationActionCore &&state, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), state_(std::move(state)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {}           
+            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), state_(std::move(state)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false), inputCopy_(std::nullopt) {}           
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
             }
