@@ -528,7 +528,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 cert.consume(this);
                 std::tuple<TimePoint, std::function<Data<B>()>> ret = std::move(*buffer_);
                 buffer_ = std::nullopt;
-                return std::get<1>(ret)();
+                auto v = std::get<1>(ret)();
+                if (v) {
+                    v->overrideTime(std::get<0>(ret));
+                }
+                return v;
             }
         };
 
@@ -624,6 +628,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!latestBFrame_) {
                         return std::nullopt;
                     }
+                    latestBFrame_->overrideTime(std::get<0>(ret));
                     if (latestBFrame_->timedData.value.empty()) {
                         latestBFrame_ = std::nullopt;
                         return std::nullopt;
@@ -720,7 +725,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class PureActionCore final : public ActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -729,9 +733,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (done_) {
                         return std::nullopt;
                     } else {
-                        auto x = applyDelaySimulator<B>(0, {
-                            pureInnerDataLift<A>(f_, std::move(a))
-                        }, delaySimulator_);
+                        Data<B> x = pureInnerDataLift<A>(f_, std::move(a));
                         if (x) {
                             x->timedData.finalFlag = true;
                             done_ = true;
@@ -739,13 +741,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return x;
                     }
                 } else {
-                    return applyDelaySimulator<B>(0, {
-                        pureInnerDataLift<A>(f_, std::move(a))
-                    }, delaySimulator_);
+                    return pureInnerDataLift<A>(f_, std::move(a));
                 }
             }
         public:
-            PureActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            PureActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~PureActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -756,7 +756,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class MaybeActionCore final : public ActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -771,25 +770,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 } else {
                     if (fireOnceOnly_) {
-                        auto z = applyDelaySimulator<B>(0, pureInnerData<B>(
+                        Data<B> z = pureInnerData<B>(
                             a.environment,
                             {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
-                        ), delaySimulator_);
+                        );
                         if (z) {
                             z->timedData.finalFlag = true;
                             done_ = true;
                         }
                         return z;
                     } else {
-                        return applyDelaySimulator<B>(0, pureInnerData<B>(
+                        return pureInnerData<B>(
                             a.environment,
                             {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
-                        ), delaySimulator_);
+                        );
                     }
                 }
             }
         public:
-            MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~MaybeActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -800,7 +799,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class EnhancedMaybeActionCore final : public ActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -815,25 +813,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 } else {
                     if (fireOnceOnly_) {
-                        auto z = applyDelaySimulator<B>(0, pureInnerData<B>(
+                        Data<B> z = pureInnerData<B>(
                             a.environment,
                             {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
-                        ), delaySimulator_);
+                        );
                         if (z) {
                             z->timedData.finalFlag = true;
                             done_ = true;
                         }
                         return z;
                     } else {
-                        return applyDelaySimulator<B>(0, pureInnerData<B>(
+                        return pureInnerData<B>(
                             a.environment,
                             {a.timedData.timePoint, std::move(*y), a.timedData.finalFlag}
-                        ), delaySimulator_);
+                        );
                     }
                 }
             }
         public:
-            EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~EnhancedMaybeActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -844,7 +842,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliActionCore final : public ActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -853,18 +850,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (done_) {
                         return std::nullopt;
                     }
-                    auto x = applyDelaySimulatorForKleisli<B>(0, f_(std::move(a)), delaySimulator_);
+                    auto x = f_(std::move(a));
                     if (x) {
                         x->timedData.finalFlag = true;
                         done_ = true;
                     }
                     return x;
                 } else {
-                    return applyDelaySimulatorForKleisli<B>(0, f_(std::move(a)), delaySimulator_);
+                    return f_(std::move(a));
                 }
             }
         public:
-            KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~KleisliActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -914,7 +911,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class SimpleMultiActionCore final : public MultiActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -923,9 +919,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (done_) {
                         return std::nullopt;
                     }
-                    auto x = applyDelaySimulator<std::vector<B>>(0, {
+                    MultiData<B> x = {
                         pureInnerDataLift<A>(f_, std::move(a))
-                    }, delaySimulator_);
+                    };
                     if (x && x->timedData.value.size() > 0) {
                         x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                         x->timedData.finalFlag = true;
@@ -933,13 +929,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     return x;
                 } else {
-                    return applyDelaySimulator<std::vector<B>>(0, {
+                    return MultiData<B> {
                         pureInnerDataLift<A>(f_, std::move(a))
-                    }, delaySimulator_);
+                    };
                 }
             }
         public:
-            SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~SimpleMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -950,7 +946,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class EnhancedMultiActionCore final : public MultiActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -962,10 +957,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 std::vector<B> y = f_(std::tuple<TimePoint, A> {a.timedData.timePoint, std::move(a.timedData.value)});
                 if (fireOnceOnly_) {
-                    auto z = applyDelaySimulator<std::vector<B>>(0, pureInnerData<std::vector<B>>(
+                    MultiData<B> z = pureInnerData<std::vector<B>>(
                         a.environment,
                         {a.timedData.timePoint, std::move(y), a.timedData.finalFlag}
-                    ), delaySimulator_);
+                    );
                     if (z && z->timedData.value.size() > 0) {
                         z->timedData.value = std::vector<B> {std::move(z->timedData.value[0])};
                         z->timedData.finalFlag = true;
@@ -973,14 +968,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     return z;
                 } else {
-                    return applyDelaySimulator<std::vector<B>>(0, pureInnerData<std::vector<B>>(
+                    return pureInnerData<std::vector<B>>(
                         a.environment,
                         {a.timedData.timePoint, std::move(y), a.timedData.finalFlag}
-                    ), delaySimulator_);
+                    );
                 }
             }
         public:
-            EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~EnhancedMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -991,7 +986,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliMultiActionCore final : public MultiActionCore<A,B> {
         private:
             F f_;
-            DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
@@ -1000,7 +994,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (done_) {
                         return std::nullopt;
                     }
-                    auto x = applyDelaySimulatorForKleisli<std::vector<B>>(0, f_(std::move(a)), delaySimulator_);
+                    auto x = f_(std::move(a));
                     if (x && x->timedData.value.size() > 0) {
                         x->timedData.value = std::vector<B> {std::move(x->timedData.value[0])};
                         x->timedData.finalFlag = true;
@@ -1008,11 +1002,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     return x;
                 } else {
-                    return applyDelaySimulatorForKleisli<std::vector<B>>(0, f_(std::move(a)), delaySimulator_);
+                    return f_(std::move(a));
                 }
             }
         public:
-            KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {
+            KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
             virtual ~KleisliMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -1073,7 +1067,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             return ret;
                         }
                         cont_(std::move(*input), [this,&ret](InnerData<B> &&b) {
-                            ret = applyDelaySimulator<B>(0, std::move(b), delaySimulator_);
+                            ret = std::move(b);
                             if (fireOnceOnly_) {
                                 done_ = true;
                             }
@@ -1083,7 +1077,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return std::nullopt;
                     }    
                 };
-                return std::tuple<TimePoint, std::function<Data<B>()>> {tp, produce};
+                auto tp1 = tp;
+                if (delaySimulator_) {
+                    tp1 += (*delaySimulator_)(0, tp);
+                }
+                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }       
         public:
             ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {}           

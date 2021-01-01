@@ -420,6 +420,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
         }
+        TimedDataWithEnvironment &overrideTime(TimePoint const &tp) {
+            timedData.timePoint = tp;
+            return *this;
+        }
+        TimedDataWithEnvironment &overrideTime() {
+            timedData.timePoint = environment->resolveTime(timedData.timePoint);
+            return *this;
+        }
     };
 
     namespace withtime_utils {
