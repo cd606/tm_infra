@@ -1030,18 +1030,56 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>(new KleisliMultiActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
     private:
-        template <class A, class B>
-        class ContinuationActionCore final : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual BufferedProvider<B> {
+        template <class B, class ContinuationStructure>
+        class ContinuationProvider : public virtual Provider<B> {
+        protected:
+            using CheckAndProduceResult =
+                std::optional<
+                    std::tuple<TimePoint, std::function<std::optional<std::tuple<TimePoint, InnerData<B>>>()>>
+                >;
+            virtual CheckAndProduceResult checkAndProduce() = 0;
+        private:
+            CheckAndProduceResult res_;
+        public:
+            virtual Certificate<B> poll() override final {
+                if (!res_) {
+                    res_ = checkAndProduce();
+                }
+                if (res_) {
+                    return Certificate<B> { std::get<0>(*res_), this };
+                } else {
+                    return Certificate<B> { std::nullopt, this };
+                }
+            }
+            virtual Data<B> next(Certificate<B> &&cert) override final {
+                cert.consume(this);
+                if (res_) {
+                    auto ret = std::get<1>(*res_)();
+                    if (!ret) {
+                        res_ = std::nullopt;
+                        return std::nullopt;
+                    }
+                    std::get<1>(*ret)->overrideTime(std::get<0>(res_));
+                    std::get<0>(res_) = std::get<0>(*ret);
+                    return Data<B> {std::get<1>(*ret)};
+                } else {
+                    return std::nullopt;
+                }
+            }
+        };
+        template <class A, class B, class ContinuationStructure>
+        class ContinuationActionCore final : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual ContinuationProvider<B, ContinuationStructure> {
         private:
             bool hasA_;
             TimePoint aTime_;
             VersionChecker<A> versionChecker_;
-            TimedAppModelContinuation<A, B, EnvironmentType> cont_;
+            TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> cont_;
+            ContinuationStructure state_;
             DelaySimulatorType delaySimulator_;
             bool fireOnceOnly_;
             bool done_;
         protected:
-            virtual typename BufferedProvider<B>::CheckAndProduceResult checkAndProduce() override final {
+            virtual typename ContinuationProvider<B,ContinuationStructure>::CheckAndProduceResult checkAndProduce() override final {
                 Certificate<A> t { this->source()->poll() };
                 if (!t.check()) {
                     return std::nullopt;
@@ -1050,7 +1088,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (delaySimulator_) {
                     tp += (*delaySimulator_)(0, tp);
                 }
-                auto produce = [tp,t=std::move(t),this]() -> Data<B> {
+                auto produce = [tp,t=std::move(t),this]() -> std::optional<std::tuple<TimePoint,InnerData<B>>> {
                     Certificate<A> t1 {std::move(t)};
                     auto input = this->source()->next(std::move(t1));
                     if (!input) {
@@ -1064,36 +1102,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         aTime_ = tp;
                         Data<B> ret = std::nullopt;
                         if (fireOnceOnly_ && done_) {
-                            return ret;
+                            return std::nullopt;
                         }
-                        cont_(std::move(*input), [this,&ret](InnerData<B> &&b) {
+                        cont_(std::move(*input), state_, [this,&ret](InnerData<B> &&b) {
                             ret = std::move(b);
                             if (fireOnceOnly_) {
                                 done_ = true;
                             }
                         });
-                        return ret;
+                        return std::tuple<TimePoint,InnerData<B>> {state_.nextTimePoint(), *ret};
                     } else {
                         return std::nullopt;
                     }    
                 };
-                auto tp1 = tp;
-                if (delaySimulator_) {
-                    tp1 += (*delaySimulator_)(0, tp);
-                }
-                return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
+                return std::tuple<TimePoint, std::function<std::optional<std::tuple<TimePoint,InnerData<B>>>()>> {tp, produce};
             }       
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {}           
+            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationActionCore &&state, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), state_(std::move(state)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false) {}           
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
             }
         };
     public:
-        template <class A, class B>
-        static auto continuationAction(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
+        template <class A, class B, class ContinuationStructure>
+        static auto continuationAction(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure(), LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
             return std::make_shared<Action<A,B>>(
-                new ContinuationActionCore<A,B>(cont, liftParam.delaySimulator, liftParam.fireOnceOnly)
+                new ContinuationActionCore<A,B,ContinuationStructure>(cont, std::move(state), liftParam.delaySimulator, liftParam.fireOnceOnly)
             );
         }
     

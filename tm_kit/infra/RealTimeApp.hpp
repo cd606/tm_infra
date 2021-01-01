@@ -1153,12 +1153,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
     private:
-        template <class A, class B, bool Threaded, bool FireOnceOnly>
+        template <class A, class B, class ContinuationStructure, bool Threaded, bool FireOnceOnly>
         class ContinuationActionCore {};
-        template <class A, class B, bool FireOnceOnly>
-        class ContinuationActionCore<A, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
+        template <class A, class B, class ContinuationStructure, bool FireOnceOnly>
+        class ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
         private:
-            TimedAppModelContinuation<A, B, EnvironmentType> cont_;
+            TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> cont_;
+            ContinuationStructure state_;
             bool done_;
         protected:
             virtual void actuallyHandle(InnerData<A> &&data) override final {
@@ -1170,7 +1171,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }
-                cont_(std::move(data), [this](InnerData<B> &&x) {
+                cont_(std::move(data), state_, [this](InnerData<B> &&x) {
                     if constexpr (FireOnceOnly) {
                         done_ = true;
                     }
@@ -1178,7 +1179,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 });
             }
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), cont_(cont), done_(false) {
+            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), cont_(cont), state_(std::move(state)), done_(false) {
             }
             virtual ~ContinuationActionCore() {
             }
@@ -1189,14 +1190,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return FireOnceOnly;
             }
         };
-        template <class A, class B, bool FireOnceOnly>
-        class ContinuationActionCore<A,B,false,FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
+        template <class A, class B, class ContinuationStructure, bool FireOnceOnly>
+        class ContinuationActionCore<A,B,ContinuationStructure,false,FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
         private:
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
-            TimedAppModelContinuation<A, B, EnvironmentType> cont_;
+            TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> cont_;
+            ContinuationStructure state_;
             std::atomic<bool> done_;
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, EnvironmentType> const &cont) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), cont_(cont), done_(false) {
+            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), cont_(cont), state_(std::move(state)), done_(false) {
             }
             virtual ~ContinuationActionCore() {
             }
@@ -1207,7 +1209,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
-                    cont_(std::move(data), [this](InnerData<B> &&x) {
+                    cont_(std::move(data), state_, [this](InnerData<B> &&x) {
                         if constexpr (FireOnceOnly) {
                             done_ = true;
                         }
@@ -1223,26 +1225,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
     public:
-        template <class A, class B>
-        static auto continuationAction(TimedAppModelContinuation<A, B, EnvironmentType> const &cont, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
+        template <class A, class B, class ContinuationStructure>
+        static auto continuationAction(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure(), LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
             if (liftParam.suggestThreaded) {
                 if (liftParam.fireOnceOnly) {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,true,true>(cont)
+                        new ContinuationActionCore<A,B,ContinuationStructure,true,true>(cont,std::move(state))
                     );
                 } else {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,true,false>(cont)
+                        new ContinuationActionCore<A,B,ContinuationStructure,true,false>(cont,std::move(state))
                     );
                 }
             } else {
                 if (liftParam.fireOnceOnly) {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,false,true>(cont)
+                        new ContinuationActionCore<A,B,ContinuationStructure,false,true>(cont,std::move(state))
                     );
                 } else {
                     return std::make_shared<Action<A,B>>(
-                        new ContinuationActionCore<A,B,false,false>(cont)
+                        new ContinuationActionCore<A,B,ContinuationStructure,false,false>(cont,std::move(state))
                     );
                 }
             }
