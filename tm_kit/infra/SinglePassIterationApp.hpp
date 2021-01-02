@@ -581,7 +581,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }       
             virtual Data<B> handle(InnerData<A> &&) = 0;
         public:
-            ActionCore(DelaySimulatorType const &delaySimulator) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
+            ActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
         };
 
         template <class B>
@@ -699,7 +699,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }       
             virtual MultiData<B> handle(InnerData<A> &&) = 0;
         public:
-            MultiActionCore(DelaySimulatorType const &delaySimulator) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
+            MultiActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
         };
 
     private:
