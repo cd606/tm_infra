@@ -225,7 +225,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -275,7 +274,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -328,7 +326,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -374,7 +371,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -414,7 +410,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -468,7 +463,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -515,7 +509,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -846,7 +839,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -896,7 +888,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -949,7 +940,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -995,7 +985,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1035,7 +1024,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -1089,7 +1077,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -1136,7 +1123,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1545,7 +1531,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -1595,7 +1580,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -1648,7 +1632,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -1694,7 +1677,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1734,7 +1716,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -1788,7 +1769,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -1835,7 +1815,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2322,7 +2301,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -2372,7 +2350,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -2425,7 +2402,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -2471,7 +2447,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2511,7 +2486,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -2565,7 +2539,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -2612,7 +2585,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3177,7 +3149,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -3227,7 +3198,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -3280,7 +3250,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -3326,7 +3295,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3366,7 +3334,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -3420,7 +3387,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -3467,7 +3433,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4110,7 +4075,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -4160,7 +4124,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -4213,7 +4176,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -4259,7 +4221,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4299,7 +4260,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -4353,7 +4313,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -4400,7 +4359,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5121,7 +5079,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -5171,7 +5128,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -5224,7 +5180,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -5270,7 +5225,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5310,7 +5264,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -5364,7 +5317,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -5411,7 +5363,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6210,7 +6161,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -6260,7 +6210,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -6313,7 +6262,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -6359,7 +6307,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6399,7 +6346,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -6453,7 +6399,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -6500,7 +6445,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7377,7 +7321,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         B b = f_(std::move(data.timedData.value));
         if (fireOnceOnly_) {
             Data<B> x = pureInnerData<B>(
@@ -7427,7 +7370,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::move(data.timedData.value));
         if (!b) {
             return std::nullopt;
@@ -7480,7 +7422,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::optional<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {tp, std::move(data.timedData.value)});
         if (!b) {
             return std::nullopt;
@@ -7526,7 +7467,6 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7566,7 +7506,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::move(data.timedData.value));
         if (b.empty()) {
             return std::nullopt;
@@ -7620,7 +7559,6 @@ protected:
         }
         StateT *env = data.environment;
         TimePoint tp = data.timedData.timePoint;
-        std::size_t index = data.timedData.value.index();
         std::vector<B> b = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {tp, std::move(data.timedData.value)});
         if (b.empty()) {
             return std::nullopt;
@@ -7667,7 +7605,6 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
-        std::size_t index = data.timedData.value.index();
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
