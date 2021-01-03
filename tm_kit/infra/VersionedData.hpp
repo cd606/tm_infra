@@ -1,6 +1,7 @@
 #ifndef TM_KIT_INFRA_VERSIONED_DATA_HPP_
 #define TM_KIT_INFRA_VERSIONED_DATA_HPP_
 
+#include <memory>
 #include <optional>
 #include <functional>
 #include <type_traits>
