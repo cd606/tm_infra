@@ -165,6 +165,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     struct IsKeyedData<std::variant<A,B>> {
 	enum {value=(IsKeyedData<A>::value && IsKeyedData<B>::value)};
     };
+    template <class A, class B, class C>
+    struct IsKeyedData<std::variant<A,B,C>> {
+	enum {value=(IsKeyedData<A>::value && IsKeyedData<B>::value && IsKeyedData<C>::value)};
+    };
     template <class T>
     inline constexpr bool is_keyed_data_v = IsKeyedData<T>::value;
 
