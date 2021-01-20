@@ -1664,9 +1664,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             });
         }
         template <class T>
+        static std::shared_ptr<Importer<T>> constFirstPushImporterWithTime(TimePoint const &tp, T &&t = T()) {
+            return simpleImporter<T>([tp,t=std::move(t)](StateT *env) -> Data<T> {
+                static bool published = false;
+                if (!published) {
+                    published = true;
+                    env->resolveTime(tp);
+                    return InnerData<T> {
+                        env
+                        , {
+                            tp
+                            , std::move(t)
+                            , true
+                        }
+                    };
+                } else {
+                    return std::nullopt;
+                }
+            });
+        }
+        template <class T>
         static std::shared_ptr<Importer<Key<T>>> constFirstPushKeyImporter(T &&t = T()) {
             return constFirstPushImporter<Key<T>>(
                 infra::withtime_utils::keyify<T,StateT>(std::move(t))
+            );
+        }
+        template <class T>
+        static std::shared_ptr<Importer<Key<T>>> constFirstPushKeyImporterWithTime(TimePoint const &tp, T &&t = T()) {
+            return constFirstPushImporterWithTime<Key<T>>(
+                tp, infra::withtime_utils::keyify<T,StateT>(std::move(t))
             );
         }
         template <class T>
