@@ -2425,6 +2425,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     };
 
+    template <class T>
+    using RealTimeApp_T = RealTimeApp<T>;
+
 } } } }
 
 #endif

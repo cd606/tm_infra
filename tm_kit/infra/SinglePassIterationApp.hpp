@@ -2499,6 +2499,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraOutputType = typename X::ExtraOutputType;
         };
     };
+
+    template <class T>
+    using SinglePassIterationApp_T = SinglePassIterationApp<T>;
 } } } }
 
 #endif

@@ -644,6 +644,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     };
 
+    template <class T>
+    using BasicWithTimeApp_T = BasicWithTimeApp<T>;
+
 }}}}
 
 #endif
