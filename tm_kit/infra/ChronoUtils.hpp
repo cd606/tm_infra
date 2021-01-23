@@ -40,12 +40,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         //similar to sinceMidnight
         template <class Duration>
-        inline int64_t sinceEpoch(std::chrono::system_clock::time_point const &tp) {
+        inline constexpr int64_t sinceEpoch(std::chrono::system_clock::time_point const &tp) {
             return static_cast<int64_t>(std::chrono::duration_cast<Duration>(std::chrono::time_point_cast<Duration>(tp).time_since_epoch()).count());
         }
 
         template <class Duration>
-        inline std::chrono::system_clock::time_point epochDurationToTime(int64_t d) {
+        inline constexpr std::chrono::system_clock::time_point epochDurationToTime(int64_t d) {
             return std::chrono::system_clock::time_point { Duration { static_cast<typename Duration::rep>(d) } };
         }
 
