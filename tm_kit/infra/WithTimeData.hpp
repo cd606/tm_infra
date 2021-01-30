@@ -531,6 +531,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = typename App::template GetExtraInputOutputType<VIEOnOrderFacility>::ExtraInputType;
             using ExtraOutputType = typename App::template GetExtraInputOutputType<VIEOnOrderFacility>::ExtraOutputType;
         };
+
+        template <class T>
+        class IsVariant {
+        public:
+            static constexpr bool Value = false;
+        };
+        template <class ...Ts>
+        class IsVariant<std::variant<Ts...>> {
+        public:
+            static constexpr bool Value = true;
+        };
     }
 
     template <class App>
@@ -1054,27 +1065,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         StateT *environment() const {
             return env_;
         }
-        /*
-         * The reason that methods related to actions are templaterized differently from
-         * other methods is as follows.
-         * In the actual monads, Actions and let's say Importers are sometimes defined as 
-         * aliases of different specialization for a single template. When the compiler tries
-         * to match an input type against something that can be either an Action or say an
-         * Importer, gcc 9.3.0 will fail (clang 10 and MSVC 14.2 and gcc 9.2.1 work, though).
-         * Therefore, we have to engage in template type derivations to distinguish between
-         * them. However, when all the rest are written with template type derivations and only
-         * Action is left for the compiler to automaticaly deduce the inner types, gcc 9.3.0
-         * works. Therefore we keep it as is for now to reduce code generation. If in the future
-         * compilers will reject this inner type deduction, then we can always use the same
-         * method as for other components to force duduction. 
-         */
-        template <class A, class B>
-        void registerAction(ActionPtr<A,B> const &f, std::string const &name) {
-            registerAction_(f, name);
+
+        template <class Action>
+        void registerAction(std::shared_ptr<Action> const &f, std::string const &name) {
+            registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
         }
-        template <class A, class B>
-        void registerAction(std::string const &name, ActionPtr<A,B> const &f) {
-            registerAction_(f, name);
+        template <class Action>
+        void registerAction(std::string const &name, std::shared_ptr<Action> const &f) {
+            registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
         }
         template <class Imp>
         void registerImporter(std::shared_ptr<Imp> const &f, std::string const &name) {
@@ -1169,45 +1167,45 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::ImporterTypeInfo<App,Imp>::DataType> importItem(std::shared_ptr<Imp> const &importer) {
             return importerAsSource<Imp>(importer);
         }
-        template <class A, class B>
-        Source<B> actionAsSource(std::string const &name, ActionPtr<A,B> const &action) {
+        template <class Action>
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> actionAsSource(std::string const &name, std::shared_ptr<Action> const &action) {
             {
                 std::lock_guard<std::mutex> _(mutex_);
-                registerAction_(action, name);
+                registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(action, name);
             }
-            return { m_.actionAsSource(env_, *action), name };
+            return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *action), name };
         }
-        template <class A, class B>
-        Source<B> actionAsSource(ActionPtr<A,B> &action) {
+        template <class Action>
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> actionAsSource(std::shared_ptr<Action> &action) {
             std::string name;
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 name = checkName_((void *) action.get());
             }
-            return { m_.actionAsSource(env_, *action), name };
+            return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *action), name };
         }
-        template <class A, class B>
-        Source<B> execute(std::string const &name, ActionPtr<A,B> &f, Source<A> &&x) {
+        template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::string const &name, std::shared_ptr<Action> &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
             {
                 std::lock_guard<std::mutex> _(mutex_);
-                registerAction_(f, name);
+                registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
                 if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
-                    return { m_.actionAsSource(env_, *f), name };
+                    return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
                 }
             }
-            return { m_.execute(*f, std::move(x.mSource)), name };
+            return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
         }
-        template <class A, class B>
-        Source<B> execute(ActionPtr<A,B> const &f, Source<A> &&x) {
+        template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::shared_ptr<Action> const &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
             std::string name;
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
-                    return { m_.actionAsSource(env_, *f), name };
+                    return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
                 }
                 name = nameMap_[(void *) f.get()].name;
             }
-            return { m_.execute(*f, std::move(x.mSource)), name };
+            return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
         }
 
         #include <tm_kit/infra/WithTimeData_VariantExecute_Piece.hpp>
@@ -1246,22 +1244,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return { m_.template exporterAsSink<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType>(*exporter), name, 0 };
         }
-        template <class A, class B>
-        Sink<A> actionAsSink(std::string const &name, ActionPtr<A,B> const &action) {
+        template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
+        Sink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> actionAsSink(std::string const &name, std::shared_ptr<Action> const &action) {
             {
                 std::lock_guard<std::mutex> _(mutex_);
-                registerAction_(action, name);
+                registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(action, name);
             }
-            return { m_.actionAsSink(*action), name, 0 };
+            return { m_.template actionAsSink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*action), name, 0 };
         }
-        template <class A, class B>
-        Sink<A> actionAsSink(ActionPtr<A,B> const &action) {
+        template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
+        Sink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> actionAsSink(std::shared_ptr<Action> const &action) {
             std::string name;
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 name = checkName_((void *) action.get());
             }
-            return { m_.actionAsSink(*action), name, 0 };
+            return { m_.template actionAsSink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*action), name, 0 };
         }
         template <class Fac>
         Sink<typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType> localFacilityAsSink(std::string const &name, std::shared_ptr<Fac> const &facility) {
