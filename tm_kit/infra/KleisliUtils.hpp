@@ -91,6 +91,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class F>
+        class KleisliMultiFromPure {
+        private:
+            F f_;
+        public:
+            KleisliMultiFromPure(F &&f) : f_(std::move(f)) {}
+ 
+            using B = typename decltype(f_(A()))::value_type;
+            typename M::template Data<std::vector<B>> operator()(typename M::template InnerData<A> &&x) {
+                auto res = f_(std::move(x.timedData.value));
+                return M::template pureInnerData<std::vector<B>>(x.environment, {x.timedData.timePoint, std::move(res), x.timedData.finalFlag});
+            }
+        };
+        template <class A, class F>
         class KleisliMultiFromEnhancedMulti {
         private:
             F f_;
@@ -109,6 +122,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             F f_;
         public:
             KleisliHolder(F &&f) : f_(std::move(f)) {}
+
+            using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
+            typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
+                return f_(std::move(x));
+            }
+        };
+        template <class A, class F>
+        class KleisliMultiHolder {
+        private:
+            F f_;
+        public:
+            KleisliMultiHolder(F &&f) : f_(std::move(f)) {}
 
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
@@ -164,12 +189,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return KleisliFromEnhancedMaybe<A, F>(std::move(f));
         }
         template <class A, class F>
+        static KleisliMultiFromPure<A, F> liftMulti(F &&f) {
+            return KleisliMultiFromPure<A, F>(std::move(f));
+        }
+        template <class A, class F>
         static KleisliMultiFromEnhancedMulti<A, F> enhancedMulti(F &&f) {
             return KleisliMultiFromEnhancedMulti<A, F>(std::move(f));
         }
         template <class A, class F>
         static KleisliHolder<A, F> kleisli(F &&f) {
             return KleisliHolder<A, F>(std::move(f));
+        }
+        template <class A, class F>
+        static KleisliMultiHolder<A, F> kleisliMulti(F &&f) {
+            return KleisliMultiHolder<A, F>(std::move(f));
         }
         template <class A, class F, class G>
         static ComposedKleisli<A, F, G> compose(F &&f, G &&g) {
@@ -182,6 +215,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         
         template <class A, class B>
         static std::shared_ptr<typename M::template Action<A,B>> action(KleisliFunction<A,B> &&f) {
+            return M::template kleisli<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliFromPure<A,F> &&f) {
+            return M::template kleisli<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliFromMaybe<A,F> &&f) {
+            return M::template kleisli<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliFromEnhancedMaybe<A,F> &&f) {
+            return M::template kleisli<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliHolder<A,F> &&f) {
+            return M::template kleisli<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliMultiFromPure<A,F> &&f) {
+            return M::template kleisliMulti<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliMultiFromEnhancedMulti<A,F> &&f) {
+            return M::template kleisliMulti<A>(std::move(f));
+        }
+        template <class A, class F>
+        static auto action(KleisliMultiHolder<A,F> &&f) {
+            return M::template kleisliMulti<A>(std::move(f));
+        }
+        template <class A, class F, class G>
+        static auto action(ComposedKleisli<A,F,G> &&f) {
             return M::template kleisli<A>(std::move(f));
         }
     };
