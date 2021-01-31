@@ -287,7 +287,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 publish(withtime_utils::pureTimedDataWithEnvironment<T, StateT, typename StateT::TimePointType>(env, std::move(data)));
             }
             void publish(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers_.size();
                 switch (s) {
                     case 0:
@@ -297,10 +298,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         break;
                     default:
                         {
+                            for (auto ii=0; ii<s-1; ++ii) {
+                                handlers_[ii]->handle(data.clone());
+                            }
+                            handlers_[s-1]->handle(std::move(data));
+                            /*
                             TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> ownedCopy { std::move(data) };
                             for (auto *h : handlers_) {
                                 h->handle(ownedCopy.clone());
                             }
+                            */
                         }
                         break;
                 }

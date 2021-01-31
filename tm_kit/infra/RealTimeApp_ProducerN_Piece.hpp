@@ -40,7 +40,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -51,9 +52,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -61,7 +63,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -72,9 +75,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -139,7 +143,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -150,9 +155,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -160,7 +166,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -171,9 +178,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -181,7 +189,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -192,9 +201,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -271,7 +281,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -282,9 +293,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -292,7 +304,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -303,9 +316,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -313,7 +327,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -324,9 +339,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -334,7 +350,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -345,9 +362,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -436,7 +454,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -447,9 +466,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -457,7 +477,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -468,9 +489,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -478,7 +500,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -489,9 +512,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -499,7 +523,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -510,9 +535,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -520,7 +546,8 @@ public:
             break;
         case 4:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers4_.size();
                 switch (s) {
                 case 0:
@@ -531,9 +558,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<4>(std::move(x));}, true)};
-                        for (auto *h : handlers4_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers4_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers4_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -634,7 +662,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -645,9 +674,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -655,7 +685,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -666,9 +697,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -676,7 +708,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -687,9 +720,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -697,7 +731,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -708,9 +743,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -718,7 +754,8 @@ public:
             break;
         case 4:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers4_.size();
                 switch (s) {
                 case 0:
@@ -729,9 +766,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<4>(std::move(x));}, true)};
-                        for (auto *h : handlers4_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers4_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers4_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -739,7 +777,8 @@ public:
             break;
         case 5:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers5_.size();
                 switch (s) {
                 case 0:
@@ -750,9 +789,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<5>(std::move(x));}, true)};
-                        for (auto *h : handlers5_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers5_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers5_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -865,7 +905,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -876,9 +917,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -886,7 +928,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -897,9 +940,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -907,7 +951,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -918,9 +963,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -928,7 +974,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -939,9 +986,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -949,7 +997,8 @@ public:
             break;
         case 4:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers4_.size();
                 switch (s) {
                 case 0:
@@ -960,9 +1009,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<4>(std::move(x));}, true)};
-                        for (auto *h : handlers4_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers4_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers4_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -970,7 +1020,8 @@ public:
             break;
         case 5:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers5_.size();
                 switch (s) {
                 case 0:
@@ -981,9 +1032,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<5>(std::move(x));}, true)};
-                        for (auto *h : handlers5_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers5_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers5_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -991,7 +1043,8 @@ public:
             break;
         case 6:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers6_.size();
                 switch (s) {
                 case 0:
@@ -1002,9 +1055,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<6>(std::move(x));}, true)};
-                        for (auto *h : handlers6_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers6_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers6_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1129,7 +1183,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -1140,9 +1195,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1150,7 +1206,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -1161,9 +1218,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1171,7 +1229,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -1182,9 +1241,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1192,7 +1252,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -1203,9 +1264,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1213,7 +1275,8 @@ public:
             break;
         case 4:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers4_.size();
                 switch (s) {
                 case 0:
@@ -1224,9 +1287,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<4>(std::move(x));}, true)};
-                        for (auto *h : handlers4_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers4_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers4_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1234,7 +1298,8 @@ public:
             break;
         case 5:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers5_.size();
                 switch (s) {
                 case 0:
@@ -1245,9 +1310,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<5>(std::move(x));}, true)};
-                        for (auto *h : handlers5_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers5_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers5_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1255,7 +1321,8 @@ public:
             break;
         case 6:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers6_.size();
                 switch (s) {
                 case 0:
@@ -1266,9 +1333,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<6>(std::move(x));}, true)};
-                        for (auto *h : handlers6_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers6_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers6_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1276,7 +1344,8 @@ public:
             break;
         case 7:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers7_.size();
                 switch (s) {
                 case 0:
@@ -1287,9 +1356,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<7>(std::move(x));}, true)};
-                        for (auto *h : handlers7_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers7_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers7_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1426,7 +1496,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -1437,9 +1508,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1447,7 +1519,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -1458,9 +1531,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1468,7 +1542,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -1479,9 +1554,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1489,7 +1565,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -1500,9 +1577,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1510,7 +1588,8 @@ public:
             break;
         case 4:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers4_.size();
                 switch (s) {
                 case 0:
@@ -1521,9 +1600,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<4>(std::move(x));}, true)};
-                        for (auto *h : handlers4_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers4_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers4_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1531,7 +1611,8 @@ public:
             break;
         case 5:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers5_.size();
                 switch (s) {
                 case 0:
@@ -1542,9 +1623,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<5>(std::move(x));}, true)};
-                        for (auto *h : handlers5_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers5_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers5_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1552,7 +1634,8 @@ public:
             break;
         case 6:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers6_.size();
                 switch (s) {
                 case 0:
@@ -1563,9 +1646,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<6>(std::move(x));}, true)};
-                        for (auto *h : handlers6_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers6_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers6_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1573,7 +1657,8 @@ public:
             break;
         case 7:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers7_.size();
                 switch (s) {
                 case 0:
@@ -1584,9 +1669,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<7>(std::move(x));}, true)};
-                        for (auto *h : handlers7_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers7_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers7_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1594,7 +1680,8 @@ public:
             break;
         case 8:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers8_.size();
                 switch (s) {
                 case 0:
@@ -1605,9 +1692,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<8>(std::move(x));}, true)};
-                        for (auto *h : handlers8_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers8_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers8_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1756,7 +1844,8 @@ public:
         switch (data.timedData.value.index()) {
         case 0:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers0_.size();
                 switch (s) {
                 case 0:
@@ -1767,9 +1856,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<0>(std::move(x));}, true)};
-                        for (auto *h : handlers0_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers0_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers0_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1777,7 +1867,8 @@ public:
             break;
         case 1:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers1_.size();
                 switch (s) {
                 case 0:
@@ -1788,9 +1879,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<1>(std::move(x));}, true)};
-                        for (auto *h : handlers1_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers1_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers1_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1798,7 +1890,8 @@ public:
             break;
         case 2:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers2_.size();
                 switch (s) {
                 case 0:
@@ -1809,9 +1902,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<2>(std::move(x));}, true)};
-                        for (auto *h : handlers2_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers2_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers2_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1819,7 +1913,8 @@ public:
             break;
         case 3:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers3_.size();
                 switch (s) {
                 case 0:
@@ -1830,9 +1925,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<3>(std::move(x));}, true)};
-                        for (auto *h : handlers3_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers3_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers3_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1840,7 +1936,8 @@ public:
             break;
         case 4:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers4_.size();
                 switch (s) {
                 case 0:
@@ -1851,9 +1948,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<4>(std::move(x));}, true)};
-                        for (auto *h : handlers4_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers4_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers4_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1861,7 +1959,8 @@ public:
             break;
         case 5:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers5_.size();
                 switch (s) {
                 case 0:
@@ -1872,9 +1971,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<5>(std::move(x));}, true)};
-                        for (auto *h : handlers5_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers5_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers5_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1882,7 +1982,8 @@ public:
             break;
         case 6:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers6_.size();
                 switch (s) {
                 case 0:
@@ -1893,9 +1994,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<6>(std::move(x));}, true)};
-                        for (auto *h : handlers6_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers6_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers6_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1903,7 +2005,8 @@ public:
             break;
         case 7:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers7_.size();
                 switch (s) {
                 case 0:
@@ -1914,9 +2017,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<7>(std::move(x));}, true)};
-                        for (auto *h : handlers7_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers7_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers7_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1924,7 +2028,8 @@ public:
             break;
         case 8:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers8_.size();
                 switch (s) {
                 case 0:
@@ -1935,9 +2040,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<8>(std::move(x));}, true)};
-                        for (auto *h : handlers8_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers8_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers8_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
@@ -1945,7 +2051,8 @@ public:
             break;
         case 9:
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                //In "publish", the system has reached stable state, so mutex is no longer needed
+                //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers9_.size();
                 switch (s) {
                 case 0:
@@ -1956,9 +2063,10 @@ public:
                 default:
                     {
                         auto ownedCopy {std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<9>(std::move(x));}, true)};
-                        for (auto *h : handlers9_) {
-                            h->handle(ownedCopy.clone());
+                        for (auto ii=0; ii<s-1; ++ii) {
+                            handlers9_[ii]->handle(ownedCopy.clone());
                         }
+                        handlers9_[s-1]->handle(std::move(ownedCopy));
                     }
                     break;
                 }
