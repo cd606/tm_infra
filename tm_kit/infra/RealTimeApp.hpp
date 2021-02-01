@@ -760,7 +760,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
     
-    private:
+    public:
         template <class A, class B, bool Threaded, bool FireOnceOnly>
         class ActionCore {};
         template <class A, class B, bool FireOnceOnly>

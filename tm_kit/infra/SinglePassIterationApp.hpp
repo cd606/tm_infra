@@ -747,6 +747,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             PureActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
+            PureActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+            }
             virtual ~PureActionCore() {}
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
@@ -789,6 +791,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             MaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
+            }
+            MaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
             }
             virtual ~MaybeActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -833,6 +837,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             EnhancedMaybeActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
+            EnhancedMaybeActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+            }
             virtual ~EnhancedMaybeActionCore() {}
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
@@ -862,6 +868,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             KleisliActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : ActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
+            }
+            KleisliActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : ActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
             }
             virtual ~KleisliActionCore() {}
             virtual bool isOneTimeOnly() const override final {
@@ -937,6 +945,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             SimpleMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
+            SimpleMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+            }
             virtual ~SimpleMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
@@ -977,6 +987,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             EnhancedMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
             }
+            EnhancedMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
+            }
             virtual ~EnhancedMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
@@ -1007,6 +1019,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             KleisliMultiActionCore(F &&f, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : MultiActionCore<A,B>(delaySimulator), f_(std::move(f)), fireOnceOnly_(fireOnceOnly), done_(false) {
+            }
+            KleisliMultiActionCore(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) : MultiActionCore<A,B>(liftParam.delaySimulator), f_(std::move(f)), fireOnceOnly_(liftParam.fireOnceOnly), done_(false) {
             }
             virtual ~KleisliMultiActionCore() {}
             virtual bool isOneTimeOnly() const override final {
