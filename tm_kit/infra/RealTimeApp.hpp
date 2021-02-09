@@ -14,6 +14,8 @@
 #include <sstream>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+    class OutputRealTimeThreadBufferSizeComponent {};
+
     class RealTimeAppException : public std::runtime_error {
     public:
         RealTimeAppException(std::string const &s) : std::runtime_error(s) {}
@@ -121,6 +123,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                         processing_.splice(processing_.end(), incoming_);
                         lock.unlock();
+                        if constexpr (std::is_convertible_v<StateT *, OutputRealTimeThreadBufferSizeComponent *>) {
+                            std::ostringstream oss;
+                            oss << "Thread buffer for " << std::this_thread::get_id() << " size: " << processing_.size();
+                            processing_.front().environment->log(LogLevel::Debug, oss.str());
+                        }
                     }
                     while (!processing_.empty()) {
                         auto &data = processing_.front();
@@ -202,6 +209,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         std::lock_guard<std::mutex> _(mutex_);
                         if (!incoming_.empty()) {
                             processing_.splice(processing_.end(), incoming_);
+                        }
+                    }
+                    if constexpr (std::is_convertible_v<StateT *, OutputRealTimeThreadBufferSizeComponent *>) {
+                        if (!processing_.empty()) {
+                            std::ostringstream oss;
+                            oss << "Thread buffer for " << std::this_thread::get_id() << " size: " << processing_.size();
+                            processing_.front().environment->log(LogLevel::Debug, oss.str());
                         }
                     }
                     while (!processing_.empty()) {
