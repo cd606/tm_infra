@@ -21,6 +21,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         RealTimeAppException(std::string const &s) : std::runtime_error(s) {}
     };
 
+    class IRealTimeAppPossiblyThreadedNode {
+    public:
+        virtual ~IRealTimeAppPossiblyThreadedNode() = default;
+        virtual std::optional<std::thread::native_handle_type> threadHandle() = 0;
+    };
+
     template <class StateT>
     class RealTimeAppComponents {
     public:
@@ -95,7 +101,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     private:
         template <class T>
-        class ThreadedHandlerBase {
+        class ThreadedHandlerBase : public IRealTimeAppPossiblyThreadedNode {
         private:
             TimeChecker<false, T> timeChecker_;
             std::mutex mutex_;
@@ -154,6 +160,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~ThreadedHandlerBase() {
                 stopThread();
             }
+            virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                return th_.native_handle();
+            }
         protected:
             void putData(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
                 if (running_) {
@@ -190,7 +199,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         //busy loop can only be used to handle one kind of input
         template <class T>
-        class BusyLoopThreadedHandlerBase {
+        class BusyLoopThreadedHandlerBase : public IRealTimeAppPossiblyThreadedNode {
         private:
             bool noYield_;
             TimeChecker<false, T> timeChecker_;
@@ -245,6 +254,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~BusyLoopThreadedHandlerBase() {
                 stopThread();
+            }
+            virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                return th_.native_handle();
             }
         protected:
             void putData(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
@@ -678,16 +690,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class RealTimeApp;
             std::unique_ptr<T> core_;
+            IRealTimeAppPossiblyThreadedNode *threadInfo_;
             void release() {
                 core_.release();
+                threadInfo_ = nullptr;
             }
         public:
             using InputType = Input;
             using OutputType = Output;
 
-            TwoWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
+            TwoWayHolder(std::unique_ptr<T> &&p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p.get())), core_(std::move(p)) {}
             template <class A>
-            TwoWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            TwoWayHolder(A *p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
             }
@@ -696,16 +710,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class OneWayHolder {
         private:
             friend class RealTimeApp;
+            IRealTimeAppPossiblyThreadedNode *threadInfo_;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
+                threadInfo_ = nullptr;
             }
         public:
             using DataType = Data;
 
-            OneWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
+            OneWayHolder(std::unique_ptr<T> &&p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p.get())), core_(std::move(p)) {}
             template <class A>
-            OneWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            OneWayHolder(A *p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p)), core_(std::unique_ptr<T>(dynamic_cast<T *>(p))) {}
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
             }
@@ -1612,12 +1628,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     private:
         template <class T, class F>
-        class SimpleImporter final : public AbstractImporter<T> {
+        class SimpleImporter final : public IRealTimeAppPossiblyThreadedNode, public AbstractImporter<T> {
         private:
             F f_;
             bool threaded_;
+            std::optional<std::thread::native_handle_type> thHandle_;
         public:
-            SimpleImporter(F &&f, bool threaded) : f_(std::move(f)), threaded_(threaded) {}
+            SimpleImporter(F &&f, bool threaded) : f_(std::move(f)), threaded_(threaded), thHandle_(std::nullopt) {}
             virtual void start(StateT *env) override final {
                 if (threaded_) {
                     auto pub = std::make_unique<PublisherCall<T>>(this, env);
@@ -1625,11 +1642,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         f_(*(pub.get()));
                     });
                     th.detach();
+                    thHandle_ = th.native_handle();
                 } else {
                     auto pub = std::make_unique<PublisherCall<T>>(this, env);
                     f_(*(pub.get()));
                 }
                 
+            }
+            virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                return thHandle_;
             }
         };
     public:
@@ -1666,7 +1687,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, bool HasOwnThread=true>
         static std::tuple<std::shared_ptr<Importer<T>>,std::function<void()>> constTriggerImporter(T &&t = T()) {
             if constexpr (HasOwnThread) {
-                class LocalI final : public AbstractImporter<T> {
+                class LocalI final : public IRealTimeAppPossiblyThreadedNode, public AbstractImporter<T> {
                 private:
                     T t_;
                     StateT *env_;
@@ -1718,6 +1739,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             cond_.notify_one();
                         }
                     }
+                    virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                        return th_.native_handle();
+                    }
                 };
                 auto *p = new LocalI(std::move(t));
                 return {
@@ -1756,7 +1780,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, bool HasOwnThread=true>
         static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(T&&)>> triggerImporter() {
             if constexpr (HasOwnThread) {
-                class LocalI final : public AbstractImporter<T> {
+                class LocalI final : public IRealTimeAppPossiblyThreadedNode, public AbstractImporter<T> {
                 private:
                     std::list<T> incoming_, processing_;
                     StateT *env_;
@@ -1812,6 +1836,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             incoming_.push_back(std::move(t));
                         }
                         cond_.notify_one();
+                    }
+                    virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                        return th_.native_handle();
                     }
                 };
                 auto *p = new LocalI();
@@ -2229,6 +2256,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             >(
                 p, i, o
             );
+        }
+    public:
+        template<class T>
+        static std::optional<std::thread::native_handle_type> threadHandle(
+            std::shared_ptr<T> const &node
+        ) {
+            auto *p = node->threadInfo_;
+            if (p) {
+                return p->threadHandle();
+            } else {
+                return std::nullopt;
+            }
         }
 
     public:
