@@ -9,11 +9,12 @@ tm_infra_headers = [
     , 'BasicWithTimeApp_VariantAndMerge_Piece.hpp'
     , 'BasicWithTimeApp_VariantSink_Piece.hpp'
     , 'BasicWithTimeApp_ConnectN_Piece.hpp'
-    , 'WithTimeData_ActionCheckDataCreate_Piece.hpp'
     , 'WithTimeData_TupleCopy_Piece.hpp'
     , 'WithTimeData_VariantExecute_Piece.hpp'
     , 'WithTimeData_VariantSink_Piece.hpp'
+    , 'WithTimeData_VariantSink_ClassPiece.hpp'
     , 'WithTimeData_ConnectN_Piece.hpp'
+    , 'WithTimeData_ConnectN_ClassPiece.hpp'
     , 'RealTimeApp_AbstractAction_Piece.hpp'
     , 'RealTimeApp_ActionCore_Piece.hpp'
     , 'RealTimeApp_MultiActionCore_Piece.hpp'
@@ -46,6 +47,7 @@ tm_infra_headers = [
     , 'VersionedData.hpp'
     , 'PidUtil.hpp'
     , 'TraceNodesComponent.hpp'
+    , 'TupleVariantHelper.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')

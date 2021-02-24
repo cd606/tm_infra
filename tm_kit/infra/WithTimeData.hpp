@@ -459,6 +459,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {environment, {preserveTime?a.timePoint:environment->resolveTime(a.timePoint), std::move(f(std::move(a.value))), a.finalFlag}};
         }
         template <class A, class F, class Environment, class TimePoint>
+        inline auto pureTimedDataWithEnvironmentLift(F &f, TimedDataWithEnvironment<A, Environment, TimePoint> &&a, bool preserveTime=false) -> TimedDataWithEnvironment<decltype(f(std::move(a.timedData.value))), Environment, TimePoint> {
+            return {a.environment, {preserveTime?a.timedData.timePoint:a.environment->resolveTime(a.timedData.timePoint), std::move(f(std::move(a.timedData.value))), a.timedData.finalFlag}};
+        }
+        template <class A, class F, class Environment, class TimePoint>
+        inline auto pureTimedDataWithEnvironmentLift(Environment *environment, F const &f, WithTime<A,TimePoint> &&a, bool preserveTime=false) -> TimedDataWithEnvironment<decltype(f(std::move(a.value))), Environment, TimePoint> {
+            return {environment, {preserveTime?a.timePoint:environment->resolveTime(a.timePoint), std::move(f(std::move(a.value))), a.finalFlag}};
+        }
+        template <class A, class F, class Environment, class TimePoint>
         inline auto pureTimedDataWithEnvironmentLift(F const &f, TimedDataWithEnvironment<A, Environment, TimePoint> &&a, bool preserveTime=false) -> TimedDataWithEnvironment<decltype(f(std::move(a.timedData.value))), Environment, TimePoint> {
             return {a.environment, {preserveTime?a.timedData.timePoint:a.environment->resolveTime(a.timedData.timePoint), std::move(f(std::move(a.timedData.value))), a.timedData.finalFlag}};
         }
@@ -609,7 +617,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::string name;
             int paramCount;
             std::vector<std::unordered_map<std::string,std::set<std::tuple<int,int,std::string>>>> paramConnectedFrom;
-            std::unordered_map<std::string,std::unordered_set<int>> outputConnectedTo;            
+            std::map<std::tuple<std::string,std::string>,std::unordered_set<int>> outputConnectedTo;            
             bool isImporter = false;
             bool isExporter = false;
             bool hasAltOutput = false;
@@ -627,13 +635,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             template <class A, class B>
             static ActionCheckData create(Action<A,B> *f, std::string const &n)
             {
-                ActionCheckData d {n, 1};
-                d.isImporter = false;
-                d.isExporter = false;
-                return d;
+                if constexpr (!withtime_utils::IsVariant<A>::Value) {
+                    ActionCheckData d {n, 1};
+                    d.isImporter = false;
+                    d.isExporter = false;
+                    return d;
+                } else {
+                    ActionCheckData d {n, std::variant_size_v<A>};
+                    d.isImporter = false;
+                    d.isExporter = false;
+                    return d;
+                }
             }
-
-            #include <tm_kit/infra/WithTimeData_ActionCheckDataCreate_Piece.hpp>
 
             template <class A>
             static ActionCheckData createForImporter(Importer<A> *f, std::string const &n)
@@ -758,12 +771,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return;
                 }
             }
-            nameMap_.insert({p, ActionCheckData::create(f.get(), name)});
+            nameMap_.insert({p, ActionCheckData::template create<A,B>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
             ActionProperties prop;
-            prop.threaded = AppType::actionIsThreaded(f);
-            prop.oneTimeOnly = AppType::actionIsOneTimeOnly(f);
+            prop.threaded = AppType::template actionIsThreaded<A,B>(f);
+            prop.oneTimeOnly = AppType::template actionIsOneTimeOnly<A,B>(f);
             actionPropertiesMap_.insert({name, prop});
         }
         template <class A>
@@ -1012,7 +1025,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     sourceIter->second.altOutputConnectedTo.insert({iter->second.name,{colorCode}});   
                 }
             } else {
-                auto sourceOutputConnIter = sourceIter->second.outputConnectedTo.find(iter->second.name);
+                auto sourceOutputConnIter = sourceIter->second.outputConnectedTo.find({iter->second.name, edgeLabel});
                 if (sourceOutputConnIter != sourceIter->second.outputConnectedTo.end()) {
                     if (sourceOutputConnIter->second.find(colorCode) != sourceOutputConnIter->second.end()) {
                         isReconnect = true;
@@ -1020,7 +1033,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         sourceOutputConnIter->second.insert(colorCode);
                     }
                 } else {
-                    sourceIter->second.outputConnectedTo.insert({iter->second.name,{colorCode}});
+                    sourceIter->second.outputConnectedTo.insert({{iter->second.name, edgeLabel},{colorCode}});
                 }
             }
 
@@ -2069,13 +2082,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!includeFacility && outputTo.second.find(0) == outputTo.second.end()) {
                         continue;
                     }
-                    auto iter = reverseLookup_.find(outputTo.first);
+                    auto iter = reverseLookup_.find(std::get<0>(outputTo.first));
                     auto iter2 = nameMap_.find(iter->second);
-                    if (visited.find(outputTo.first) == visited.end()
+                    if (visited.find(std::get<0>(outputTo.first)) == visited.end()
                         && isCyclic(*iter2, visited, recStack, includeFacility)
                     ) {
                         return item.second.name;
-                    } else if (recStack.find(outputTo.first) != recStack.end()) {
+                    } else if (recStack.find(std::get<0>(outputTo.first)) != recStack.end()) {
                         return item.second.name;
                     }
                 }
@@ -2539,6 +2552,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         os << '}';
         return os;
     } 
+
+    namespace AppRunnerHelper {
+        #include <tm_kit/infra/WithTimeData_VariantSink_ClassPiece.hpp>
+        #include <tm_kit/infra/WithTimeData_ConnectN_ClassPiece.hpp>
+    }
 
 }}}}
 
