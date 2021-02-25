@@ -5,11 +5,11 @@ class ActionAsSink<1, 0> {
 public:
     template <class R, class A, class B>
     static typename R::template Sink<A> call(R &r, std::string const &name, typename R::template ActionPtr<A,B> const &action) {
-        return r.template actionAsSink<A, B>(name, action);
+        return r.template actionAsSink<typename R::template Action<A, B>>(name, action);
     }
     template <class R, class A, class B>
     static typename R::template Sink<A> call(R &r, typename R::template ActionPtr<A,B> const &action) {
-        return r.template actionAsSink<A, B>(action);
+        return r.template actionAsSink<typename R::template Action<A, B>>(action);
     }
 };
 template <>

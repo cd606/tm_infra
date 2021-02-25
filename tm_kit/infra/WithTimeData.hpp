@@ -1189,7 +1189,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *action), name };
         }
         template <class Action>
-        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> actionAsSource(std::shared_ptr<Action> &action) {
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> actionAsSource(std::shared_ptr<Action> const &action) {
             std::string name;
             {
                 std::lock_guard<std::mutex> _(mutex_);
@@ -1198,7 +1198,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *action), name };
         }
         template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
-        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::string const &name, std::shared_ptr<Action> &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::string const &name, std::shared_ptr<Action> const &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
@@ -2556,6 +2556,159 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     namespace AppRunnerHelper {
         #include <tm_kit/infra/WithTimeData_VariantSink_ClassPiece.hpp>
         #include <tm_kit/infra/WithTimeData_ConnectN_ClassPiece.hpp>
+
+        template <class R>
+        class GenericExecute {
+        private:
+            template <class A, class C>
+            static bool simple_sink_simple_source_connect_(
+                R &r
+                , typename R::template Source<C> &&source
+                , typename R::template Sink<A> const &sink
+            ) {
+                if constexpr (std::is_same_v<A,C>) {
+                    Connect<1,0>::template call<R, A>(r, std::move(source), sink);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            template <class A, class VariantSourceType, std::size_t K>
+            static bool simple_sink_variant_source_connect_internal_(
+                R &r
+                , typename R::template Source<VariantSourceType> &&source
+                , typename R::template Sink<A> const &sink
+            ) {
+                if constexpr (K >= std::variant_size_v<VariantSourceType>) {
+                    return false;
+                } else {
+                    if constexpr (std::is_same_v<A, std::variant_alternative_t<K,VariantSourceType>>) {
+                        Connect<
+                            std::variant_size_v<VariantSourceType>
+                            , K
+                        >::template call<R, VariantSourceType>(r, std::move(source), sink);
+                        return true;
+                    } else {
+                        return simple_sink_variant_source_connect_internal_<A, VariantSourceType, K+1>(r, std::move(source), sink);
+                    }
+                }
+            }
+            template <class A, class VariantSourceType>
+            static bool simple_sink_variant_source_connect_(
+                R &r
+                , typename R::template Source<VariantSourceType> &&source
+                , typename R::template Sink<A> const &sink
+            ) {
+                return simple_sink_variant_source_connect_internal_<
+                    A, VariantSourceType, 0
+                >(r, std::move(source), sink);
+            }
+            template <class A, class C>
+            static bool simple_sink_connect_(
+                R &r
+                , typename R::template Source<C> &&source
+                , typename R::template Sink<A> const &sink
+            ) {
+                if constexpr (withtime_utils::IsVariant<C>::Value) {
+                    return simple_sink_variant_source_connect_<A,C>(r, std::move(source), sink);
+                } else {
+                    return simple_sink_simple_source_connect_<A,C>(r, std::move(source), sink);
+                }
+            }
+            template <class A, class B, class C>
+            static bool simple_action_connect_(
+                R &r
+                , typename R::template ActionPtr<A,B> const &action 
+                , typename R::template Source<C> &&source
+            ) {
+                return simple_sink_connect_<
+                    A, C
+                >(
+                    r
+                    , std::move(source)
+                    , ActionAsSink<
+                        1, 0
+                    >::template call<
+                        R, A, B
+                    >(r, action) 
+                );
+            }
+            template <class VariantInputType, class B, class C, std::size_t K>
+            static bool variant_action_connect_one_(
+                R &r
+                , typename R::template ActionPtr<VariantInputType,B> const &action 
+                , typename R::template Source<C> &&source
+            ) {
+                return simple_sink_connect_<
+                    std::variant_alternative_t<K, VariantInputType>
+                    , C
+                >(
+                    r
+                    , std::move(source)
+                    , ActionAsSink<
+                        std::variant_size_v<VariantInputType>
+                        , K 
+                    >::template call<
+                        R
+                        , VariantInputType
+                        , B 
+                    >(r, action) 
+                );
+            }
+            template <class VariantInputType, class B, class C, std::size_t K>
+            static bool variant_action_connect_internal_(
+                R &r
+                , typename R::template ActionPtr<VariantInputType,B> const &action 
+                , typename R::template Source<C> &&source
+                , bool &accum
+            ) {
+                if constexpr (K >= std::variant_size_v<VariantInputType>) {
+                    return accum;
+                } else {
+                    if (variant_action_connect_one_<
+                        VariantInputType, B, C, K
+                    >(r, action, source.clone())) {
+                        accum = true;
+                    }
+                    return variant_action_connect_internal_<
+                        VariantInputType, B, C, K+1
+                    >(r, action, std::move(source), accum);
+                }
+            }
+            template <class A, class B, class C>
+            static bool variant_action_connect_(
+                R &r
+                , typename R::template ActionPtr<A,B> const &action 
+                , typename R::template Source<C> &&source
+            ) {
+                bool accum = false;
+                return variant_action_connect_internal_<
+                    A, B, C, 0
+                >(r, action, std::move(source), accum);
+            }
+        public:
+            template <class A, class B, class C>
+            static typename R::template Source<B> call(
+                R &r
+                , typename R::template ActionPtr<A,B> const &action 
+                , typename R::template Source<C> &&source
+            ) {
+                if constexpr (withtime_utils::IsVariant<A>::Value) {
+                    if (!variant_action_connect_<A,B,C>(
+                        r, action, std::move(source)
+                    )) {
+                        throw std::runtime_error("GenericExecute::call: cannot connect");
+                    }
+                } else {
+                    if (!simple_action_connect_<A,B,C>(
+                        r, action, std::move(source)
+                    )) {
+                        throw std::runtime_error("GenericExecute::call: cannot connect");
+                    }
+                }
+                return r.template actionAsSource<typename R::template Action<A,B>>(action);
+            }
+        };
     }
 
 }}}}
