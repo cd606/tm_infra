@@ -2687,12 +2687,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 >(r, action, std::move(source), accum);
             }
         public:
-            template <class A, class B, class C>
-            static typename R::template Source<B> call(
+            template <class Action, class C>
+            static typename R::template Source<typename withtime_utils::ActionTypeInfo<typename R::AppType,Action>::OutputType> call(
                 R &r
-                , typename R::template ActionPtr<A,B> const &action 
+                , typename std::shared_ptr<Action> const &action 
                 , typename R::template Source<C> &&source
             ) {
+                using A = typename withtime_utils::ActionTypeInfo<typename R::AppType,Action>::InputType;
+                using B = typename withtime_utils::ActionTypeInfo<typename R::AppType,Action>::OutputType;
                 if constexpr (withtime_utils::IsVariant<A>::Value) {
                     if (!variant_action_connect_<A,B,C>(
                         r, action, std::move(source)
