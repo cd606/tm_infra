@@ -313,3 +313,30 @@ public:
             }
         }
     }
+public:
+    template <class A, class F>
+    static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(std::move(*((A *) nullptr))))::value_type>> {
+        if constexpr (!withtime_utils::IsVariant<A>::Value) {
+            return liftMaybe1<A,F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 2) {
+            return liftMaybe2<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 3) {
+            return liftMaybe3<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 4) {
+            return liftMaybe4<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 5) {
+            return liftMaybe5<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 6) {
+            return liftMaybe6<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 7) {
+            return liftMaybe7<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 8) {
+            return liftMaybe8<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, std::variant_alternative_t<7,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 9) {
+            return liftMaybe9<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, std::variant_alternative_t<7,A>, std::variant_alternative_t<8,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 10) {
+            return liftMaybe10<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, std::variant_alternative_t<7,A>, std::variant_alternative_t<8,A>, std::variant_alternative_t<9,A>, F>(std::move(f), liftParam);
+        } else {
+            throw std::runtime_error("liftMaybe: bad template parameter");
+        }
+    }

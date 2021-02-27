@@ -953,7 +953,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }     
         template <class A, class F>
-        static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
+        static auto liftMaybe1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f)));
