@@ -937,7 +937,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         
         template <class A, class F>
-        static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
+        static auto liftPure1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,true>(std::move(f)));
