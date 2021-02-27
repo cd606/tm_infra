@@ -437,6 +437,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
+        public:
+            virtual bool isTrivialExporter() const {return false;}
         };
 
         template <class A, class B>
@@ -1893,6 +1895,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class SimpleExporter<T,F,true> final : public virtual AbstractExporter<T>, public RealTimeAppComponents<StateT>::template ThreadedHandler<T> {
         private:
             F f_;  
+            bool isTrivial_;
             virtual void actuallyHandle(InnerData<T> &&d) override final {
                 if (!this->timeCheckGood(d)) {
                     return;
@@ -1902,23 +1905,27 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }    
         public:
         #ifdef _MSC_VER
-            SimpleExporter(F &&f) : f_(std::move(f)) {}
+            SimpleExporter(F &&f, bool isTrivial=false) : f_(std::move(f)), isTrivial_(isTrivial) {}
         #else
-            SimpleExporter(F &&f) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T>(), f_(std::move(f)) {}
+            SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T>(), f_(std::move(f)), isTrivial_(isTrivial) {}
         #endif            
             virtual ~SimpleExporter() {}
             virtual void start(StateT *) override final {}
+            virtual bool isTrivialExporter() const override final {
+                return isTrivial_;
+            }
         };
         template <class T, class F>
         class SimpleExporter<T,F,false> final : public virtual AbstractExporter<T> {
         private:
             F f_;    
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, T> timeChecker_; 
+            bool isTrivial_;
         public:
         #ifdef _MSC_VER
-            SimpleExporter(F &&f) : f_(std::move(f)), timeChecker_() {}
+            SimpleExporter(F &&f, bool isTrivial=false) : f_(std::move(f)), timeChecker_(), isTrivial_(isTrivial) {}
         #else
-            SimpleExporter(F &&f) : AbstractExporter<T>(), f_(std::move(f)), timeChecker_() {}
+            SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), f_(std::move(f)), timeChecker_(), isTrivial_(isTrivial) {}
         #endif
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {
@@ -1928,6 +1935,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             } 
             virtual void start(StateT *) override final {}
+            virtual bool isTrivialExporter() const override final {
+                return isTrivial_;
+            }
         };
     public:       
         template <class T>
@@ -1949,9 +1959,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return simpleExporter<T>(std::move(wrapper), liftParam);
         }
+    private:
+        template <class T, class F>
+        static std::shared_ptr<Exporter<T>> trivialExporter_internal(F &&f) {
+            return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F,false>>(std::move(f), true));       
+        }
+    public:
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {
-            return simpleExporter<T>([](InnerData<T> &&) {}, LiftParameters<TimePoint> {});
+            return trivialExporter_internal<T>([](InnerData<T> &&) {});
         }
 
     public:
@@ -2358,7 +2374,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(exporter.core_.get()), 0);
-            return {dynamic_cast<IHandler<T> *>(exporter.core_.get())};
+            if (dynamic_cast<AbstractExporter<T> *>(exporter.core_.get())->isTrivialExporter()) {
+                return {(IHandler<T> *) nullptr};
+            } else {
+                return {dynamic_cast<IHandler<T> *>(exporter.core_.get())};
+            }
         }
         template <class A, class B>
         Sink<A> actionAsSink(Action<A,B> &action) {
