@@ -3,6 +3,7 @@
 
 #include <future>
 #include <tm_kit/infra/WithTimeData.hpp>
+#include <tm_kit/infra/ControllableNode.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class StateT>
@@ -75,6 +76,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             {}
             ~Action() = default;
             std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
         };
@@ -165,6 +169,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {};
             }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                return {};
+            }
         };
 
         template <class A, class B>
@@ -238,6 +245,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {};
             }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                return {};
+            }
         };
 
         template <class T>
@@ -292,6 +302,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {};
             }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                return {};
+            }
         };
 
         template <class T>
@@ -331,6 +344,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using OutputType = QueryResultType;
             using DataType = DataInputType;
             std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
         };
@@ -393,6 +409,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using OutputType = QueryResultType;
             using DataType = DataInputType;
             std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
         };
@@ -458,6 +477,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = ExtraInputT;
             using ExtraOutputType = ExtraOutputT;
             std::unordered_set<void *> getUnderlyingPointers() const {
+                return {};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
         };

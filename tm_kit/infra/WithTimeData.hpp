@@ -33,6 +33,7 @@
 #include <tm_kit/infra/LogLevel.hpp>
 #include <tm_kit/infra/VersionedData.hpp>
 #include <tm_kit/infra/TraceNodesComponent.hpp>
+#include <tm_kit/infra/ControllableNode.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -733,6 +734,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<std::string, ActionProperties> actionPropertiesMap_;
         bool restrictFacilityOutputConnectionByDefault_;
         std::unordered_map<void *, std::string> underlyingPointerNameMap_;
+        std::unordered_map<std::string, std::vector<
+            IControllableNode<StateT> *
+        >> controllableNodeMap_;
         mutable std::mutex mutex_;
 
         void registerUnderlyingNames_(std::string const &name, std::unordered_set<void *> ptrs) {
@@ -748,6 +752,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 underlyingPointerNameMap_.insert({p, name});
             }
         }
+        void registerControllableNodes_(std::string const &name, std::vector<IControllableNode<StateT> *> &&nodes) {
+            controllableNodeMap_.insert({name, std::move(nodes)});
+        }
 
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
@@ -757,6 +764,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -787,6 +795,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -813,6 +822,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -839,6 +849,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -868,6 +879,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -897,6 +909,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -926,6 +939,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
+            registerControllableNodes_(name, f->getControllableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -2503,6 +2517,46 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         using Pathway =
             std::function<void(AppRunner &, Source<A> &&, Sink<B> const &)>;
+
+        void controlFirst(std::string const &name, std::string const &command, std::vector<std::string> const &params) {
+            std::lock_guard<std::mutex> _(mutex_);
+            auto iter = controllableNodeMap_.find(name);
+            if (iter != controllableNodeMap_.end()) {
+                if (!iter->second.empty()) {
+                    iter->second[0]->control(env_, command, params);
+                }
+            }
+        }
+        void controlAll(std::string const &name, std::string const &command, std::vector<std::string> const &params) {
+            std::lock_guard<std::mutex> _(mutex_);
+            auto iter = controllableNodeMap_.find(name);
+            if (iter != controllableNodeMap_.end()) {
+                for (auto *p : iter->second) {
+                    p->control(env_, command, params);
+                }
+            }
+        }
+        void controlFirstRE(std::regex const &name, std::string const &command, std::vector<std::string> const &params) {
+            std::lock_guard<std::mutex> _(mutex_);
+            for (auto const &item : controllableNodeMap_) {
+                if (std::regex_match(item.first, name)) {
+                    if (!item.second.empty()) {
+                        item.second[0]->control(env_, command, params);
+                        break;
+                    }
+                }
+            }
+        }
+        void controlAllRE(std::regex const &name, std::string const &command, std::vector<std::string> const &params) {
+            std::lock_guard<std::mutex> _(mutex_);
+            for (auto const &item : controllableNodeMap_) {
+                if (std::regex_match(item.first, name)) {
+                    for (auto *p : item.second) {
+                        p->control(env_, command, params);
+                    }
+                }
+            }
+        }
     };
 
     template <class T, class Environment, class TimePoint>

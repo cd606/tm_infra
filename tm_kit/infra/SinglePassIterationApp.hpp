@@ -2,6 +2,7 @@
 #define TM_KIT_INFRA_SINGLE_PASS_ITERATION_APP_HPP_
 
 #include <tm_kit/infra/WithTimeData.hpp>
+#include <tm_kit/infra/ControllableNode.hpp>
 
 #include <deque>
 #include <queue>
@@ -401,35 +402,53 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class TwoWayHolder {
         private:
             friend class SinglePassIterationApp;
+            IControllableNode<StateT> *controlInfo_;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
+                controlInfo_ = nullptr;
             }
         public:
             using InputType = Input;
             using OutputType = Output;
-            TwoWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
+            TwoWayHolder(std::unique_ptr<T> &&p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), core_(std::move(p)) {}
             template <class A>
-            TwoWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            TwoWayHolder(A *p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                std::vector<IControllableNode<StateT> *> ret;
+                if (controlInfo_) {
+                    ret.push_back(controlInfo_);
+                }
+                return ret;
             }
         };
         template <class T, class Data>
         class OneWayHolder {
         private:
             friend class SinglePassIterationApp;
+            IControllableNode<StateT> *controlInfo_;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
+                controlInfo_ = nullptr;
             }
         public:
             using DataType = Data;
-            OneWayHolder(std::unique_ptr<T> &&p) : core_(std::move(p)) {}
+            OneWayHolder(std::unique_ptr<T> &&p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), core_(std::move(p)) {}
             template <class A>
-            OneWayHolder(A *p) : core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            OneWayHolder(A *p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                std::vector<IControllableNode<StateT> *> ret;
+                if (controlInfo_) {
+                    ret.push_back(controlInfo_);
+                }
+                return ret;
             }
         };
         template <class T1, class Input, class Output, class T2, class Data>
@@ -443,9 +462,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             //case
             T1 *core1_;
             T2 *core2_;
+            std::vector<IControllableNode<StateT> *> controlInfo_;
             void release() {
                 core1_ = nullptr;
                 core2_ = nullptr;
+                controlInfo_.clear();
             }
         public:
             using InputType = Input;
@@ -453,13 +474,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using DataType = Data;
 
             template <class A, class B>
-            ThreeWayHolder(A *p1, B*p2) : core1_(static_cast<T1 *>(p1)), core2_(static_cast<T2 *>(p2)) {}
+            ThreeWayHolder(A *p1, B*p2) : core1_(static_cast<T1 *>(p1)), core2_(static_cast<T2 *>(p2)) {
+                auto *q1 = dynamic_cast<IControllableNode<StateT> *>(p1);
+                if (q1) {
+                    controlInfo_.push_back(q1);
+                }
+                auto *q2 = dynamic_cast<IControllableNode<StateT> *>(p2);
+                if (q2) {
+                    controlInfo_.push_back(q2);
+                }
+            }
             ThreeWayHolder(ThreeWayHolder const &) = delete;
             ThreeWayHolder &operator=(ThreeWayHolder const &) = delete;
             ThreeWayHolder(ThreeWayHolder &&) = default;
             ThreeWayHolder &operator=(ThreeWayHolder &&) = default;
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core1_, core2_};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                return controlInfo_;
             }
         };
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
@@ -474,10 +507,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             T1 *core1_;
             T2 *core2_;
             T3 *core3_;
+            std::vector<IControllableNode<StateT> *> controlInfo_;
             void release() {
                 core1_ = nullptr;
                 core2_ = nullptr;
                 core3_ = nullptr;
+                controlInfo_.clear();
             }
         public:
             using InputType = Input;
@@ -486,13 +521,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraOutputType = ExtraOutput;
 
             template <class A, class B, class C>
-            FourWayHolder(A *p1, B *p2, C *p3) : core1_(static_cast<T1 *>(p1)), core2_(static_cast<T2 *>(p2)), core3_(static_cast<T3 *>(p3)) {}
+            FourWayHolder(A *p1, B *p2, C *p3) : core1_(static_cast<T1 *>(p1)), core2_(static_cast<T2 *>(p2)), core3_(static_cast<T3 *>(p3)) {
+                auto *q1 = dynamic_cast<IControllableNode<StateT> *>(p1);
+                if (q1) {
+                    controlInfo_.push_back(q1);
+                }
+                auto *q2 = dynamic_cast<IControllableNode<StateT> *>(p2);
+                if (q2) {
+                    controlInfo_.push_back(q2);
+                }
+                auto *q3 = dynamic_cast<IControllableNode<StateT> *>(p3);
+                if (q3) {
+                    controlInfo_.push_back(q3);
+                }
+            }
             FourWayHolder(FourWayHolder const &) = delete;
             FourWayHolder &operator=(FourWayHolder const &) = delete;
             FourWayHolder(FourWayHolder &&) = default;
             FourWayHolder &operator=(FourWayHolder &&) = default;
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core1_, core2_, core3_};
+            }
+            std::vector<IControllableNode<StateT> *> getControllableNodes() const {
+                return controlInfo_;
             }
         };
 
