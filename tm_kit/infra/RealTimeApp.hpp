@@ -969,7 +969,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class A, class F>
-        static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+        static auto enhancedMaybe1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)));
@@ -985,7 +985,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }  
         }
         template <class A, class F>
-        static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
+        static auto kleisli1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
@@ -1144,7 +1144,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/RealTimeApp_MultiActionCore_Piece.hpp>
     public:
         template <class A, class F>
-        static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
+        static auto liftMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f)));
@@ -1160,7 +1160,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }     
         template <class A, class F>
-        static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
+        static auto enhancedMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)));
@@ -1176,7 +1176,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class A, class F>
-        static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>> {
+        static auto kleisliMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(

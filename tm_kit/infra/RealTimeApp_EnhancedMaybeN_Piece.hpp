@@ -313,3 +313,30 @@ public:
             }
         }
     }
+public:
+    template <class A, class F>
+    static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(std::move(*((std::tuple<TimePoint, A> *) nullptr))))::value_type>> {
+        if constexpr (!withtime_utils::IsVariant<A>::Value) {
+            return enhancedMaybe1<A,F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 2) {
+            return enhancedMaybe2<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 3) {
+            return enhancedMaybe3<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 4) {
+            return enhancedMaybe4<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 5) {
+            return enhancedMaybe5<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 6) {
+            return enhancedMaybe6<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 7) {
+            return enhancedMaybe7<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 8) {
+            return enhancedMaybe8<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, std::variant_alternative_t<7,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 9) {
+            return enhancedMaybe9<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, std::variant_alternative_t<7,A>, std::variant_alternative_t<8,A>, F>(std::move(f), liftParam);
+        } else if constexpr (std::variant_size_v<A> == 10) {
+            return enhancedMaybe10<std::variant_alternative_t<0,A>, std::variant_alternative_t<1,A>, std::variant_alternative_t<2,A>, std::variant_alternative_t<3,A>, std::variant_alternative_t<4,A>, std::variant_alternative_t<5,A>, std::variant_alternative_t<6,A>, std::variant_alternative_t<7,A>, std::variant_alternative_t<8,A>, std::variant_alternative_t<9,A>, F>(std::move(f), liftParam);
+        } else {
+            throw std::runtime_error("enhancedMaybe: bad template parameter");
+        }
+    }
