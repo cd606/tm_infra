@@ -10,6 +10,43 @@
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
+    namespace single_pass_iteration_app_utils {
+        template <class T>
+        struct TrueType : std::true_type {};
+
+        template <class T>
+        static auto hasSetLocalTime(int) -> TrueType<decltype(std::declval<T>().setLocalTime(std::declval<typename T::TimePointType>()))>;
+        template <class T>
+        static auto hasSetLocalTime(long) -> std::false_type;
+
+        template <class T>
+        static auto hasResetLocalTime(int) -> TrueType<decltype(std::declval<T>().resetLocalTime())>;
+        template <class T>
+        static auto hasResetLocalTime(long) -> std::false_type;
+
+        template <class Env, bool HasSetTime=(decltype(hasSetLocalTime<Env>(0))::value && decltype(hasResetLocalTime<Env>(0))::value)>
+        class TimePreserver;
+        
+        template <class Env>
+        class TimePreserver<Env, true> {
+        private:
+            Env *env_;
+        public:
+            TimePreserver(Env *env, typename Env::TimePointType const &localTime) : env_(env) {
+                env->setLocalTime(localTime);
+            }
+            ~TimePreserver() {
+                env_->resetLocalTime();
+            }
+        };
+        template <class Env>
+        class TimePreserver<Env, false> {
+        public:
+            TimePreserver(Env *, typename Env::TimePointType const &) {}
+            ~TimePreserver() {}
+        };
+    }
+
     //Nothing in this monad is mutex protected because it is supposed to run
     //single-threaded
     template <class StateT, std::enable_if_t<StateT::PreserveInputRelativeOrder,int> = 0>
@@ -588,8 +625,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::tuple<TimePoint, std::function<Data<B>()>> ret = std::move(*buffer_);
                 buffer_ = std::nullopt;
                 auto v = std::get<1>(ret)();
-                if (v) {
-                    v->overrideTime(std::get<0>(ret));
+                if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                    if (v) {
+                        v->overrideTime(std::get<0>(ret));
+                    }
                 }
                 return v;
             }
@@ -687,7 +726,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!latestBFrame_) {
                         return std::nullopt;
                     }
-                    latestBFrame_->overrideTime(std::get<0>(ret));
+                    if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                        latestBFrame_->overrideTime(std::get<0>(ret));
+                    }
                     if (latestBFrame_->timedData.value.empty()) {
                         latestBFrame_ = std::nullopt;
                         return std::nullopt;
@@ -1129,8 +1170,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 cert.consume(this);
                 if (res_.content) {
                     auto ret = std::get<1>(*(res_.content))();
-                    if (std::get<1>(ret)) {
-                        std::get<1>(ret)->overrideTime(std::get<0>(*(res_.content)));
+                    if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                        if (std::get<1>(ret)) {
+                            std::get<1>(ret)->overrideTime(std::get<0>(*(res_.content)));
+                        }
                     }
                     res_ = std::get<0>(ret);
                     return std::move(std::get<1>(ret));
@@ -1917,6 +1960,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             SimpleExporter(F &&f) : AbstractExporterCore<T>(), f_(std::move(f)) {}
             virtual void start(StateT *environment) override final {}
             virtual void handle(InnerData<T> &&data) override final {
+                single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
                 f_(std::move(data));
             }
         };

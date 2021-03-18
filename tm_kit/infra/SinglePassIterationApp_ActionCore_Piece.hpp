@@ -218,6 +218,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -269,6 +270,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -323,6 +325,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -377,6 +380,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -411,6 +415,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -466,6 +471,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -521,6 +527,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -846,6 +853,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -897,6 +905,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -951,6 +960,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1005,6 +1015,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1039,6 +1050,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1094,6 +1106,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1149,6 +1162,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1552,6 +1566,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1603,6 +1618,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1657,6 +1673,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1711,6 +1728,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1745,6 +1763,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1800,6 +1819,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -1855,6 +1875,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2336,6 +2357,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2387,6 +2409,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2441,6 +2464,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2495,6 +2519,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2529,6 +2554,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2584,6 +2610,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -2639,6 +2666,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3198,6 +3226,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3249,6 +3278,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3303,6 +3333,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3357,6 +3388,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3391,6 +3423,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3446,6 +3479,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -3501,6 +3535,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4138,6 +4173,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4189,6 +4225,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4243,6 +4280,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4297,6 +4335,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4331,6 +4370,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4386,6 +4426,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -4441,6 +4482,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5156,6 +5198,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5207,6 +5250,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5261,6 +5305,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5315,6 +5360,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5349,6 +5395,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5404,6 +5451,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -5459,6 +5507,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6252,6 +6301,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6303,6 +6353,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6357,6 +6408,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6411,6 +6463,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6445,6 +6498,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6500,6 +6554,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -6555,6 +6610,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7426,6 +7482,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7477,6 +7534,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7531,6 +7589,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7585,6 +7644,7 @@ private:
     bool done_;
 protected:
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7619,6 +7679,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7674,6 +7735,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
@@ -7729,6 +7791,7 @@ private:
     bool done_;
 protected:
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
         if (fireOnceOnly_) {
             if (done_) {
                 return std::nullopt;
