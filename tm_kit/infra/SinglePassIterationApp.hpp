@@ -666,7 +666,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             input->environment 
                             , this
                         );
-                        return handle(std::move(*input));
+                        if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                            if (delaySimulator_) {
+                                auto r = handle(std::move(*input));
+                                if (r) {
+                                    auto tp1 = tp;
+                                    tp1 += (*delaySimulator_)(0, tp);
+                                    r->overrideTime(tp1);
+                                }
+                                return r;
+                            } else {
+                                return handle(std::move(*input));
+                            }
+                        } else {
+                            return handle(std::move(*input));
+                        }
                     } else {
                         return std::nullopt;
                     }    
@@ -786,7 +800,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             input->environment 
                             , this
                         );
-                        return handle(std::move(*input));
+                        if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                            if (delaySimulator_) {
+                                auto r = handle(std::move(*input));
+                                if (r) {
+                                    auto tp1 = tp;
+                                    tp1 += (*delaySimulator_)(0, tp);
+                                    r->overrideTime(tp1);
+                                }
+                                return r;
+                            } else {
+                                return handle(std::move(*input));
+                            }
+                        } else {
+                            return handle(std::move(*input));
+                        }
                     } else {
                         return std::nullopt;
                     }    
