@@ -666,7 +666,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             input->environment 
                             , this
                         );
-                        if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                        if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
                                 auto r = handle(std::move(*input));
                                 if (r) {
@@ -800,7 +800,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             input->environment 
                             , this
                         );
-                        if constexpr (!(decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value)) {
+                        if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
                                 auto r = handle(std::move(*input));
                                 if (r) {
