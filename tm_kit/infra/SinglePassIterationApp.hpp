@@ -1988,7 +1988,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             SimpleExporter(F &&f) : AbstractExporterCore<T>(), f_(std::move(f)) {}
             virtual void start(StateT *environment) override final {}
             virtual void handle(InnerData<T> &&data) override final {
-                single_pass_iteration_app_utils::TimePreserver<StateT> _(data.environment, data.timedData.timePoint);
+                single_pass_iteration_app_utils::TimePreserver<StateT> _timePreserver(data.environment, data.timedData.timePoint);
                 f_(std::move(data));
             }
         };
