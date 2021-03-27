@@ -425,15 +425,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
 
-        //KeyedData cannot be imported "out of the blue"
-        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
+        template <class T>
         class AbstractImporter : public virtual IExternalComponent, public Producer<T> {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
         };
 
-        //Keys and KeyedData can be exported, for example to be written to database,
-        //so there is no check on the exporter
         template <class T>
         class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
         protected:

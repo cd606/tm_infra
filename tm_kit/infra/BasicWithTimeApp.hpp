@@ -228,7 +228,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/BasicWithTimeApp_VariantAndMerge_Piece.hpp>
         #include <tm_kit/infra/BasicWithTimeApp_Pure_Maybe_Kleisli_Piece.hpp>
 
-        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
+        template <class T>
         class AbstractImporter : public virtual IExternalComponent {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}

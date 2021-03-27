@@ -1696,7 +1696,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/SinglePassIterationApp_Pure_Maybe_Kleisli_Piece.hpp>
 
     public:
-        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
+        template <class T>
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {
@@ -1714,7 +1714,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractImporterCore() : BufferedProvider<T>() {}
         };
 
-        template <class T, std::enable_if_t<!is_keyed_data_v<T>,int> = 0>
+        template <class T>
         class ConcreteImporterCore : public AbstractImporterCore<T> {
         private:
             std::deque<InnerData<T>> q_;
