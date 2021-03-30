@@ -249,6 +249,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto action(ComposedKleisli<A,F,G> &&f) {
             return M::template kleisli<A>(std::move(f));
         }
+        template <class F>
+        static auto action(F &&f) {
+            return M::template kleisli<typename F::InputType>(std::move(f));
+        }
     };
 } } } }
 
