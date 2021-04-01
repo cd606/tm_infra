@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <utility>
+#include <tm_kit/infra/WithTimeData.hpp>
 
 //The reason these utilities are introduced is that,
 //in RealTimeApp and SinglePassIterationApp, the Actions are 
@@ -214,44 +215,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         
         template <class A, class B>
-        static std::shared_ptr<typename M::template Action<A,B>> action(KleisliFunction<A,B> &&f) {
-            return M::template kleisli<A>(std::move(f));
+        static std::shared_ptr<typename M::template Action<A,B>> action(KleisliFunction<A,B> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliFromPure<A,F> &&f) {
-            return M::template kleisli<A>(std::move(f));
+        static auto action(KleisliFromPure<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliFromMaybe<A,F> &&f) {
-            return M::template kleisli<A>(std::move(f));
+        static auto action(KleisliFromMaybe<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliFromEnhancedMaybe<A,F> &&f) {
-            return M::template kleisli<A>(std::move(f));
+        static auto action(KleisliFromEnhancedMaybe<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliHolder<A,F> &&f) {
-            return M::template kleisli<A>(std::move(f));
+        static auto action(KleisliHolder<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliMultiFromPure<A,F> &&f) {
-            return M::template kleisliMulti<A>(std::move(f));
+        static auto action(KleisliMultiFromPure<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisliMulti<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliMultiFromEnhancedMulti<A,F> &&f) {
-            return M::template kleisliMulti<A>(std::move(f));
+        static auto action(KleisliMultiFromEnhancedMulti<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisliMulti<A>(std::move(f), liftParam);
         }
         template <class A, class F>
-        static auto action(KleisliMultiHolder<A,F> &&f) {
-            return M::template kleisliMulti<A>(std::move(f));
+        static auto action(KleisliMultiHolder<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisliMulti<A>(std::move(f), liftParam);
         }
         template <class A, class F, class G>
-        static auto action(ComposedKleisli<A,F,G> &&f) {
-            return M::template kleisli<A>(std::move(f));
+        static auto action(ComposedKleisli<A,F,G> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<A>(std::move(f), liftParam);
         }
         template <class F>
-        static auto action(F &&f) {
-            return M::template kleisli<typename F::InputType>(std::move(f));
+        static auto action(F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<typename F::InputType>(std::move(f), liftParam);
         }
     };
 } } } }
