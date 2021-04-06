@@ -12,6 +12,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         EnhancedMulti2(F &&f) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~EnhancedMulti2() {}
@@ -46,6 +49,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         EnhancedMulti3(F &&f) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -82,6 +88,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         EnhancedMulti4(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~EnhancedMulti4() {}
@@ -116,6 +125,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         EnhancedMulti5(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -152,6 +164,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         EnhancedMulti6(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~EnhancedMulti6() {}
@@ -186,6 +201,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         EnhancedMulti7(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -222,6 +240,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         EnhancedMulti8(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~EnhancedMulti8() {}
@@ -257,6 +278,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         EnhancedMulti9(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~EnhancedMulti9() {}
@@ -291,6 +315,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         EnhancedMulti10(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}

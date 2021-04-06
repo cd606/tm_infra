@@ -7,6 +7,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Kleisli2(F &&f) : ActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Kleisli2() {}
@@ -36,6 +39,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Kleisli3(F &&f) : ActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -67,6 +73,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Kleisli4(F &&f) : ActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Kleisli4() {}
@@ -96,6 +105,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Kleisli5(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -127,6 +139,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Kleisli6(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Kleisli6() {}
@@ -156,6 +171,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Kleisli7(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -187,6 +205,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Kleisli8(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Kleisli8() {}
@@ -217,6 +238,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Kleisli9(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Kleisli9() {}
@@ -246,6 +270,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Kleisli10(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}

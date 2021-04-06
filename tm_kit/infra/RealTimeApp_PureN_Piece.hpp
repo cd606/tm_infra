@@ -7,6 +7,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Pure2(F &&f) : ActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Pure2() {}
@@ -36,6 +39,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Pure3(F &&f) : ActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -67,6 +73,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Pure4(F &&f) : ActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Pure4() {}
@@ -96,6 +105,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Pure5(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -127,6 +139,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Pure6(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Pure6() {}
@@ -156,6 +171,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Pure7(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -187,6 +205,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Pure8(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Pure8() {}
@@ -217,6 +238,9 @@ private:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Pure9(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Pure9() {}
@@ -246,6 +270,9 @@ private:
     protected:
         virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), f_(std::move(data.timedData.value)), data.timedData.finalFlag});
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Pure10(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}

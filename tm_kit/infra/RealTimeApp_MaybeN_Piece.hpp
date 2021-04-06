@@ -12,6 +12,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Maybe2(F &&f) : ActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Maybe2() {}
@@ -46,6 +49,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Maybe3(F &&f) : ActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -82,6 +88,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Maybe4(F &&f) : ActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Maybe4() {}
@@ -116,6 +125,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Maybe5(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -152,6 +164,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Maybe6(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Maybe6() {}
@@ -186,6 +201,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Maybe7(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -222,6 +240,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Maybe8(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Maybe8() {}
@@ -257,6 +278,9 @@ private:
                 return std::nullopt;
             }
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         Maybe9(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~Maybe9() {}
@@ -291,6 +315,9 @@ private:
             } else {
                 return std::nullopt;
             }
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         Maybe10(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}

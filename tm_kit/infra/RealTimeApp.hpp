@@ -421,6 +421,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             virtual bool isThreaded() const = 0;
             virtual bool isOneTimeOnly() const = 0;
+            virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
         };
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
@@ -450,6 +451,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         protected:
             virtual ~OneLevelDownKleisli() {}
             virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A, typename StateT::TimePointType> &&data) = 0;
+            virtual void *getIdleHandlerParam() {return nullptr;}
         };
 
         template <class A, class B, class F, bool ForceFinal>
@@ -464,6 +466,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     return withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                 }               
+            }
+            virtual void *getIdleHandlerParam() override final {
+                return (void *) &f_;
             }
         public:
             PureOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
@@ -486,6 +491,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     std::move(b),
                     (ForceFinal?true:data.finalFlag)
                 });
+            }
+            virtual void *getIdleHandlerParam() override final {
+                return (void *) &f_;
             }
         public:
             EnhancedPureOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
@@ -511,6 +519,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
             }
+            virtual void *getIdleHandlerParam() override final {
+                return (void *) &f_;
+            }
         public:
             MaybeOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
             MaybeOneLevelDownKleisli(MaybeOneLevelDownKleisli const &) = delete;
@@ -534,6 +545,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     return std::nullopt;
                 }
+            }
+            virtual void *getIdleHandlerParam() override final {
+                return (void *) &f_;
             }
         public:
             EnhancedMaybeOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
@@ -565,6 +579,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         , std::move(data)
                     });
                 }               
+            }
+            virtual void *getIdleHandlerParam() override final {
+                return (void *) &f_;
             }
         public:
             DirectOneLevelDownKleisli(F &&f) : f_(std::move(f)) {}
@@ -855,6 +872,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class ActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
         private:
             bool done_;
+            std::function<void(void *)> idleWorker_;
+            std::mutex idleWorkerMutex_;
         protected:
             virtual void actuallyHandle(InnerData<A> &&data) override final {
                 if constexpr (FireOnceOnly) {
@@ -882,7 +901,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false) {
+            ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false), idleWorker_(), idleWorkerMutex_() {
             }
             virtual ~ActionCore() {
             }
@@ -891,6 +910,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
+            }
+            virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                std::lock_guard<std::mutex> _(idleWorkerMutex_);
+                idleWorker_ = worker;
+            }
+            virtual void idleWork() override final {
+                std::lock_guard<std::mutex> _(idleWorkerMutex_);
+                if (idleWorker_) {
+                    idleWorker_(this->getIdleHandlerParam());
+                }
             }
         };
         template <class A, class B, bool FireOnceOnly>
@@ -931,6 +960,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
+            }
+            virtual void setIdleWorker(std::function<void(void *)> worker) override final {
             }
         };
         //PureActionCore will be specialized so it is not defined with mixin
@@ -982,6 +1013,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
             return a->core_->isOneTimeOnly(); 
+        }
+        template <class A, class B>
+        static void setIdleWorkerForAction(std::shared_ptr<Action<A,B>> const &a, std::function<void(void *)> idleWorker) {
+            a->core_->setIdleWorker(idleWorker);
         }
         
         template <class A, class F>
@@ -1063,6 +1098,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class MultiActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
         private:
             bool done_;
+            std::function<void(void *)> idleWorker_;
+            std::mutex idleWorkerMutex_;
         protected:
             virtual void actuallyHandle(InnerData<A> &&data) override final {
                 if constexpr (FireOnceOnly) {
@@ -1104,7 +1141,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            MultiActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false) {
+            MultiActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false), idleWorker_(), idleWorkerMutex_() {
             }
             virtual ~MultiActionCore() {
             }
@@ -1113,6 +1150,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
+            }
+            virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                std::lock_guard<std::mutex> _(idleWorkerMutex_);
+                idleWorker_ = worker;
+            }
+            virtual void idleWork() override final {
+                std::lock_guard<std::mutex> _(idleWorkerMutex_);
+                if (idleWorker_) {
+                    idleWorker_(this->getIdleHandlerParam());
+                }
             }
         };
         template <class A, class B, bool FireOnceOnly>
@@ -1168,6 +1215,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
+            }
+            virtual void setIdleWorker(std::function<void(void *)> worker) override final {
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
@@ -1652,6 +1701,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return f_->isOneTimeOnly() || g_->isOneTimeOnly();
             }
+            virtual void setIdleWorker(std::function<void(void *)> worker) override final {}
         };
     public:   
         template <class A, class B, class C>

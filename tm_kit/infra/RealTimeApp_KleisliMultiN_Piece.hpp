@@ -7,6 +7,9 @@ private:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         KleisliMulti2(F &&f) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti2() {}
@@ -36,6 +39,9 @@ private:
     protected:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         KleisliMulti3(F &&f) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -67,6 +73,9 @@ private:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         KleisliMulti4(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti4() {}
@@ -96,6 +105,9 @@ private:
     protected:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         KleisliMulti5(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -127,6 +139,9 @@ private:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         KleisliMulti6(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti6() {}
@@ -156,6 +171,9 @@ private:
     protected:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         KleisliMulti7(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
@@ -187,6 +205,9 @@ private:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         KleisliMulti8(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti8() {}
@@ -217,6 +238,9 @@ private:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             return f_(std::move(data));
         }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
+        }
     public:
         KleisliMulti9(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
         virtual ~KleisliMulti9() {}
@@ -246,6 +270,9 @@ private:
     protected:
         virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             return f_(std::move(data));
+        }
+        virtual void *getIdleHandlerParam() override final {
+            return (void *) &f_;
         }
     public:
         KleisliMulti10(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
