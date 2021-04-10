@@ -90,15 +90,19 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                     if (tType.Name.Equals("VersionedData`2"))
                     {
                         var p = tType.GenericTypeArguments;
-                        var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
-                        this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
-                        useVersionChecker = true;
+                        if (!p[0].Name.Equals("NoVersion")) {
+                            var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
+                            this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                            useVersionChecker = true;
+                        }
                     } else if (tType.Name.Equals("GroupedVersionedData`3"))
                     {
                         var p = tType.GenericTypeArguments;
-                        var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
-                        this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
-                        useVersionChecker = true;
+                        if (!p[1].Name.Equals("NoVersion")) {
+                            var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
+                            this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                            useVersionChecker = true;
+                        }
                     }
                 }
             }
@@ -111,16 +115,20 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                         if (interf.Name.Equals("VersionedData`2"))
                         {
                             var p = interf.GenericTypeArguments;
-                            var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
-                            this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
-                            useVersionChecker = true;
+                            if (!p[0].Name.Equals("NoVersion")) {
+                                var checkerType = typeof(VersionedDataChecker<,>).MakeGenericType(p);
+                                this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                                useVersionChecker = true;
+                            }
                             break;
                         } else if (interf.Name.Equals("GroupedVersionedData`3"))
                         {
                             var p = interf.GenericTypeArguments;
-                            var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
-                            this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
-                            useVersionChecker = true;
+                            if (!p[1].Name.Equals("NoVersion")) {
+                                var checkerType = typeof(GroupedVersionedDataChecker<,,>).MakeGenericType(p);
+                                this.versionChecker = (SecondaryChecker) Activator.CreateInstance(checkerType);
+                                useVersionChecker = true;
+                            }
                             break;
                         }
                     }
