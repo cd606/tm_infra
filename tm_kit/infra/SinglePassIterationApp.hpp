@@ -1696,7 +1696,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/SinglePassIterationApp_Pure_Maybe_Kleisli_Piece.hpp>
 
     public:
-        template <class T>
+        //We don't allow importer to manufacture keyed data "out of the blue"
+        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {

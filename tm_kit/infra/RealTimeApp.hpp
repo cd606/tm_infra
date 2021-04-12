@@ -426,7 +426,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
 
-        template <class T>
+        //We don't allow importer to manufacture keyed data "out of the blue"
+        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
         class AbstractImporter : public virtual IExternalComponent, public Producer<T> {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
