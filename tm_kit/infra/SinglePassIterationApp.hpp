@@ -1918,7 +1918,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
     public:
-        template <class T>
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
         private:
             Certificate<T> sourceCert_;

@@ -433,7 +433,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
         };
 
-        template <class T>
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}

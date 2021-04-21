@@ -2669,6 +2669,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return simple_sink_simple_source_connect_<A,C>(r, std::move(source), sink);
                 }
             }
+            template <class A, class B>
+            static bool simple_exporter_connect_(
+                R &r
+                , typename R::template ExporterPtr<A> const &exporter
+                , typename R::template Source<B> &&source
+            ) {
+                return simple_sink_connect_<
+                    A, B
+                >(
+                    r
+                    , std::move(source)
+                    , r.exporterAsSink(exporter)
+                );
+            }
             template <class A, class B, class C>
             static bool simple_action_connect_(
                 R &r
@@ -2763,6 +2777,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 return r.template actionAsSource<typename R::template Action<A,B>>(action);
+            }
+            template <class Exporter, class B>
+            static void callExporter(
+                R &r
+                , typename std::shared_ptr<Exporter> const &exporter
+                , typename R::template Source<B> &&source
+            ) {
+                using A = typename withtime_utils::ExporterTypeInfo<typename R::AppType,Exporter>::DataType;
+                if (!simple_exporter_connect_<A,B>(
+                        r, exporter, std::move(source)
+                    )) {
+                    throw std::runtime_error("GenericExecute::callExporter: cannot connect");
+                }
             }
         };
     }
