@@ -1411,6 +1411,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void publish(StateT *env, Key<B> &&data, bool isFinal) {
                 publish(pureInnerData<Key<B>>(env, std::move(data), isFinal));
             }  
+            void markEndHandlingRequest(typename StateT::IDType const &id) {                
+                keyMap_.erase(id);
+            }
             static constexpr OnOrderFacilityCore *nullptrToInheritedFacility() {return nullptr;}
         public:
             OnOrderFacilityCore() : keyMap_(), providers_() {}

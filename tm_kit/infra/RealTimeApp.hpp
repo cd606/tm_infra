@@ -408,6 +408,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void publishResponse(TimedDataWithEnvironment<Key<B>, StateT, typename StateT::TimePointType> &&data) {
                 this->publish(std::move(data));
             }
+            void markEndHandlingRequest(typename StateT::IDType const &id) {
+                std::lock_guard<std::recursive_mutex> _(mutex_);
+                theMap_.erase(id);
+            }
         };
 
         class IExternalComponent {

@@ -159,6 +159,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }   
             void publish(StateT *env, Key<B> &&data, bool isFinal) {
             }  
+            void markEndHandlingRequest(typename StateT::IDType const &) {
+            }
             virtual void handle(InnerData<Key<A>> &&input) = 0;
         };
 
