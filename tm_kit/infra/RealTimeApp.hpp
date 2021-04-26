@@ -2327,7 +2327,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
         using AbstractIntegratedVIEOnOrderFacilityWithPublish = AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>; 
-        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType>
+        template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType, bool NotUsed=false>
         static std::shared_ptr<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>> vieOnOrderFacility(
             AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType> *p) {
             return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(p,p,p);
