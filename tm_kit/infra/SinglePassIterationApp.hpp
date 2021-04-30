@@ -522,7 +522,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     controlInfo_.push_back(q1);
                 }
                 auto *q2 = dynamic_cast<IControllableNode<StateT> *>(p2);
-                if (q2) {
+                if (q2 && (q2 != q1)) {
                     controlInfo_.push_back(q2);
                 }
             }
@@ -569,11 +569,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     controlInfo_.push_back(q1);
                 }
                 auto *q2 = dynamic_cast<IControllableNode<StateT> *>(p2);
-                if (q2) {
+                if (q2 && (q2 != q1)) {
                     controlInfo_.push_back(q2);
                 }
                 auto *q3 = dynamic_cast<IControllableNode<StateT> *>(p3);
-                if (q3) {
+                if (q3 && (q3 != q1) && (q3 != q2)) {
                     controlInfo_.push_back(q3);
                 }
             }
@@ -1929,7 +1929,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     public:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
+        class AbstractExporterCore : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
         private:
             Certificate<T> sourceCert_;
             bool hasT_;
@@ -1975,6 +1975,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         flag
                     }
                 ) };
+            }
+            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
             }
             AbstractExporterCore() : Consumer<T>(), sourceCert_(), hasT_(false), tTime_() {}
         };

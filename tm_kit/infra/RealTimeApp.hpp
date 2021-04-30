@@ -441,11 +441,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
+        class AbstractExporter : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public virtual IHandler<T> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
             virtual bool isTrivialExporter() const {return false;}
+            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
+            }
         };
 
         template <class A, class B>
@@ -811,7 +813,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     controlInfo_.push_back(q1);
                 }
                 auto *q2 = dynamic_cast<IControllableNode<StateT> *>(p2);
-                if (q2) {
+                if (q2 && (q2 != q1)) {
                     controlInfo_.push_back(q2);
                 }
             }
@@ -858,11 +860,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     controlInfo_.push_back(q1);
                 }
                 auto *q2 = dynamic_cast<IControllableNode<StateT> *>(p2);
-                if (q2) {
+                if (q2 && (q2 != q1)) {
                     controlInfo_.push_back(q2);
                 }
                 auto *q3 = dynamic_cast<IControllableNode<StateT> *>(p3);
-                if (q3) {
+                if (q3 && (q3 != q1) && (q3 != q2)) {
                     controlInfo_.push_back(q3);
                 }
             }

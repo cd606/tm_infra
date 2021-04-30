@@ -296,11 +296,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        class AbstractExporter : public virtual IExternalComponent {
+        class AbstractExporter : public virtual IExternalComponent, public virtual IControllableNode<StateT> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
             virtual void handle(InnerData<T> &&) = 0;
+            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
+            }
         };
 
         template <class T>
