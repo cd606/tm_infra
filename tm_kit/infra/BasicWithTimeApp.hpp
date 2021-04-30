@@ -232,13 +232,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         //We don't allow importer to manufacture keyed data "out of the blue"
         template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
-        class AbstractImporter : public virtual IExternalComponent {
+        class AbstractImporter : public virtual IExternalComponent, public virtual IControllableNode<StateT> {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
         public:
             void publish(InnerData<T> &&data) {
             }
             void publish(StateT *env, T &&data, bool finalFlag=false) {
+            }
+            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
             }
         };
 
