@@ -776,6 +776,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return ret;
             }
+            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
+                if (controlInfo_) {
+                    controlInfo_->control(env, command, params);
+                }
+            }
         };
         template <class T1, class Input, class Output, class T2, class Data>
         class ThreeWayHolder {

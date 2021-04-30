@@ -253,6 +253,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
         };
 
         template <class T>
@@ -309,6 +311,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
+            }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
             }
         };
 
