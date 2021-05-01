@@ -435,9 +435,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractImporter : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public Producer<T> {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
-        public:
-            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
-            }
         };
 
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
@@ -446,8 +443,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
             virtual bool isTrivialExporter() const {return false;}
-            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
-            }
         };
 
         template <class A, class B>

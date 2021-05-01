@@ -1721,8 +1721,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:           
             virtual Data<T> generate(T const *notUsed=nullptr) = 0;
             AbstractImporterCore() : BufferedProvider<T>() {}
-            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
-            }
         };
 
         template <class T>
@@ -1975,8 +1973,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         flag
                     }
                 ) };
-            }
-            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
             }
             AbstractExporterCore() : Consumer<T>(), sourceCert_(), hasT_(false), tTime_() {}
         };

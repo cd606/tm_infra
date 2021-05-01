@@ -240,8 +240,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             void publish(StateT *env, T &&data, bool finalFlag=false) {
             }
-            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
-            }
         };
 
         template <class T>
@@ -301,8 +299,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
             virtual void handle(InnerData<T> &&) = 0;
-            virtual void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override {
-            }
         };
 
         template <class T>
