@@ -1706,7 +1706,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     public:
         //We don't allow importer to manufacture keyed data "out of the blue"
         template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
-        class AbstractImporterCore : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public virtual BufferedProvider<T> {
+        class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {
                 auto d = generate((T const *) nullptr);
@@ -1927,7 +1927,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     public:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        class AbstractExporterCore : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
+        class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
         private:
             Certificate<T> sourceCert_;
             bool hasT_;

@@ -6,7 +6,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class IControllableNode {
     public:
         virtual ~IControllableNode() = default;
-        virtual void control(Env *env, std::string const &command, std::vector<std::string> const &params) {}
+        virtual void control(Env *env, std::string const &command, std::vector<std::string> const &params) = 0;
     };
 } } } }
 

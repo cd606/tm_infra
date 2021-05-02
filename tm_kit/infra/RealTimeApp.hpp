@@ -432,13 +432,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         //We don't allow importer to manufacture keyed data "out of the blue"
         template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
-        class AbstractImporter : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public Producer<T> {
+        class AbstractImporter : public virtual IExternalComponent, public Producer<T> {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
         };
 
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        class AbstractExporter : public virtual IExternalComponent, public virtual IControllableNode<StateT>, public virtual IHandler<T> {
+        class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
