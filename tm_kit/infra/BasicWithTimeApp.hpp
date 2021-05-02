@@ -81,6 +81,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
         };
 
         template <class A, class B>
@@ -173,6 +175,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
+            }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
             }
         };
 
@@ -356,6 +360,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         static auto emptyLocalOnOrderFacility() 
@@ -420,6 +426,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
+            }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
             }
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
@@ -488,6 +496,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
+            }
+            void control(StateT *, std::string const &, std::vector<std::string> const &) {
             }
         };
         template <class QueryKeyType, class QueryResultType, class ExtraInputT, class ExtraOutputT>

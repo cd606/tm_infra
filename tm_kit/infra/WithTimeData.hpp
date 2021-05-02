@@ -601,6 +601,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Source<T> clone() const {
                 return {mSource.clone(), producer, useAltOutput};
             }
+            //The name is always copied back for safety
+            std::string registeredNodeName() const {
+                return producer;
+            }
         };
         template <class T>
         class Sink {
@@ -610,6 +614,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::string consumer;
             int pos;
             Sink(typename App::template Sink<T> &&s, std::string const &c, int p) : mSink(std::move(s)), consumer(c), pos(p) {}
+        public:
+            //The name is always copied back for safety
+            std::string registeredNodeName() const {
+                return consumer;
+            }
         };
     private:
         App m_;

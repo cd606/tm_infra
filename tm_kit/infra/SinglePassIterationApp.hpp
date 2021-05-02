@@ -461,6 +461,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return ret;
             }
+            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
+                if (controlInfo_) {
+                    controlInfo_->control(env, command, params);
+                }
+            }
         };
         template <class T, class Data>
         class OneWayHolder {
@@ -536,6 +541,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return controlInfo_;
             }
+            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
+                for (auto *p : controlInfo_) {
+                    p->control(env, command, params);
+                }
+            }
         };
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
         class FourWayHolder {
@@ -586,6 +596,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return controlInfo_;
+            }
+            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
+                for (auto *p : controlInfo_) {
+                    p->control(env, command, params);
+                }
             }
         };
 
