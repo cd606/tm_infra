@@ -762,7 +762,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         void registerControllableNodes_(std::string const &name, std::vector<IControllableNode<StateT> *> &&nodes) {
-            controllableNodeMap_.insert({name, std::move(nodes)});
+            if (!nodes.empty()) {
+                controllableNodeMap_.insert({name, std::move(nodes)});
+            }
         }
 
         template <class A, class B>
@@ -2565,6 +2567,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
             }
+        }
+        std::optional<std::string> findFirstControllableNodeAtOrAbove(std::string const &nodeName) {
+            std::lock_guard<std::mutex> _(mutex_);
+            std::unordered_set<std::string> seen;
+            std::deque<std::string> q;
+            q.push_back(nodeName);
+            seen.insert(nodeName);
+            while (!q.empty()) {
+                auto s = q.front();
+                q.pop_front();
+                if (controllableNodeMap_.find(s) != controllableNodeMap_.end()) {
+                    return s;
+                }
+                auto reverseIter = reverseLookup_.find(s);
+                if (reverseIter != reverseLookup_.end()) {
+                    auto iter = nameMap_.find(reverseIter->second);
+                    if (iter != nameMap_.end()) {
+                        for (auto const &from : iter->second.paramConnectedFrom) {
+                            for (auto const &oneFrom : from) {
+                                if (seen.find(oneFrom.first) == seen.end()) {
+                                    q.push_back(oneFrom.first);
+                                    seen.insert(oneFrom.first);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return std::nullopt;
         }
     };
 
