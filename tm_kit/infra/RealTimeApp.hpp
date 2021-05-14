@@ -287,8 +287,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
+        class IStoppableProducer {
+        private:
+            std::atomic<bool> producerIsStopped_ = false;
+        public:
+            void stopProducer() {
+                producerIsStopped_ = true;
+            }
+            void restartProducer() {
+                producerIsStopped_ = false;
+            }
+            bool producerIsStopped() const {
+                return producerIsStopped_;
+            }
+        };
+
         template <class T>
-        class Producer {
+        class Producer : public virtual IStoppableProducer {
         private:
             std::vector<IHandler<T> *> handlers_;
             std::unordered_set<IHandler<T> *> handlerSet_;
@@ -311,9 +326,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }               
             }
             void publish(StateT *env, T &&data) {
+                if (this->producerIsStopped()) {
+                    return;
+                }
                 publish(withtime_utils::pureTimedDataWithEnvironment<T, StateT, typename StateT::TimePointType>(env, std::move(data)));
             }
             void publish(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
+                if (this->producerIsStopped()) {
+                    return;
+                }
                 //In "publish", the system has reached stable state, so mutex is no longer needed
                 //std::lock_guard<std::mutex> _(mutex_);
                 auto s = handlers_.size();
@@ -421,11 +442,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class A, class B>
-        class AbstractAction : public virtual IHandler<A>, public Producer<B> {
+        class AbstractAction : public virtual IHandler<A>, public Producer<B>, public virtual IControllableNode<StateT> {
         public:
             virtual bool isThreaded() const = 0;
             virtual bool isOneTimeOnly() const = 0;
             virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+                if (command == "stop") {
+                    this->stopProducer();
+                } else if (command == "restart") {
+                    this->restartProducer();
+                }
+            }
         };
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
