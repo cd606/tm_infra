@@ -27,6 +27,69 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         virtual ~IRealTimeAppPossiblyThreadedNode() = default;
         virtual std::optional<std::thread::native_handle_type> threadHandle() = 0;
     };
+    
+    template <uint8_t N>
+    class IStoppableRealTimeProducer {
+    private:
+        std::atomic<uint32_t> stoppedFlag_ = 0;
+    public:
+        void stopProducer() {
+            stoppedFlag_ = (uint32_t) 0xffffffff;
+        }
+        void restartProducer() {
+            stoppedFlag_ = 0;
+        }
+        void stopProducer(uint8_t which) {
+            if (which < N) {
+                stoppedFlag_ = (stoppedFlag_ | (((uint32_t) 1) << which));
+            }
+        }
+        void restartProducer(uint8_t which) {
+            if (which < N) {
+                stoppedFlag_ = (stoppedFlag_ & ~(((uint32_t) 1) << which));
+            }
+        }
+        bool producerIsStopped(uint8_t which) const {
+            if (which < N) {
+                return ((stoppedFlag_ & (((uint32_t) 1) << which)) != 0);
+            } else {
+                return false;
+            }
+        }
+    };
+
+    template <>
+    class IStoppableRealTimeProducer<1> {
+    private:
+        std::atomic<bool> producerIsStopped_ = false;
+    public:
+        void stopProducer() {
+            producerIsStopped_ = true;
+        }
+        void stopProducer(uint8_t which) {
+            if (which == 0) {
+                producerIsStopped_ = true;
+            }
+        }
+        void restartProducer() {
+            producerIsStopped_ = false;
+        }
+        void restartProducer(uint8_t which) {
+            if (which == 0) {
+                producerIsStopped_ = false;
+            }
+        }
+        bool producerIsStopped() const {
+            return producerIsStopped_;
+        }
+        bool producerIsStopped(uint8_t which) const {
+            if (which == 0) {
+                return producerIsStopped_;
+            } else {
+                return false;
+            }
+        }
+    };
 
     template <class StateT>
     class RealTimeAppComponents {
@@ -287,23 +350,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
-        class IStoppableProducer {
-        private:
-            std::atomic<bool> producerIsStopped_ = false;
-        public:
-            void stopProducer() {
-                producerIsStopped_ = true;
-            }
-            void restartProducer() {
-                producerIsStopped_ = false;
-            }
-            bool producerIsStopped() const {
-                return producerIsStopped_;
-            }
-        };
-
         template <class T>
-        class Producer : public virtual IStoppableProducer {
+        class Producer : public virtual IStoppableRealTimeProducer<1> {
         private:
             std::vector<IHandler<T> *> handlers_;
             std::unordered_set<IHandler<T> *> handlerSet_;
@@ -449,9 +497,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
-                    this->stopProducer();
+                    if (params.empty()) {
+                        this->stopProducer();
+                    } else {
+                        this->stopProducer((uint8_t) std::stoi(params[0]));
+                    }
                 } else if (command == "restart") {
-                    this->restartProducer();
+                    if (params.empty()) {
+                        this->restartProducer();
+                    } else {
+                        this->restartProducer((uint8_t) std::stoi(params[0]));
+                    }
                 }
             }
         };

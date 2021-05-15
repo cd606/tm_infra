@@ -6,9 +6,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -20,9 +28,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -34,9 +50,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -48,9 +72,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -62,9 +94,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -76,9 +116,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -90,9 +138,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -104,9 +160,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };
@@ -118,9 +182,17 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
-            this->stopProducer();
+            if (params.empty()) {
+                this->stopProducer();
+            } else {
+                this->stopProducer((uint8_t) std::stoi(params[0]));
+            }
         } else if (command == "restart") {
-            this->restartProducer();
+            if (params.empty()) {
+                this->restartProducer();
+            } else {
+                this->restartProducer((uint8_t) std::stoi(params[0]));
+            }
         }
     }
 };

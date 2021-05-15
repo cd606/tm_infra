@@ -1,5 +1,5 @@
 template <class A0, class A1>
-class Producer<std::variant<A0,A1>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1>> : public virtual IStoppableRealTimeProducer<2> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -34,13 +34,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -96,7 +96,7 @@ public:
     }
 };
 template <class A0, class A1, class A2>
-class Producer<std::variant<A0,A1,A2>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2>> : public virtual IStoppableRealTimeProducer<3> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -143,13 +143,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -228,7 +228,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3>
-class Producer<std::variant<A0,A1,A2,A3>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3>> : public virtual IStoppableRealTimeProducer<4> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -287,13 +287,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -395,7 +395,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4>
-class Producer<std::variant<A0,A1,A2,A3,A4>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3,A4>> : public virtual IStoppableRealTimeProducer<5> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -466,13 +466,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -597,7 +597,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
-class Producer<std::variant<A0,A1,A2,A3,A4,A5>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3,A4,A5>> : public virtual IStoppableRealTimeProducer<6> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -680,13 +680,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -834,7 +834,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
-class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6>> : public virtual IStoppableRealTimeProducer<7> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -929,13 +929,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -1106,7 +1106,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
-class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> : public virtual IStoppableRealTimeProducer<8> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -1213,13 +1213,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -1413,7 +1413,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
-class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> : public virtual IStoppableRealTimeProducer<9> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -1532,13 +1532,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
@@ -1755,7 +1755,7 @@ public:
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
-class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> : public virtual IStoppableProducer {
+class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> : public virtual IStoppableRealTimeProducer<10> {
 private:
     std::vector<IHandler<A0> *> handlers0_;
     std::unordered_set<IHandler<A0> *> handlerSet0_;
@@ -1886,13 +1886,13 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.index())) {
             return;
         }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, StateT, typename StateT::TimePointType> &&data) {
-        if (this->producerIsStopped()) {
+        if (this->producerIsStopped(data.timedData.value.index())) {
             return;
         }
         switch (data.timedData.value.index()) {
