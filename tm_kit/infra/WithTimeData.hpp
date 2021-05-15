@@ -2673,19 +2673,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 R &r
                 , typename R::template Source<VariantSourceType> &&source
                 , typename R::template Sink<A> const &sink
+                , bool accum
             ) {
                 if constexpr (K >= std::variant_size_v<VariantSourceType>) {
-                    return false;
+                    return accum;
                 } else {
                     if constexpr (std::is_same_v<A, std::variant_alternative_t<K,VariantSourceType>>) {
                         Connect<
                             std::variant_size_v<VariantSourceType>
                             , K
                         >::template call<R, VariantSourceType>(r, std::move(source), sink);
-                        return true;
-                    } else {
-                        return simple_sink_variant_source_connect_internal_<A, VariantSourceType, K+1>(r, std::move(source), sink);
-                    }
+                        accum = true;
+                    } 
+                    return simple_sink_variant_source_connect_internal_<A, VariantSourceType, K+1>(r, std::move(source), sink, accum);
                 }
             }
             template <class A, class VariantSourceType>
@@ -2696,7 +2696,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ) {
                 return simple_sink_variant_source_connect_internal_<
                     A, VariantSourceType, 0
-                >(r, std::move(source), sink);
+                >(r, std::move(source), sink, false);
             }
             template <class A, class C>
             static bool simple_sink_connect_(
