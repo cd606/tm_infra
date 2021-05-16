@@ -35,6 +35,7 @@
 #include <tm_kit/infra/VersionedData.hpp>
 #include <tm_kit/infra/TraceNodesComponent.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
+#include <tm_kit/infra/ObservableNode.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -747,6 +748,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<std::string, std::vector<
             IControllableNode<StateT> *
         >> controllableNodeMap_;
+        std::unordered_map<std::string, std::vector<
+            IObservableNode<StateT> *
+        >> observableNodeMap_;
         mutable std::mutex mutex_;
 
         void registerUnderlyingNames_(std::string const &name, std::unordered_set<void *> ptrs) {
@@ -767,6 +771,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 controllableNodeMap_.insert({name, std::move(nodes)});
             }
         }
+        void registerObservableNodes_(std::string const &name, std::vector<IObservableNode<StateT> *> &&nodes) {
+            if (!nodes.empty()) {
+                observableNodeMap_.insert({name, std::move(nodes)});
+            }
+        }
 
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
@@ -777,6 +786,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -808,6 +818,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -835,6 +846,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -862,6 +874,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -892,6 +905,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -922,6 +936,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -952,6 +967,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             registerUnderlyingNames_(name, f->getUnderlyingPointers());
             registerControllableNodes_(name, f->getControllableNodes());
+            registerObservableNodes_(name, f->getObservableNodes());
             void *p = (void *) (f.get());
             auto nameIter = nameMap_.find(p);
             if (nameIter != nameMap_.end()) {
@@ -1875,6 +1891,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     clusterLevel = parts.size();
                 }
+                if (controllableNodeMap_.find(item.second.name) != controllableNodeMap_.end()) {
+                    nodeLabel = nodeLabel+" :C";
+                }
+                if (observableNodeMap_.find(item.second.name) != observableNodeMap_.end()) {
+                    nodeLabel = nodeLabel+" :O";
+                }
                 os << "\t action" << counter << " [";
                 std::string htmlNodeShape = "plain";
                 if (!item.second.isFacility) {
@@ -2597,6 +2619,68 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             return std::nullopt;
+        }
+
+        std::vector<std::string> observeFirst(std::string const &name) const {
+            std::lock_guard<std::mutex> _(mutex_);
+            auto iter = observableNodeMap_.find(name);
+            if (iter != observableNodeMap_.end()) {
+                if (!iter->second.empty()) {
+                    return iter->second[0]->observe(env_);
+                }
+            }
+            return {};
+        }
+        std::vector<std::string> observeAll(std::string const &name) const {
+            std::lock_guard<std::mutex> _(mutex_);
+            auto iter = observableNodeMap_.find(name);
+            if (iter != observableNodeMap_.end()) {
+                std::vector<std::string> ret;
+                for (auto *p : iter->second) {
+                    auto r = p->observe(env_);
+                    std::copy(r.begin(), r.end(), std::back_inserter(ret));
+                }
+                return ret;
+            }
+            return {};
+        }
+        std::vector<std::string> observeFirstRE(std::regex const &name) const {
+            std::lock_guard<std::mutex> _(mutex_);
+            for (auto const &item : observableNodeMap_) {
+                if (std::regex_match(item.first, name)) {
+                    if (!item.second.empty()) {
+                        return item.second[0]->observe(env_);
+                    }
+                }
+            }
+            return {};
+        }
+        std::vector<std::string> observeAllRE(std::regex const &name) const {
+            std::lock_guard<std::mutex> _(mutex_);
+            for (auto const &item : observableNodeMap_) {
+                if (std::regex_match(item.first, name)) {
+                    std::vector<std::string> ret;
+                    for (auto *p : item.second) {
+                        auto r = p->observe(env_);
+                        std::copy(r.begin(), r.end(), std::back_inserter(ret));
+                    }
+                    return ret;
+                }
+            }
+            return {};
+        }
+        std::unordered_map<std::string, std::vector<std::string>> observeAllNodes() const {
+            std::lock_guard<std::mutex> _(mutex_);
+            std::unordered_map<std::string, std::vector<std::string>> ret;
+            for (auto const &item : observableNodeMap_) {
+                std::vector<std::string> innerRet;
+                for (auto *p : item.second) {
+                    auto r = p->observe(env_);
+                    std::copy(r.begin(), r.end(), std::back_inserter(innerRet));
+                }
+                ret.insert({item.first, std::move(innerRet)});
+            }
+            return ret;
         }
     };
 

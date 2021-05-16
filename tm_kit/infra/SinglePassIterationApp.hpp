@@ -3,6 +3,7 @@
 
 #include <tm_kit/infra/WithTimeData.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
+#include <tm_kit/infra/ObservableNode.hpp>
 
 #include <deque>
 #include <queue>
@@ -440,17 +441,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class SinglePassIterationApp;
             IControllableNode<StateT> *controlInfo_;
+            IObservableNode<StateT> *observeInfo_;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
                 controlInfo_ = nullptr;
+                observeInfo_ = nullptr;
             }
         public:
             using InputType = Input;
             using OutputType = Output;
-            TwoWayHolder(std::unique_ptr<T> &&p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), core_(std::move(p)) {}
+            TwoWayHolder(std::unique_ptr<T> &&p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p.get())), core_(std::move(p)) {}
             template <class A>
-            TwoWayHolder(A *p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            TwoWayHolder(A *p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
             }
@@ -461,9 +464,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return ret;
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                std::vector<IObservableNode<StateT> *> ret;
+                if (observeInfo_) {
+                    ret.push_back(observeInfo_);
+                }
+                return ret;
+            }
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
                 if (controlInfo_) {
                     controlInfo_->control(env, command, params);
+                }
+            }
+            std::vector<std::string> observe(StateT *env) const {
+                if (observeInfo_) {
+                    return observeInfo_->observe(env);
+                } else {
+                    return {};
                 }
             }
         };
@@ -472,16 +489,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class SinglePassIterationApp;
             IControllableNode<StateT> *controlInfo_;
+            IObservableNode<StateT> *observeInfo_;
             std::unique_ptr<T> core_;
             void release() {
                 core_.release();
                 controlInfo_ = nullptr;
+                observeInfo_ = nullptr;
             }
         public:
             using DataType = Data;
-            OneWayHolder(std::unique_ptr<T> &&p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), core_(std::move(p)) {}
+            OneWayHolder(std::unique_ptr<T> &&p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p.get())), core_(std::move(p)) {}
             template <class A>
-            OneWayHolder(A *p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            OneWayHolder(A *p) : controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
             }
@@ -492,9 +511,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return ret;
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                std::vector<IObservableNode<StateT> *> ret;
+                if (observeInfo_) {
+                    ret.push_back(observeInfo_);
+                }
+                return ret;
+            }
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
                 if (controlInfo_) {
                     controlInfo_->control(env, command, params);
+                }
+            }
+            std::vector<std::string> observe(StateT *env) const {
+                if (observeInfo_) {
+                    return observeInfo_->observe(env);
+                } else {
+                    return {};
                 }
             }
         };
@@ -510,10 +543,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             T1 *core1_;
             T2 *core2_;
             std::vector<IControllableNode<StateT> *> controlInfo_;
+            std::vector<IObservableNode<StateT> *> observeInfo_;
             void release() {
                 core1_ = nullptr;
                 core2_ = nullptr;
                 controlInfo_.clear();
+                observeInfo_.clear();
             }
         public:
             using InputType = Input;
@@ -530,6 +565,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (q2 && (q2 != q1)) {
                     controlInfo_.push_back(q2);
                 }
+                auto *o1 = dynamic_cast<IObservableNode<StateT> *>(p1);
+                if (o1) {
+                    observeInfo_.push_back(o1);
+                }
+                auto *o2 = dynamic_cast<IObservableNode<StateT> *>(p2);
+                if (o2 && (o2 != o1)) {
+                    observeInfo_.push_back(o2);
+                }
             }
             ThreeWayHolder(ThreeWayHolder const &) = delete;
             ThreeWayHolder &operator=(ThreeWayHolder const &) = delete;
@@ -541,10 +584,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return controlInfo_;
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return observeInfo_;
+            }
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
                 for (auto *p : controlInfo_) {
                     p->control(env, command, params);
                 }
+            }
+            std::vector<std::string> observe(StateT *env) const {
+                std::vector<std::string> ret;
+                for (auto *p : observeInfo_) {
+                    auto r = p->observe(env);
+                    std::copy(r.begin(), r.end(), std::back_inserter(ret));
+                }
+                return ret;
             }
         };
         template <class T1, class Input, class Output, class T2, class ExtraInput, class T3, class ExtraOutput>
@@ -560,11 +614,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             T2 *core2_;
             T3 *core3_;
             std::vector<IControllableNode<StateT> *> controlInfo_;
+            std::vector<IObservableNode<StateT> *> observeInfo_;
             void release() {
                 core1_ = nullptr;
                 core2_ = nullptr;
                 core3_ = nullptr;
                 controlInfo_.clear();
+                observeInfo_.clear();
             }
         public:
             using InputType = Input;
@@ -586,6 +642,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (q3 && (q3 != q1) && (q3 != q2)) {
                     controlInfo_.push_back(q3);
                 }
+                auto *o1 = dynamic_cast<IObservableNode<StateT> *>(p1);
+                if (o1) {
+                    observeInfo_.push_back(o1);
+                }
+                auto *o2 = dynamic_cast<IObservableNode<StateT> *>(p2);
+                if (o2 && (o2 != o1)) {
+                    observeInfo_.push_back(o2);
+                }
+                auto *o3 = dynamic_cast<IObservableNode<StateT> *>(p3);
+                if (o3 && (o3 != o1) && (o3 != o2)) {
+                    observeInfo_.push_back(o3);
+                }
             }
             FourWayHolder(FourWayHolder const &) = delete;
             FourWayHolder &operator=(FourWayHolder const &) = delete;
@@ -597,10 +665,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return controlInfo_;
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return observeInfo_;
+            }
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) {
                 for (auto *p : controlInfo_) {
                     p->control(env, command, params);
                 }
+            }
+            std::vector<std::string> observe(StateT *env) const {
+                std::vector<std::string> ret;
+                for (auto *p : observeInfo_) {
+                    auto r = p->observe(env);
+                    std::copy(r.begin(), r.end(), std::back_inserter(ret));
+                }
+                return ret;
             }
         };
 

@@ -4,6 +4,7 @@
 #include <future>
 #include <tm_kit/infra/WithTimeData.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
+#include <tm_kit/infra/ObservableNode.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class StateT>
@@ -81,7 +82,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
 
@@ -176,7 +183,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
 
@@ -255,7 +268,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
 
@@ -314,7 +333,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
 
@@ -360,7 +385,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
@@ -427,7 +458,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
         template <class QueryKeyType, class QueryResultType, class DataInputType>
@@ -497,7 +534,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IControllableNode<StateT> *> getControllableNodes() const {
                 return {};
             }
+            std::vector<IObservableNode<StateT> *> getObservableNodes() const {
+                return {};
+            }
             void control(StateT *, std::string const &, std::vector<std::string> const &) {
+            }
+            std::vector<std::string> observe(StateT *) const {
+                return {};
             }
         };
         template <class QueryKeyType, class QueryResultType, class ExtraInputT, class ExtraOutputT>

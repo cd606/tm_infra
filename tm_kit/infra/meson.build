@@ -49,6 +49,7 @@ tm_infra_headers = [
     , 'TraceNodesComponent.hpp'
     , 'TupleVariantHelper.hpp'
     , 'ControllableNode.hpp'
+    , 'ObservableNode.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
