@@ -2013,17 +2013,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 hasStyles = true;
                             }
                             std::string edgeLabel = std::get<2>(connector);
+                            bool srcIsStopped = false;
+                            auto observableIter = observableNodeMap_.find(iter2->second.name);
+                            if (observableIter != observableNodeMap_.end()) {
+                                std::vector<std::string> status;
+                                for (auto const *oneObservable : observableIter->second) {
+                                    auto oneStatus = oneObservable->observe(env_);
+                                    std::copy(oneStatus.begin(), oneStatus.end(), std::back_inserter(status));
+                                }
+                                int edgeNum = 0;
+                                if (edgeLabel != "") {
+                                    try {
+                                        edgeNum = std::stoi(edgeLabel.substr(0, edgeLabel.find('/')));
+                                    } catch (...) {
+                                        edgeNum = 0;
+                                    }
+                                }
+                                auto edgeStoppedStr = std::to_string(edgeNum)+" stopped";
+                                for (auto const &statusItem : status) {
+                                    if (statusItem == "stopped") {
+                                        srcIsStopped = true;
+                                        break;
+                                    } else if (statusItem == edgeStoppedStr) {
+                                        srcIsStopped = true;
+                                        break;
+                                    }
+                                }
+                            }
                             if (edgeLabel != "") {
                                 if (hasStyles) {
-                                    os << ",label=\"" << edgeLabel << "\"];\n";
+                                    os << ",arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << ",label=\"" << edgeLabel << "\"];\n";
                                 } else {
-                                    os << " [label=\"" << edgeLabel << "\"];\n";
+                                    os << " [,arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << ",label=\"" << edgeLabel << "\"];\n";
                                 }  
                             } else {
                                 if (hasStyles) {
-                                    os << "];\n";
+                                    os << ",arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << "];\n";
                                 } else {
-                                    os << ";\n";
+                                    os << "[arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << "];\n";
                                 }         
                             }
                         }  
