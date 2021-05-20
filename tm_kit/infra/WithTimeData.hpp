@@ -2779,6 +2779,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return false;
                 }
             }
+            template <class A, class C>
+            static bool simple_sink_simple_source_connect_rt_branch_(
+                R &r
+                , typename R::template Source<C> &&source
+                , typename R::template Sink<A> const &sink
+                , std::size_t sourceBranchNumber
+            ) {
+                if constexpr (std::is_same_v<A,C>) {
+                    if (sourceBranchNumber == 0) {
+                        Connect<1,0>::template call<R, A>(r, std::move(source), sink);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
             template <class A, class VariantSourceType, std::size_t K>
             static bool simple_sink_variant_source_connect_internal_(
                 R &r
@@ -2799,6 +2817,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return simple_sink_variant_source_connect_internal_<A, VariantSourceType, K+1>(r, std::move(source), sink, accum);
                 }
             }
+            template <class A, class VariantSourceType, std::size_t K>
+            static bool simple_sink_variant_source_connect_rt_branch_internal_(
+                R &r
+                , typename R::template Source<VariantSourceType> &&source
+                , typename R::template Sink<A> const &sink
+                , std::size_t sourceBranchNumber
+                , bool accum
+            ) {
+                if constexpr (K >= std::variant_size_v<VariantSourceType>) {
+                    return accum;
+                } else {
+                    if constexpr (std::is_same_v<A, std::variant_alternative_t<K,VariantSourceType>>) {
+                        if (K == sourceBranchNumber) {
+                            Connect<
+                                std::variant_size_v<VariantSourceType>
+                                , K
+                            >::template call<R, VariantSourceType>(r, std::move(source), sink);
+                            accum = true;
+                        }
+                    } 
+                    return simple_sink_variant_source_connect_rt_branch_internal_<A, VariantSourceType, K+1>(r, std::move(source), sink, sourceBranchNumber, accum);
+                }
+            }
             template <class A, class VariantSourceType>
             static bool simple_sink_variant_source_connect_(
                 R &r
@@ -2808,6 +2849,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return simple_sink_variant_source_connect_internal_<
                     A, VariantSourceType, 0
                 >(r, std::move(source), sink, false);
+            }
+            template <class A, class VariantSourceType>
+            static bool simple_sink_variant_source_connect_rt_branch_(
+                R &r
+                , typename R::template Source<VariantSourceType> &&source
+                , typename R::template Sink<A> const &sink
+                , std::size_t sourceBranchNumber
+            ) {
+                return simple_sink_variant_source_connect_rt_branch_internal_<
+                    A, VariantSourceType, 0
+                >(r, std::move(source), sink, sourceBranchNumber, false);
             }
             template <class A, class C>
             static bool simple_sink_connect_(
@@ -2837,6 +2889,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return false;
                 }
             }
+            template <class A, class C>
+            static bool simple_sink_connect_rt_branch_(
+                R &r
+                , typename R::template Source<C> &&source
+                , typename R::template Sink<A> const &sink
+                , std::size_t sourceBranchNumber
+            ) {
+                if constexpr (withtime_utils::IsVariant<C>::Value) {
+                    return simple_sink_variant_source_connect_rt_branch_<A,C>(r, std::move(source), sink, sourceBranchNumber);
+                } else {
+                    return simple_sink_simple_source_connect_rt_branch_<A,C>(r, std::move(source), sink, sourceBranchNumber);
+                }
+            }
             template <class A, class B>
             static bool simple_exporter_connect_(
                 R &r
@@ -2863,6 +2928,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     r
                     , std::move(source)
                     , r.exporterAsSink(exporter)
+                );
+            }
+            template <class A, class B>
+            static bool simple_exporter_connect_rt_branch_(
+                R &r
+                , typename R::template ExporterPtr<A> const &exporter
+                , typename R::template Source<B> &&source
+                , std::size_t sourceBranchNumber
+            ) {
+                return simple_sink_connect_rt_branch_<
+                    A, B
+                >(
+                    r
+                    , std::move(source)
+                    , r.exporterAsSink(exporter)
+                    , sourceBranchNumber
                 );
             }
             template <class A, class B, class C>
@@ -2899,6 +2980,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     >::template call<
                         R, A, B
                     >(r, action) 
+                );
+            }
+            template <class A, class B, class C>
+            static bool simple_action_connect_rt_branch_(
+                R &r
+                , typename R::template ActionPtr<A,B> const &action 
+                , typename R::template Source<C> &&source
+                , std::size_t sourceBranchNumber
+            ) {
+                return simple_sink_connect_rt_branch_<
+                    A, C
+                >(
+                    r
+                    , std::move(source)
+                    , ActionAsSink<
+                        1, 0
+                    >::template call<
+                        R, A, B
+                    >(r, action) 
+                    , sourceBranchNumber
                 );
             }
             template <class VariantInputType, class B, class C, std::size_t K>
@@ -2947,6 +3048,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             template <class VariantInputType, class B, class C, std::size_t K>
+            static bool variant_action_connect_one_rt_branch_(
+                R &r
+                , typename R::template ActionPtr<VariantInputType,B> const &action 
+                , typename R::template Source<C> &&source
+                , std::size_t sourceBranchNumber
+            ) {
+                return simple_sink_connect_rt_branch_<
+                    std::variant_alternative_t<K, VariantInputType>
+                    , C
+                >(
+                    r
+                    , std::move(source)
+                    , ActionAsSink<
+                        std::variant_size_v<VariantInputType>
+                        , K 
+                    >::template call<
+                        R
+                        , VariantInputType
+                        , B 
+                    >(r, action) 
+                    , sourceBranchNumber
+                );
+            }
+            template <class VariantInputType, class B, class C, std::size_t K>
             static bool variant_action_connect_internal_(
                 R &r
                 , typename R::template ActionPtr<VariantInputType,B> const &action 
@@ -2986,6 +3111,27 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     >(r, action, std::move(source), accum);
                 }
             }
+            template <class VariantInputType, class B, class C, std::size_t K>
+            static bool variant_action_connect_rt_branch_internal_(
+                R &r
+                , typename R::template ActionPtr<VariantInputType,B> const &action 
+                , typename R::template Source<C> &&source
+                , std::size_t sourceBranchNumber
+                , bool &accum
+            ) {
+                if constexpr (K >= std::variant_size_v<VariantInputType>) {
+                    return accum;
+                } else {
+                    if (variant_action_connect_one_rt_branch_<
+                        VariantInputType, B, C, K
+                    >(r, action, source.clone(), sourceBranchNumber)) {
+                        accum = true;
+                    }
+                    return variant_action_connect_rt_branch_internal_<
+                        VariantInputType, B, C, K+1
+                    >(r, action, std::move(source), sourceBranchNumber, accum);
+                }
+            }
             template <class A, class B, class C>
             static bool variant_action_connect_(
                 R &r
@@ -3007,6 +3153,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return variant_action_connect_specific_branch_internal_<
                     A, B, C, 0, SourceBranchNumber
                 >(r, action, std::move(source), accum);
+            }
+            template <class A, class B, class C>
+            static bool variant_action_connect_rt_branch_(
+                R &r
+                , typename R::template ActionPtr<A,B> const &action 
+                , typename R::template Source<C> &&source
+                , std::size_t sourceBranchNumber
+            ) {
+                bool accum = false;
+                return variant_action_connect_rt_branch_internal_<
+                    A, B, C, 0
+                >(r, action, std::move(source), sourceBranchNumber, accum);
             }
         public:
             template <class Action, class C>
@@ -3087,6 +3245,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         r, exporter, std::move(source)
                     )) {
                     throw std::runtime_error("GenericExecute::callExporterOnSourceBranch: cannot connect");
+                }
+            }
+            template <class Action, class C>
+            static typename R::template Source<typename withtime_utils::ActionTypeInfo<typename R::AppType,Action>::OutputType> callOnRTSourceBranch(
+                R &r
+                , typename std::shared_ptr<Action> const &action 
+                , typename R::template Source<C> &&source
+                , std::size_t sourceBranchNumber
+            ) {
+                using A = typename withtime_utils::ActionTypeInfo<typename R::AppType,Action>::InputType;
+                using B = typename withtime_utils::ActionTypeInfo<typename R::AppType,Action>::OutputType;
+                if constexpr (withtime_utils::IsVariant<A>::Value) {
+                    if (!variant_action_connect_rt_branch_<A,B,C>(
+                        r, action, std::move(source), sourceBranchNumber
+                    )) {
+                        throw std::runtime_error("GenericExecute::callOnRTSourceBranch: cannot connect");
+                    }
+                } else {
+                    if (!simple_action_connect_rt_branch_<A,B,C>(
+                        r, action, std::move(source), sourceBranchNumber
+                    )) {
+                        throw std::runtime_error("GenericExecute::callOnRTSourceBranch: cannot connect");
+                    }
+                }
+                return r.template actionAsSource<typename R::template Action<A,B>>(action);
+            }
+            template <class Exporter, class B>
+            static void callExporterOnRTSourceBranch(
+                R &r
+                , typename std::shared_ptr<Exporter> const &exporter
+                , typename R::template Source<B> &&source
+                , std::size_t sourceBranchNumber
+            ) {
+                using A = typename withtime_utils::ExporterTypeInfo<typename R::AppType,Exporter>::DataType;
+                if (!simple_exporter_connect_rt_branch_<A,B>(
+                        r, exporter, std::move(source), sourceBranchNumber
+                    )) {
+                    throw std::runtime_error("GenericExecute::callExporterOnRTSourceBranch: cannot connect");
                 }
             }
         };
