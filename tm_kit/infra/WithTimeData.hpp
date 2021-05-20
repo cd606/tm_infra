@@ -2044,13 +2044,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 if (hasStyles) {
                                     os << ",arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << ",label=\"" << edgeLabel << "\"];\n";
                                 } else {
-                                    os << " [,arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << ",label=\"" << edgeLabel << "\"];\n";
+                                    os << " [arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << ",label=\"" << edgeLabel << "\"];\n";
                                 }  
                             } else {
                                 if (hasStyles) {
                                     os << ",arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << "];\n";
                                 } else {
-                                    os << "[arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << "];\n";
+                                    os << " [arrowtail=" << (srcIsStopped?"odot,dir=both":"none") << "];\n";
                                 }         
                             }
                         }  
