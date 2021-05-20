@@ -4,6 +4,7 @@
 #include <tm_kit/infra/WithTimeData.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
+#include <tm_kit/infra/StoppableProducer.hpp>
 
 #include <vector>
 #include <list>
@@ -30,84 +31,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     };
     
     template <uint8_t N>
-    class IStoppableRealTimeProducer {
-    private:
-        std::atomic<uint32_t> stoppedFlag_ = 0;
-    public:
-        void stopProducer() {
-            stoppedFlag_ = (uint32_t) 0xffffffff;
-        }
-        void restartProducer() {
-            stoppedFlag_ = 0;
-        }
-        void stopProducer(uint8_t which) {
-            if (which < N) {
-                stoppedFlag_ = (stoppedFlag_ | (((uint32_t) 1) << which));
-            }
-        }
-        void restartProducer(uint8_t which) {
-            if (which < N) {
-                stoppedFlag_ = (stoppedFlag_ & ~(((uint32_t) 1) << which));
-            }
-        }
-        bool producerIsStopped(uint8_t which) const {
-            if (which < N) {
-                return ((stoppedFlag_ & (((uint32_t) 1) << which)) != 0);
-            } else {
-                return false;
-            }
-        }
-        std::vector<std::string> producerStoppedStatus() const {
-            std::vector<std::string> ret;
-            for (uint8_t which=0; which < N; ++which) {
-                if ((stoppedFlag_ & (((uint32_t) 1) << which)) != 0) {
-                    ret.push_back(std::to_string((int) which)+" stopped");
-                }
-            }
-            return ret;
-        }
-    };
-
-    template <>
-    class IStoppableRealTimeProducer<1> {
-    private:
-        std::atomic<bool> producerIsStopped_ = false;
-    public:
-        void stopProducer() {
-            producerIsStopped_ = true;
-        }
-        void stopProducer(uint8_t which) {
-            if (which == 0) {
-                producerIsStopped_ = true;
-            }
-        }
-        void restartProducer() {
-            producerIsStopped_ = false;
-        }
-        void restartProducer(uint8_t which) {
-            if (which == 0) {
-                producerIsStopped_ = false;
-            }
-        }
-        bool producerIsStopped() const {
-            return producerIsStopped_;
-        }
-        bool producerIsStopped(uint8_t which) const {
-            if (which == 0) {
-                return producerIsStopped_;
-            } else {
-                return false;
-            }
-        }
-        std::vector<std::string> producerStoppedStatus() const {
-            std::vector<std::string> ret;
-            if (producerIsStopped_) {
-                ret.push_back("stopped");
-            }
-            return ret;
-        }
-    };
-
+    using IStoppableRealTimeProducer = IStoppableProducer<N>;
+    
     template <class StateT>
     class RealTimeAppComponents {
     public:

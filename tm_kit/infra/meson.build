@@ -50,6 +50,7 @@ tm_infra_headers = [
     , 'TupleVariantHelper.hpp'
     , 'ControllableNode.hpp'
     , 'ObservableNode.hpp'
+    , 'StoppableProducer.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
