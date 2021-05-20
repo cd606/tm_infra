@@ -4,6 +4,7 @@
 #include <tm_kit/infra/WithTimeData.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
+#include <tm_kit/infra/StoppableProducer.hpp>
 
 #include <deque>
 #include <queue>
@@ -684,10 +685,36 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     private:
+        template <class T>
+        static constexpr uint8_t variantOutputNumber() {
+            if constexpr (withtime_utils::IsVariant<T>::Value) {
+                return std::variant_size_v<T>;
+            } else {
+                return 1;
+            }
+        }
         template <class A, class B>
-        class AbstractActionCore : public virtual AbstractConsumer<A>, public virtual Provider<B> {
+        class AbstractActionCore : public virtual AbstractConsumer<A>, public virtual Provider<B>, public virtual IStoppableProducer<variantOutputNumber<B>()>, public virtual IControllableNode<StateT>, public virtual IObservableNode<StateT> {
         public:
             virtual bool isOneTimeOnly() const = 0;
+            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+                if (command == "stop") {
+                    if (params.empty()) {
+                        this->stopProducer();
+                    } else {
+                        this->stopProducer((uint8_t) std::stoi(params[0]));
+                    }
+                } else if (command == "restart") {
+                    if (params.empty()) {
+                        this->restartProducer();
+                    } else {
+                        this->restartProducer((uint8_t) std::stoi(params[0]));
+                    }
+                }
+            }
+            std::vector<std::string> observe(StateT *env) const override final {
+                return this->producerStoppedStatus();
+            }
         };
 
         #include <tm_kit/infra/SinglePassIterationApp_AbstractActionCore_Piece.hpp>
@@ -735,6 +762,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         using DelaySimulatorType = typename LiftParameters<TimePoint>::DelaySimulatorType;
 
+        template <class T>
+        static uint outputIndex(T const &d) {
+            if constexpr (withtime_utils::IsVariant<T>::Value) {
+                return d.index();
+            } else {
+                return 0;
+            }
+        }
+
         template <class A, class B>
         class ActionCore : public virtual AbstractActionCore<A,B>, public virtual Consumer<A>, public virtual BufferedProvider<B> {
         private:
@@ -767,18 +803,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(std::move(*input));
+                                auto r = realHandle(std::move(*input));
                                 if (r) {
                                     auto tp1 = tp;
                                     tp1 += (*delaySimulator_)(0, tp);
                                     r->overrideTime(tp1);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(std::move(*input));
+                                return realHandle(std::move(*input));
                             }
                         } else {
-                            return handle(std::move(*input));
+                            return realHandle(std::move(*input));
                         }
                     } else {
                         return std::nullopt;
@@ -791,6 +827,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
             }       
             virtual Data<B> handle(InnerData<A> &&) = 0;
+            Data<B> realHandle(InnerData<A> &&a) {
+                auto ret = handle(std::move(a));
+                if (ret) {
+                    if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                        return std::nullopt;
+                    } else {
+                        return std::move(ret);
+                    }
+                } else {
+                    return std::nullopt;
+                }
+            }
         public:
             ActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
         };
@@ -901,18 +949,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(std::move(*input));
+                                auto r = realHandle(std::move(*input));
                                 if (r) {
                                     auto tp1 = tp;
                                     tp1 += (*delaySimulator_)(0, tp);
                                     r->overrideTime(tp1);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(std::move(*input));
+                                return realHandle(std::move(*input));
                             }
                         } else {
-                            return handle(std::move(*input));
+                            return realHandle(std::move(*input));
                         }
                     } else {
                         return std::nullopt;
@@ -925,6 +973,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
             }       
             virtual MultiData<B> handle(InnerData<A> &&) = 0;
+            MultiData<B> realHandle(InnerData<A> &&a) {
+                auto ret = handle(std::move(a));
+                if (ret) {
+                    std::vector<B> filtered;
+                    for (auto &&item : ret->timedData.value) {
+                        if (!this->producerIsStopped(outputIndex<B>(item))) {
+                            filtered.push_back(std::move(item));
+                        }
+                    }
+                    if (filtered.empty()) {
+                        return std::nullopt;
+                    } else {
+                        ret->timedData.value = std::move(filtered);
+                        return std::move(ret);
+                    }
+                } else {
+                    return std::nullopt;
+                }
+            }
         public:
             MultiActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
         };

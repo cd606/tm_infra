@@ -48,18 +48,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -95,18 +95,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -125,6 +125,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -182,18 +194,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -229,18 +241,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1>> {env, WithTime<std::variant<A0,A1>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -259,6 +271,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -667,18 +698,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -714,18 +745,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -761,18 +792,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -791,6 +822,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -854,18 +897,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -901,18 +944,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -948,18 +991,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2>> {env, WithTime<std::variant<A0,A1,A2>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -978,6 +1021,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -1392,18 +1454,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1439,18 +1501,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1486,18 +1548,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1533,18 +1595,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1563,6 +1625,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -1632,18 +1706,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1679,18 +1753,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1726,18 +1800,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1773,18 +1847,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3>> {env, WithTime<std::variant<A0,A1,A2,A3>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -1803,6 +1877,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -2223,18 +2316,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2270,18 +2363,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2317,18 +2410,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2364,18 +2457,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2411,18 +2504,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2441,6 +2534,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -2516,18 +2621,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2563,18 +2668,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2610,18 +2715,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2657,18 +2762,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2704,18 +2809,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> {env, WithTime<std::variant<A0,A1,A2,A3,A4>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -2734,6 +2839,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -3160,18 +3284,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3207,18 +3331,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3254,18 +3378,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3301,18 +3425,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3348,18 +3472,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3395,18 +3519,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3425,6 +3549,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -3506,18 +3642,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3553,18 +3689,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3600,18 +3736,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3647,18 +3783,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3694,18 +3830,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3741,18 +3877,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -3771,6 +3907,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -4203,18 +4358,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4250,18 +4405,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4297,18 +4452,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4344,18 +4499,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4391,18 +4546,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4438,18 +4593,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4485,18 +4640,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4515,6 +4670,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -4602,18 +4769,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4649,18 +4816,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4696,18 +4863,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4743,18 +4910,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4790,18 +4957,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4837,18 +5004,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4884,18 +5051,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -4914,6 +5081,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -5352,18 +5538,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5399,18 +5585,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5446,18 +5632,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5493,18 +5679,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5540,18 +5726,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5587,18 +5773,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5634,18 +5820,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5681,18 +5867,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp7_;
                                     newTP += (*delaySimulator_)(7, *tp7_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5711,6 +5897,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -5804,18 +6002,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5851,18 +6049,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5898,18 +6096,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5945,18 +6143,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -5992,18 +6190,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6039,18 +6237,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6086,18 +6284,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6133,18 +6331,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp7_;
                                     newTP += (*delaySimulator_)(7, *tp7_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6163,6 +6361,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -6607,18 +6824,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6654,18 +6871,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6701,18 +6918,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6748,18 +6965,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6795,18 +7012,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6842,18 +7059,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6889,18 +7106,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6936,18 +7153,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp7_;
                                     newTP += (*delaySimulator_)(7, *tp7_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -6983,18 +7200,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp8_;
                                     newTP += (*delaySimulator_)(8, *tp8_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7013,6 +7230,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -7112,18 +7341,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7159,18 +7388,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7206,18 +7435,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7253,18 +7482,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7300,18 +7529,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7347,18 +7576,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7394,18 +7623,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7441,18 +7670,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp7_;
                                     newTP += (*delaySimulator_)(7, *tp7_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7488,18 +7717,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp8_;
                                     newTP += (*delaySimulator_)(8, *tp8_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -7518,6 +7747,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -7968,18 +8216,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8015,18 +8263,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8062,18 +8310,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8109,18 +8357,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8156,18 +8404,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8203,18 +8451,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8250,18 +8498,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8297,18 +8545,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp7_;
                                     newTP += (*delaySimulator_)(7, *tp7_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8344,18 +8592,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp8_;
                                     newTP += (*delaySimulator_)(8, *tp8_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8391,18 +8639,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp9_;
                                     newTP += (*delaySimulator_)(9, *tp9_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8421,6 +8669,18 @@ protected:
         }
     }
     virtual Data<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&) = 0;
+    Data<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
+                return std::nullopt;
+            } else {
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     ActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
@@ -8526,18 +8786,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp0_;
                                     newTP += (*delaySimulator_)(0, *tp0_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x0->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<0>, std::move(x0->timedData.value)}, x0->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8573,18 +8833,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp1_;
                                     newTP += (*delaySimulator_)(1, *tp1_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x1->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<1>, std::move(x1->timedData.value)}, x1->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8620,18 +8880,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp2_;
                                     newTP += (*delaySimulator_)(2, *tp2_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x2->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<2>, std::move(x2->timedData.value)}, x2->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8667,18 +8927,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp3_;
                                     newTP += (*delaySimulator_)(3, *tp3_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x3->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<3>, std::move(x3->timedData.value)}, x3->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8714,18 +8974,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp4_;
                                     newTP += (*delaySimulator_)(4, *tp4_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x4->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<4>, std::move(x4->timedData.value)}, x4->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8761,18 +9021,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp5_;
                                     newTP += (*delaySimulator_)(5, *tp5_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x5->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<5>, std::move(x5->timedData.value)}, x5->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8808,18 +9068,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp6_;
                                     newTP += (*delaySimulator_)(6, *tp6_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x6->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<6>, std::move(x6->timedData.value)}, x6->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8855,18 +9115,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp7_;
                                     newTP += (*delaySimulator_)(7, *tp7_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x7->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<7>, std::move(x7->timedData.value)}, x7->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8902,18 +9162,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp8_;
                                     newTP += (*delaySimulator_)(8, *tp8_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x8->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<8>, std::move(x8->timedData.value)}, x8->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8949,18 +9209,18 @@ protected:
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
                             if (delaySimulator_) {
-                                auto r = handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
+                                auto r = realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                                 if (r) {
                                     auto newTP = *tp9_;
                                     newTP += (*delaySimulator_)(9, *tp9_);
                                     r->overrideTime(newTP);
                                 }
-                                return r;
+                                return std::move(r);
                             } else {
-                                return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
+                                return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                             }
                         } else {
-                            return handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
+                            return realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {env, WithTime<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,TimePoint> {std::move(x9->timedData.timePoint), std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> {std::in_place_index<9>, std::move(x9->timedData.value)}, x9->timedData.finalFlag}});
                         }
                     } else {
                         return std::nullopt;
@@ -8979,6 +9239,25 @@ protected:
         }
     }
     virtual MultiData<B> handle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&) = 0;
+    MultiData<B> realHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&x) {
+        auto ret = handle(std::move(x));
+        if (ret) {
+            std::vector<B> filtered;
+            for (auto &&item : ret->timedData.value) {
+                if (!this->producerIsStopped(outputIndex<B>(item))) {
+                    filtered.push_back(std::move(item));
+                }
+            }
+            if (filtered.empty()) {
+                return std::nullopt;
+            } else {
+                ret->timedData.value = std::move(filtered);
+                return std::move(ret);
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 public:
     MultiActionCore(DelaySimulatorType const &delaySimulator) : versionChecker0_(), tp0_(std::nullopt), versionChecker1_(), tp1_(std::nullopt), versionChecker2_(), tp2_(std::nullopt), versionChecker3_(), tp3_(std::nullopt), versionChecker4_(), tp4_(std::nullopt), versionChecker5_(), tp5_(std::nullopt), versionChecker6_(), tp6_(std::nullopt), versionChecker7_(), tp7_(std::nullopt), versionChecker8_(), tp8_(std::nullopt), versionChecker9_(), tp9_(std::nullopt), finalMask_(), delaySimulator_(delaySimulator) {
     }
