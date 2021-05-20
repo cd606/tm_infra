@@ -34,9 +34,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1>, StateT, typename StateT::TimePointType> &&data) {
@@ -143,9 +140,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2>, StateT, typename StateT::TimePointType> &&data) {
@@ -287,9 +281,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3>, StateT, typename StateT::TimePointType> &&data) {
@@ -466,9 +457,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4>, StateT, typename StateT::TimePointType> &&data) {
@@ -680,9 +668,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5>, StateT, typename StateT::TimePointType> &&data) {
@@ -929,9 +914,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6>, StateT, typename StateT::TimePointType> &&data) {
@@ -1213,9 +1195,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, StateT, typename StateT::TimePointType> &&data) {
@@ -1532,9 +1511,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, StateT, typename StateT::TimePointType> &&data) {
@@ -1886,9 +1862,6 @@ public:
         }
     }
     void publish(StateT *env, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&data) {
-        if (this->producerIsStopped(data.index())) {
-            return;
-        }
         publish(withtime_utils::pureTimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, StateT, typename StateT::TimePointType>(env, std::move(data)));
     }
     void publish(TimedDataWithEnvironment<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, StateT, typename StateT::TimePointType> &&data) {

@@ -316,9 +316,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }               
             }
             void publish(StateT *env, T &&data) {
-                if (this->producerIsStopped()) {
-                    return;
-                }
                 publish(withtime_utils::pureTimedDataWithEnvironment<T, StateT, typename StateT::TimePointType>(env, std::move(data)));
             }
             void publish(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
