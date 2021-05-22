@@ -763,9 +763,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using DelaySimulatorType = typename LiftParameters<TimePoint>::DelaySimulatorType;
 
         template <class T>
-        static uint outputIndex(T const &d) {
+        static uint8_t outputIndex(T const &d) {
             if constexpr (withtime_utils::IsVariant<T>::Value) {
-                return d.index();
+                return (uint8_t) (d.index());
             } else {
                 return 0;
             }
