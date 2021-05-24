@@ -123,8 +123,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class T, class Env>
     class Key<std::unique_ptr<T>, Env> {};  //not allowing the holding of an unique pointer as key
     template <class T, class Env>
-    class Key<std::shared_ptr<T>, Env> {};  //not allowing the holding of an shared pointer as key
-    template <class T, class Env>
     class Key<Key<T,Env>, Env> {};  //not allowing duplicate keys
 
     template <class T>
