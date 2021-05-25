@@ -2086,6 +2086,40 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
         }
+        template <class T>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(WithTime<T,TimePoint> &&)>> triggerImporterWithTime() {
+            class LocalI final : public AbstractImporterCore<T> {
+            private:
+                std::deque<WithTime<T,TimePoint>> q_;
+                StateT *env_;
+            public:           
+                virtual Data<T> generate(T const *notUsed=nullptr) {
+                    if (q_.empty()) {
+                        return std::nullopt;
+                    }
+                    Data<T> ret = InnerData<T> {
+                        env_
+                        , std::move(q_.front())
+                    };
+                    q_.pop_front();
+                    return ret;
+                }
+                LocalI() : AbstractImporterCore<T>(), q_(), env_(nullptr) {}
+                virtual void start(StateT *env) override final {
+                    env_ = env;
+                }
+                void trigger(WithTime<T,TimePoint> &&t) {
+                    q_.push_back(std::move(t));
+                }
+            };
+            auto *p = new LocalI();
+            return {
+                std::make_shared<Importer<T>>(p)
+                , [p](WithTime<T,TimePoint> &&t) {
+                    p->trigger(std::move(t));
+                }
+            };
+        }
     public:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
@@ -2797,6 +2831,49 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }       
             };        
+        }
+        std::function<std::function<bool(StateT *)>(StateT *)> finalizeForInterleaving() {
+            std::list<IExternalComponent *> aCopy = std::move(externalComponents_);
+            InputMultiplexer<SpecialOutputDataTypeForExporters> joinedSourceCopy = std::move(joinedSource_);
+            InputMultiplexer<SpecialOutputDataTypeForExporters> joinedSpecialSourceCopy = std::move(joinedSpecialSource_);
+            return [aCopy=std::move(aCopy),joinedSourceCopy=std::move(joinedSourceCopy),joinedSpecialSourceCopy=std::move(joinedSpecialSourceCopy)](StateT *env) -> std::function<bool(StateT *)> {
+                for (auto c : aCopy) {
+                    c->start(env);
+                }
+                InputMultiplexer<SpecialOutputDataTypeForExporters> s = std::move(joinedSourceCopy);
+                InputMultiplexer<SpecialOutputDataTypeForExporters> s1 = std::move(joinedSpecialSourceCopy);
+                if (!s.hasSource() && !s1.hasSource()) {
+                    return [](StateT *stepEnv) {
+                        return false;
+                    };
+                }
+                auto *finalMultiplexer = new InputMultiplexer<SpecialOutputDataTypeForExporters>();
+                if (s1.hasSource()) {
+                    finalMultiplexer->addSource(new InputMultiplexer<SpecialOutputDataTypeForExporters>(s1));
+                }
+                if (s.hasSource()) {
+                    finalMultiplexer->addSource(new InputMultiplexer<SpecialOutputDataTypeForExporters>(s));
+                }
+                return [finalMultiplexer](StateT *stepEnv) -> bool {
+                    if (stepEnv->running()) {
+                        auto cert = finalMultiplexer->poll();
+                        if (cert.check()) {
+                            auto d = finalMultiplexer->next(std::move(cert));
+                            if (!d) {
+                                return true;
+                            }
+                            if (d->timedData.finalFlag) {
+                                return false;
+                            }
+                            return true;
+                        } else {
+                            return true;
+                        }
+                    } else {
+                        return false;
+                    } 
+                };   
+            };
         }
     public:
         template <class X>

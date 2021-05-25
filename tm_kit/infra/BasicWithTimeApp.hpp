@@ -315,6 +315,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , [](T &&) {}
             };
         }
+        template <class T>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(WithTime<T,TimePoint> &&)>> triggerImporterWithTime() {
+            return {
+                std::make_shared<Importer<T>>()
+                , [](WithTime<T,TimePoint> &&) {}
+            };
+        }
     
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporter : public virtual IExternalComponent {
@@ -707,6 +714,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     
         std::function<void(StateT *)> finalize() { 
             return [](StateT *) {};
+        }
+        std::function<std::function<bool(StateT *)>(StateT *)> finalizeForInterleaving() {
+            return [](StateT *) -> std::function<bool(StateT *)> {
+                return [](StateT *) -> bool {
+                    return false;
+                };
+            };
         }
 
     public:

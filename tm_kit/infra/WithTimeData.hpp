@@ -2196,8 +2196,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return std::nullopt;
         }
-    public:
-        void finalize() {
+    private:
+        void finalizeBegin() {
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 for (auto const &item : nameMap_) {
@@ -2281,7 +2281,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (std::is_convertible_v<StateT *, TraceNodesComponent *>) {
                 env_->setNodeNameMap(underlyingPointerNameMap_);
             }
+        }
+    public:
+        void finalize() {
+            finalizeBegin();
             m_.finalize()(env_);
+        }
+        std::function<bool()> finalizeForInterleaving() {
+            finalizeBegin();
+            auto f = m_.finalizeForInterleaving()(env_);
+            return [f,this]() -> bool {
+                return f(env_);
+            };
         }
 
         template <class T>

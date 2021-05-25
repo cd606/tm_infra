@@ -2110,6 +2110,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 };
             }
         }
+        template <class T, bool HasOwnThread=true>
+        static std::tuple<std::shared_ptr<Importer<T>>,std::function<void(WithTime<T,TimePoint> &&)>> triggerImporterWithTime() {
+            auto imp = triggerImporter<T,HasOwnThread>();
+            auto f = std::get<1>(imp);
+            return {
+                std::get<0>(imp)
+                , [f](WithTime<T,TimePoint> &&x) {
+                    f(std::move(x.value));
+                }
+            };
+        }
     public:
         template <class T>
         using AbstractExporter = typename RealTimeAppComponents<StateT>::template AbstractExporter<T>;
@@ -2721,6 +2732,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 for (auto c : aCopy) {
                     c->start(env);
                 }
+            };        
+        }
+        std::function<std::function<bool(StateT *)>(StateT *)> finalizeForInterleaving() { 
+            std::list<IExternalComponent *> aCopy;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                std::copy(externalComponents_[0].begin(), externalComponents_[0].end(), std::back_inserter(aCopy));
+                std::copy(externalComponents_[1].begin(), externalComponents_[1].end(), std::back_inserter(aCopy));
+                std::copy(externalComponents_[2].begin(), externalComponents_[2].end(), std::back_inserter(aCopy));
+            }  
+            return [aCopy=std::move(aCopy)](StateT *env) -> std::function<bool(StateT *)> {
+                for (auto c : aCopy) {
+                    c->start(env);
+                }
+                return [](StateT *stepEnv) -> bool {
+                    return false; //for real-time, the actions all happen on separate threads, so stepper can simply return false
+                };
             };        
         }
     public:

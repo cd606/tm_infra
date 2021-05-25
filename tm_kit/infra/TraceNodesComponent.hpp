@@ -15,12 +15,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         int64_t pid_;
         std::unordered_map<void *, std::string> nodeNameMap_;
+        std::atomic<std::ostream *> traceStream_;
     public:
-        TraceNodesComponent() : pid_(pid_util::getpid()), nodeNameMap_() {}
-        TraceNodesComponent(TraceNodesComponent const &) = default;
-        TraceNodesComponent(TraceNodesComponent &&) = default;
-        TraceNodesComponent &operator=(TraceNodesComponent const &) = default;
-        TraceNodesComponent &operator=(TraceNodesComponent &&) = default;
+        TraceNodesComponent() : pid_(pid_util::getpid()), nodeNameMap_(), traceStream_(nullptr) {}
+        TraceNodesComponent(TraceNodesComponent const &) = delete;
+        TraceNodesComponent(TraceNodesComponent &&) = delete;
+        TraceNodesComponent &operator=(TraceNodesComponent const &) = delete;
+        TraceNodesComponent &operator=(TraceNodesComponent &&) = delete;
         ~TraceNodesComponent() = default;
         
         //Please note that the methods are not mutex protected
@@ -35,19 +36,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return &(iter->second);
             }
         }
+        void setTraceStream(std::ostream *os) {
+            traceStream_.store(os);
+        }
         template <class Env>
         void writeTrace(Env *env, int64_t tid, std::string const *name, char phase) const {
             if (!name) {
                 return;
             }
-            std::ostringstream oss;
-            oss << "{\"name\": \"" << *name << "\""
-                << ",\"pid\": " << pid_
-                << ",\"tid\": " << tid
-                << ",\"ph\": \"" << phase << "\""
-                << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
-                << "}";
-            env->log(LogLevel::Trace, oss.str());
+            if (traceStream_.load()) {
+                (*traceStream_) << "{\"name\": \"" << *name << "\""
+                    << ",\"pid\": " << pid_
+                    << ",\"tid\": " << tid
+                    << ",\"ph\": \"" << phase << "\""
+                    << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
+                    << "}\n";
+            } else {
+                std::ostringstream oss;
+                oss << "{\"name\": \"" << *name << "\""
+                    << ",\"pid\": " << pid_
+                    << ",\"tid\": " << tid
+                    << ",\"ph\": \"" << phase << "\""
+                    << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
+                    << "}";
+                env->log(LogLevel::Trace, oss.str());
+            }
         }
     };
 
