@@ -2206,7 +2206,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T, class F>
         static std::shared_ptr<Exporter<T>> pureExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
-            auto wrapper = [f=std::move(f)](InnerData<T> &&d) {
+            auto wrapper = [f=std::move(f)](InnerData<T> &&d) mutable {
                 f(std::move(d.timedData.value));
             };
             return simpleExporter<T>(std::move(wrapper), liftParam);
