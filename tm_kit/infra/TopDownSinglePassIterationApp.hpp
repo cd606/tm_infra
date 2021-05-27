@@ -401,9 +401,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //We don't allow any action to manufacture KeyedData "out of the blue"
         //, but it is ok to manipulate Keys, so the check is one-sided
         //Moreover, we allow manipulation of KeyedData
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
+        template <class A, class B>
         class AbstractAction : public virtual IHandler<A>, public Producer<B>, public virtual IControllableNode<StateT>, public virtual IObservableNode<StateT> {
         public:
+            static_assert((!is_keyed_data_v<B> || is_keyed_data_v<A>), "action cannot manufacture keyed data");
             virtual bool isOneTimeOnly() const = 0;
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
