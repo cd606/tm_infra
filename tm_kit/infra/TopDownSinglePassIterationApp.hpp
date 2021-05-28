@@ -218,12 +218,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 action_();
             }
         };
-        using TaskQueue = std::priority_queue<TaskQueueItem, std::vector<TaskQueueItem>, std::greater<TaskQueueItem>>;
+        class TaskQueueItemPtrComparor {
+        public:
+            bool operator()(TaskQueueItem *a, TaskQueueItem *b) {
+                return (*b < *a);
+            }
+        };
+        using TaskQueue = std::priority_queue<TaskQueueItem *, std::vector<TaskQueueItem *>, TaskQueueItemPtrComparor>; //std::greater<TaskQueueItem>>;
     private:
         TaskQueue taskQueue_;
     public:
         void enqueueTask(bool fromImporter, typename StateT::TimePointType const &tp, std::function<void()> &&action) {
-            taskQueue_.push(TaskQueueItem(this, fromImporter, tp, std::move(action)));
+            taskQueue_.push(new TaskQueueItem(this, fromImporter, tp, std::move(action)));
         }
 
         template <class T>
@@ -2290,9 +2296,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 importers_.erase(iter);
             }
             while (!taskQueue_.empty()) {
-                bool isImporterTask = taskQueue_.top().fromImporter();
-                taskQueue_.top().act(env);
+                auto *topTask = taskQueue_.top();
                 taskQueue_.pop();
+                bool isImporterTask = topTask->fromImporter();
+                topTask->act(env);
+                delete topTask;
                 if (isImporterTask) {
                     break;
                 }
