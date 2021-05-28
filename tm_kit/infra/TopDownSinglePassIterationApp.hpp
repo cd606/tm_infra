@@ -1477,6 +1477,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 decltype((* ((F *) nullptr))((StateT *) nullptr))
                 , std::tuple<bool, Data<T>>
             >
+            ||
+            std::is_same_v<
+                decltype((* ((F *) nullptr))((StateT *) nullptr))
+                , Data<T>
+            >
         >>
         class SimpleImporter final : public AbstractImporter<T> {
         private:
@@ -1484,13 +1489,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             DelaySimulator delaySimulator_;
             StateT *env_;
             std::tuple<bool, Data<T>> generate(T const *) override final {
-                auto ret = f_(env_);
-                if (std::get<1>(ret)) {
-                    if (delaySimulator_) {
-                        std::get<1>(ret)->timedData.timePoint += (*delaySimulator_)(0, std::get<1>(ret)->timedData.timePoint);
+                if constexpr(std::is_same_v<
+                    decltype((* ((F *) nullptr))((StateT *) nullptr))
+                    , std::tuple<bool, Data<T>>
+                >) {
+                    auto ret = f_(env_);
+                    if (std::get<1>(ret)) {
+                        if (delaySimulator_) {
+                            std::get<1>(ret)->timedData.timePoint += (*delaySimulator_)(0, std::get<1>(ret)->timedData.timePoint);
+                        }
+                    }
+                    return std::move(ret);
+                } else {
+                    auto ret = f_(env_);
+                    if (ret) {
+                        if (delaySimulator_) {
+                            ret->timedData.timePoint += (*delaySimulator_)(0, ret->timedData.timePoint);
+                        }
+                        return {!(ret->timedData.finalFlag), std::move(ret)};
+                    } else {
+                        return {true, std::nullopt};
                     }
                 }
-                return std::move(ret);
             }
         public:
             SimpleImporter(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator), env_(nullptr) {}
@@ -1523,7 +1543,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         static std::shared_ptr<Importer<T>> constFirstPushImporter(T &&t = T()) {
             return simpleImporter<T>(
-                [t=std::move(t)](StateT *env) mutable -> Data<T> {
+                [t=std::move(t)](StateT *env) mutable -> std::tuple<bool, Data<T>> {
                     return {false, InnerData<T> {
                         env
                         , {
