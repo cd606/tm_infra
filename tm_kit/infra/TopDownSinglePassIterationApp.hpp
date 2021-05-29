@@ -42,8 +42,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             Env *env_;
         public:
-            TimeSetter(Env *env, typename Env::TimePointType const &localTime) : env_(env) {
-                env->resolveTime(localTime);
+            TimeSetter(Env *env, typename Env::TimePointType const &localTime, bool fromImporter) : env_(env) {
+                if (fromImporter) {
+                    env->resolveTime(localTime);
+                }
                 env->setLocalTime(localTime);
             }
             ~TimeSetter() {
@@ -53,7 +55,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Env>
         class TimeSetter<Env, false> {
         public:
-            TimeSetter(Env *env, typename Env::TimePointType const &tp) {
+            TimeSetter(Env *env, typename Env::TimePointType const &tp, bool fromImporter) {
                 env->resolveTime(tp);
             }
             ~TimeSetter() {}
@@ -214,7 +216,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return fromImporter_;
             }
             void act(StateT *env) const {
-                top_down_single_pass_iteration_app_utils::TimeSetter<StateT> _ {env, tp_};
+                top_down_single_pass_iteration_app_utils::TimeSetter<StateT> _ {env, tp_, fromImporter_};
                 action_();
             }
         };
