@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <thread>
+#include <mutex>
 
 #include <tm_kit/infra/PidUtil.hpp>
 
@@ -15,9 +16,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         int64_t pid_;
         std::unordered_map<void *, std::string> nodeNameMap_;
+        mutable std::mutex traceStreamMutex_;
         std::atomic<std::ostream *> traceStream_;
     public:
-        TraceNodesComponent() : pid_(pid_util::getpid()), nodeNameMap_(), traceStream_(nullptr) {}
+        TraceNodesComponent() : pid_(pid_util::getpid()), nodeNameMap_(), traceStreamMutex_(), traceStream_(nullptr) {}
         TraceNodesComponent(TraceNodesComponent const &) = delete;
         TraceNodesComponent(TraceNodesComponent &&) = delete;
         TraceNodesComponent &operator=(TraceNodesComponent const &) = delete;
@@ -44,13 +46,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (!name) {
                 return;
             }
-            if (traceStream_.load()) {
-                (*traceStream_) << "{\"name\": \"" << *name << "\""
+            auto *p = traceStream_.load();
+            if (p) {
+                std::lock_guard<std::mutex> _(traceStreamMutex_);
+                (*p) << "{\"name\": \"" << *name << "\""
                     << ",\"pid\": " << pid_
                     << ",\"tid\": " << tid
                     << ",\"ph\": \"" << phase << "\""
                     << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
-                    << "}\n";
+                    << "},\n";
             } else {
                 std::ostringstream oss;
                 oss << "{\"name\": \"" << *name << "\""
@@ -58,7 +62,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     << ",\"tid\": " << tid
                     << ",\"ph\": \"" << phase << "\""
                     << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
-                    << "}";
+                    << "},";
                 env->log(LogLevel::Trace, oss.str());
             }
         }
