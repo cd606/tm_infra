@@ -592,6 +592,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class Source {
         private:
             friend class AppRunner;
+            using TheDataTypeOfThisSource = T;
             typename App::template Source<T> mSource;
             std::string producer;
             bool useAltOutput;
@@ -610,6 +611,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class Sink {
         private:
             friend class AppRunner;
+            using TheDataTypeOfThisSink = T;
             typename App::template Sink<T> mSink;
             std::string consumer;
             int pos;
@@ -2389,16 +2391,42 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return vieFacilityConnector<A,B,C,D>(facility);
         }
 
+    private:
         template <class A>
-        using Sourceoid = std::function<void(AppRunner &, Sink<A> const &)>;
+        class SinkMatch {
+        public:
+            using TheType = Sink<A>;
+        };
+        template <class... As>
+        class SinkMatch<std::variant<As...>> {
+        public:
+            using TheType = std::variant<Sink<As>...>;
+        };
+
+    public:
+        template <class A>
+        using Sourceoid = std::function<void(AppRunner &, typename SinkMatch<A>::TheType const &)>;
         template <class A>
         using Sinkoid = std::function<void(AppRunner &, Source<A> &&)>;
 
         template <class A>
         static Sourceoid<A> sourceAsSourceoid(Source<A> &&src) {
-            Source<A> src1 = src.clone();
-            return [src1](AppRunner &r, Sink<A> const &sink) {
+            return [src1=src.clone()](AppRunner &r, Sink<A> const &sink) {
                 r.connect(src1.clone(), sink);
+            };
+        }
+    private:
+        template <std::size_t Idx, std::size_t Total, class VariantSourceType, class VariantSinkType>
+        static void connect_variant_source_to_variant_sink_internal_(
+            AppRunner &r 
+            , VariantSourceType &&src
+            , VariantSinkType const &sink
+        );
+    public:
+        template <class... As>
+        static Sourceoid<std::variant<As...>> sourceAsSourceoid(Source<std::variant<As...>> &&src) {
+            return [src1=src.clone()](AppRunner &r, std::variant<Sink<As>...> const &sink) {
+                connect_variant_source_to_variant_sink_internal_<0, sizeof...(As), Source<std::variant<As...>>, std::variant<Sink<As>...>>(r, src1.clone(), sink);
             };
         }
         template <class A>
@@ -2406,7 +2434,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (src) {
                 return sourceAsSourceoid(std::move(*src));
             } else {
-                return [](AppRunner &, Sink<A> const &) {};
+                return Sourceoid<A> {};
             }
         }
         template <class A>
@@ -2426,7 +2454,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else if constexpr (std::is_same_v<T, std::optional<Source<A>>>) {
                     return sourceAsSourceoid<A>(std::move(x));
                 } else {
-                    return [](AppRunner &, Sink<A> const &) {};
+                    return Sourceoid<A> {};
                 }
             }, std::move(s));
         }
@@ -2574,14 +2602,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             registerAction(connectorName, connector);
             sink(*this, actionAsSource(connector));
             return actionAsSink(connector);
-        }
-        template <class A>
-        void connect(Sourceoid<A> const &src, Sink<A> const &sink) {
-            src(*this, sink);
-        }
-        template <class A>
-        void connect(Source<A> &&src, Sinkoid<A> const &sink) {
-            sink(*this, std::move(src));
         }
 
         template <class A, class B>
@@ -3295,6 +3315,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
+    }
+
+    template <class App>
+    template <std::size_t Idx, std::size_t Total, class VariantSourceType, class VariantSinkType>
+    void AppRunner<App>::connect_variant_source_to_variant_sink_internal_(
+        AppRunner<App> &r 
+        , VariantSourceType &&src
+        , VariantSinkType const &sink
+    ) {
+        if constexpr (Idx < Total) {
+            if (Idx == sink.index()) {
+                AppRunnerHelper::Connect<Total,Idx>::template call<
+                    AppRunner<App>, typename VariantSourceType::TheDataTypeOfThisSource
+                >(r, std::move(src), std::get<Idx>(sink));
+            } else {
+                connect_variant_source_to_variant_sink_internal_<Idx+1,Total,VariantSourceType,VariantSinkType>(
+                    r, std::move(src), sink
+                );
+            }
+        }
     }
 
 }}}}
