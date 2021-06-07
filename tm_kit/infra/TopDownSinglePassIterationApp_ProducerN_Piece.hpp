@@ -43,6 +43,18 @@ public:
 };
 template <class A0, class A1, bool IsImporter>
 class Producer<std::variant<A0,A1>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -76,7 +88,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -91,7 +103,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -100,7 +112,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -123,7 +135,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -138,7 +150,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -147,7 +159,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -219,6 +231,18 @@ public:
 };
 template <class A0, class A1, class A2, bool IsImporter>
 class Producer<std::variant<A0,A1,A2>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -252,7 +276,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -267,7 +291,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -276,7 +300,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -299,7 +323,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -314,7 +338,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -323,7 +347,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -346,7 +370,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -361,7 +385,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -370,7 +394,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -453,6 +477,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -486,7 +522,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -501,7 +537,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -510,7 +546,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -533,7 +569,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -548,7 +584,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -557,7 +593,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -580,7 +616,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -595,7 +631,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -604,7 +640,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -627,7 +663,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -642,7 +678,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -651,7 +687,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -745,6 +781,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, class A4, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -778,7 +826,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -793,7 +841,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -802,7 +850,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -825,7 +873,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -840,7 +888,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -849,7 +897,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -872,7 +920,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -887,7 +935,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -896,7 +944,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -919,7 +967,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -934,7 +982,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -943,7 +991,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -966,7 +1014,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers4_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4> &&x) {return std::get<4>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -981,7 +1029,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers4_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -990,7 +1038,7 @@ public:
                         }
                         auto *p = this->handlers4_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1095,6 +1143,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -1128,7 +1188,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1143,7 +1203,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1152,7 +1212,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1175,7 +1235,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1190,7 +1250,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1199,7 +1259,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1222,7 +1282,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1237,7 +1297,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1246,7 +1306,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1269,7 +1329,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1284,7 +1344,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1293,7 +1353,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1316,7 +1376,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers4_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<4>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1331,7 +1391,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers4_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1340,7 +1400,7 @@ public:
                         }
                         auto *p = this->handlers4_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1363,7 +1423,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers5_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5> &&x) {return std::get<5>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1378,7 +1438,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers5_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1387,7 +1447,7 @@ public:
                         }
                         auto *p = this->handlers5_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1503,6 +1563,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -1536,7 +1608,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1551,7 +1623,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1560,7 +1632,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1583,7 +1655,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1598,7 +1670,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1607,7 +1679,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1630,7 +1702,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1645,7 +1717,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1654,7 +1726,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1677,7 +1749,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1692,7 +1764,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1701,7 +1773,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1724,7 +1796,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers4_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<4>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1739,7 +1811,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers4_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1748,7 +1820,7 @@ public:
                         }
                         auto *p = this->handlers4_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1771,7 +1843,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers5_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<5>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1786,7 +1858,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers5_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1795,7 +1867,7 @@ public:
                         }
                         auto *p = this->handlers5_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1818,7 +1890,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers6_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6> &&x) {return std::get<6>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -1833,7 +1905,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers6_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -1842,7 +1914,7 @@ public:
                         }
                         auto *p = this->handlers6_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -1969,6 +2041,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -2002,7 +2086,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2017,7 +2101,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2026,7 +2110,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2049,7 +2133,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2064,7 +2148,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2073,7 +2157,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2096,7 +2180,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2111,7 +2195,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2120,7 +2204,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2143,7 +2227,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2158,7 +2242,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2167,7 +2251,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2190,7 +2274,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers4_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<4>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2205,7 +2289,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers4_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2214,7 +2298,7 @@ public:
                         }
                         auto *p = this->handlers4_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2237,7 +2321,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers5_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<5>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2252,7 +2336,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers5_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2261,7 +2345,7 @@ public:
                         }
                         auto *p = this->handlers5_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2284,7 +2368,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers6_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<6>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2299,7 +2383,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers6_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2308,7 +2392,7 @@ public:
                         }
                         auto *p = this->handlers6_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2331,7 +2415,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers7_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7> &&x) {return std::get<7>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2346,7 +2430,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers7_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2355,7 +2439,7 @@ public:
                         }
                         auto *p = this->handlers7_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2493,6 +2577,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -2526,7 +2622,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2541,7 +2637,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2550,7 +2646,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2573,7 +2669,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2588,7 +2684,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2597,7 +2693,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2620,7 +2716,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2635,7 +2731,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2644,7 +2740,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2667,7 +2763,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2682,7 +2778,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2691,7 +2787,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2714,7 +2810,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers4_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<4>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2729,7 +2825,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers4_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2738,7 +2834,7 @@ public:
                         }
                         auto *p = this->handlers4_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2761,7 +2857,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers5_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<5>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2776,7 +2872,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers5_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2785,7 +2881,7 @@ public:
                         }
                         auto *p = this->handlers5_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2808,7 +2904,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers6_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<6>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2823,7 +2919,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers6_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2832,7 +2928,7 @@ public:
                         }
                         auto *p = this->handlers6_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2855,7 +2951,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers7_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<7>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2870,7 +2966,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers7_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2879,7 +2975,7 @@ public:
                         }
                         auto *p = this->handlers7_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -2902,7 +2998,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers8_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> &&x) {return std::get<8>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -2917,7 +3013,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers8_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -2926,7 +3022,7 @@ public:
                         }
                         auto *p = this->handlers8_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3075,6 +3171,18 @@ public:
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
+private:
+    AbstractImporterBase *asImporter() {
+        if constexpr (IsImporter) {
+            static AbstractImporterBase *ret = nullptr;
+            if (ret == nullptr) {
+                ret = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return ret;
+        } else {
+            return nullptr;
+        }
+    }
 public:
     Producer() = default;
     Producer(Producer const &) = delete;
@@ -3108,7 +3216,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers0_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<0>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3123,7 +3231,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers0_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3132,7 +3240,7 @@ public:
                         }
                         auto *p = this->handlers0_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3155,7 +3263,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers1_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<1>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3170,7 +3278,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers1_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3179,7 +3287,7 @@ public:
                         }
                         auto *p = this->handlers1_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3202,7 +3310,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers2_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<2>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3217,7 +3325,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers2_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3226,7 +3334,7 @@ public:
                         }
                         auto *p = this->handlers2_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3249,7 +3357,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers3_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<3>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3264,7 +3372,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers3_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3273,7 +3381,7 @@ public:
                         }
                         auto *p = this->handlers3_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3296,7 +3404,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers4_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<4>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3311,7 +3419,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers4_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3320,7 +3428,7 @@ public:
                         }
                         auto *p = this->handlers4_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3343,7 +3451,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers5_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<5>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3358,7 +3466,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers5_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3367,7 +3475,7 @@ public:
                         }
                         auto *p = this->handlers5_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3390,7 +3498,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers6_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<6>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3405,7 +3513,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers6_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3414,7 +3522,7 @@ public:
                         }
                         auto *p = this->handlers6_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3437,7 +3545,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers7_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<7>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3452,7 +3560,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers7_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3461,7 +3569,7 @@ public:
                         }
                         auto *p = this->handlers7_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3484,7 +3592,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers8_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<8>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3499,7 +3607,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers8_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3508,7 +3616,7 @@ public:
                         }
                         auto *p = this->handlers8_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));
@@ -3531,7 +3639,7 @@ public:
                         auto tp = data.timedData.timePoint;
                         auto *p = this->handlers9_.front();
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(data).mapMove([](std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> &&x) {return std::get<9>(std::move(x));}, true)]() mutable {
                                 p->handle(std::move(data));
@@ -3546,7 +3654,7 @@ public:
                         for (auto ii=0; ii<s-1; ++ii) {
                             auto *p = this->handlers9_[ii];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=ownedCopy.clone()]() mutable {
                                     p->handle(std::move(data));
@@ -3555,7 +3663,7 @@ public:
                         }
                         auto *p = this->handlers9_[s-1];
                         this->parent_->enqueueTask(
-                            IsImporter
+                            asImporter()
                             , tp
                             , [p,data=std::move(ownedCopy)]() mutable {
                                 p->handle(std::move(data));

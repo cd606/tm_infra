@@ -9,7 +9,7 @@
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     //an environment is simply a mixture of components
     template <class ... Components>
-    class Environment : public Components... {
+    class Environment : public virtual Components... {
     public:
         Environment() : Components()... {}
         Environment(Components const &... components) : Components(components)... {}
@@ -62,6 +62,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return t_;
         }
     };
+    //This marks hidden time dependency inside the environment
+    //Currently this affects TopDown execution scheme, but it may
+    //affect others in the future
+    class HiddenTimeDependencyComponent {};
 } } } }
 
 #endif

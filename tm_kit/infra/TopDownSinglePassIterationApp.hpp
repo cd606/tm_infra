@@ -5,6 +5,7 @@
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
 #include <tm_kit/infra/StoppableProducer.hpp>
+#include <tm_kit/infra/Environments.hpp>
 
 #include <vector>
 #include <list>
@@ -34,26 +35,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         static auto hasResetLocalTime(long) -> std::false_type;
 
-        template <class Env, bool HasSetTime=(decltype(hasSetLocalTime<Env>(0))::value && decltype(hasResetLocalTime<Env>(0))::value)>
+        template <class Env, bool DontUseSetTime, bool HasSetTime=(decltype(hasSetLocalTime<Env>(0))::value && decltype(hasResetLocalTime<Env>(0))::value)>
         class TimeSetter;
         
-        template <class Env>
-        class TimeSetter<Env, true> {
+        template <class Env, bool DontUseSetTime>
+        class TimeSetter<Env, DontUseSetTime, true> {
         private:
             Env *env_;
         public:
             TimeSetter(Env *env, typename Env::TimePointType const &localTime, bool fromImporter) : env_(env) {
-                if (fromImporter) {
+                if constexpr (!DontUseSetTime) {
+                    if (fromImporter) {
+                        env->resolveTime(localTime);
+                    }
+                    env->setLocalTime(localTime);
+                } else {
                     env->resolveTime(localTime);
                 }
-                env->setLocalTime(localTime);
             }
             ~TimeSetter() {
-                env_->resetLocalTime();
+                if constexpr (!DontUseSetTime) {
+                    env_->resetLocalTime();
+                }
             }
         };
-        template <class Env>
-        class TimeSetter<Env, false> {
+        template <class Env, bool DontUseSetTime>
+        class TimeSetter<Env, DontUseSetTime, false> {
         public:
             TimeSetter(Env *env, typename Env::TimePointType const &tp, bool fromImporter) {
                 env->resolveTime(tp);
@@ -64,6 +71,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     
     template <class StateT, std::enable_if_t<StateT::PreserveInputRelativeOrder,int> = 0>
     class TopDownSinglePassIterationApp {
+    private:
+        static constexpr bool UseExecutionStrategyThatAllowsForHiddenTimeDependency
+            = std::is_convertible_v<
+                StateT *
+                , HiddenTimeDependencyComponent *
+            >;
     public:
         friend class AppRunner<TopDownSinglePassIterationApp>;
 
@@ -166,16 +179,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return (idCounter_++);
         }
 
+        class AbstractImporterBase;
+
         class TaskQueueItem {
         private:
             typename StateT::TimePointType tp_;
             uint64_t id_;
-            bool fromImporter_;
+            AbstractImporterBase *importer_;
             std::function<void()> action_;
         public:
-            TaskQueueItem() : tp_(), id_(0), fromImporter_(false), action_() {}
-            TaskQueueItem(TopDownSinglePassIterationApp *app, bool fromImporter, typename StateT::TimePointType const &tp, std::function<void()> &&action) 
-                : tp_(tp), id_(app->nextID()), fromImporter_(fromImporter), action_(std::move(action)) 
+            TaskQueueItem() : tp_(), id_(0), importer_(nullptr), action_() {}
+            TaskQueueItem(TopDownSinglePassIterationApp *app, AbstractImporterBase *importer, typename StateT::TimePointType const &tp, std::function<void()> &&action) 
+                : tp_(tp), id_(app->nextID()), importer_(importer), action_(std::move(action)) 
             {}
             ~TaskQueueItem() = default;
             TaskQueueItem(TaskQueueItem const &) = default;
@@ -213,10 +228,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return id_ == q.id_;
             }
             bool fromImporter() const {
-                return fromImporter_;
+                return (importer_ != nullptr);
+            }
+            AbstractImporterBase *importer() const {
+                return importer_;
             }
             void act(StateT *env) const {
-                top_down_single_pass_iteration_app_utils::TimeSetter<StateT> _ {env, tp_, fromImporter_};
+                top_down_single_pass_iteration_app_utils::TimeSetter<StateT,UseExecutionStrategyThatAllowsForHiddenTimeDependency> _ {env, tp_, (importer_ != nullptr)};
                 action_();
             }
         };
@@ -230,8 +248,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         TaskQueue taskQueue_;
     public:
-        void enqueueTask(bool fromImporter, typename StateT::TimePointType const &tp, std::function<void()> &&action) {
-            taskQueue_.push(new TaskQueueItem(this, fromImporter, tp, std::move(action)));
+        void enqueueTask(AbstractImporterBase *importer, typename StateT::TimePointType const &tp, std::function<void()> &&action) {
+            taskQueue_.push(new TaskQueueItem(this, importer, tp, std::move(action)));
+            if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
+                if (importer != nullptr) {
+                    importerInQueueSet_.insert(importer);
+                }
+            }
         }
 
         template <class T>
@@ -269,6 +292,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T, bool IsImporter=false>
         class Producer : public virtual ProducerBase<T> {
+        private:
+            AbstractImporterBase *asImporter() {
+                if constexpr (IsImporter) {
+                    static AbstractImporterBase *ret = nullptr;
+                    if (ret == nullptr) {
+                        ret = dynamic_cast<AbstractImporterBase *>(this);
+                    }
+                    return ret;
+                } else {
+                    return nullptr;
+                }
+            }
         public:
             Producer() = default;
             Producer(Producer const &) = delete;
@@ -295,7 +330,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             auto tp = data.timedData.timePoint;
                             auto *p = this->handlers_.front();
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=std::move(data)]() mutable {
                                     p->handle(std::move(data));
@@ -309,7 +344,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             for (auto ii=0; ii<s-1; ++ii) {
                                 auto *p = this->handlers_[ii];
                                 this->parent_->enqueueTask(
-                                    IsImporter
+                                    asImporter()
                                     , tp
                                     , [p,c=data.clone()]() mutable {
                                         p->handle(std::move(c));
@@ -318,7 +353,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             }
                             auto *p = this->handlers_[s-1];
                             this->parent_->enqueueTask(
-                                IsImporter
+                                asImporter()
                                 , tp
                                 , [p,data=std::move(data)]() mutable {
                                     p->handle(std::move(data));
@@ -381,7 +416,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 auto tp = data.timedData.timePoint;
                 parent_->enqueueTask(
-                    false
+                    nullptr
                     , tp 
                     , [h,output=withtime_utils::pureTimedDataWithEnvironment<KeyedData<A,B>, StateT, typename StateT::TimePointType>(data.environment, std::move(outputT))]() mutable {
                         h->handle(std::move(output));
@@ -1780,7 +1815,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         origDone_ = !(orig_.core_->next());
                     }
                     if (data_.empty()) {
-                        return {true, std::nullopt};
+                        return {!origDone_, std::nullopt};
                     }
                     InnerData<T2> ret = std::move(data_.front());
                     data_.pop_front();
@@ -2117,9 +2152,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<IExternalComponent *> externalComponents_[3];
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         std::list<AbstractImporterBase *> importers_;
-        std::unordered_set<AbstractImporterBase *> importerSet_;
+        std::unordered_set<AbstractImporterBase *> importerSet_, importerInQueueSet_;
         std::mutex mutex_;
-        TopDownSinglePassIterationApp() : idCounter_(0), taskQueue_(), externalComponents_(), externalComponentsSet_(), importers_(), importerSet_(), mutex_() {}
+        TopDownSinglePassIterationApp() : idCounter_(0), taskQueue_(), externalComponents_(), externalComponentsSet_(), importers_(), importerSet_(), importerInQueueSet_(), mutex_() {}
         ~TopDownSinglePassIterationApp() = default;
 
         void registerExternalComponent(IExternalComponent *c, int idx) {
@@ -2308,23 +2343,49 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         bool runOneStep(StateT *env) {
             std::list<typename std::list<AbstractImporterBase *>::iterator> doneIterators;
-            for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
-                if (!(*iter)->next()) {
-                    importerSet_.erase(*iter);
-                    doneIterators.push_back(iter);
+            if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
+                for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
+                    auto *pImporter = *iter;
+                    if (importerInQueueSet_.find(pImporter) == importerInQueueSet_.end()) {
+                        if (!pImporter->next()) {
+                            importerSet_.erase(pImporter);
+                            doneIterators.push_back(iter);
+                        }
+                    }
                 }
-            }
-            for (auto iter : doneIterators) {
-                importers_.erase(iter);
-            }
-            while (!taskQueue_.empty()) {
-                auto *topTask = taskQueue_.top();
-                taskQueue_.pop();
-                bool isImporterTask = topTask->fromImporter();
-                topTask->act(env);
-                delete topTask;
-                if (isImporterTask) {
-                    break;
+                for (auto iter : doneIterators) {
+                    importers_.erase(iter);
+                }
+                if (!taskQueue_.empty()) {
+                    auto *topTask = taskQueue_.top();
+                    taskQueue_.pop();
+                    auto *topTaskImporter = topTask->importer();
+                    topTask->act(env);
+                    delete topTask;
+                    if (topTaskImporter != nullptr) {
+                        importerInQueueSet_.erase(topTaskImporter);
+                    }
+                }
+            } else {
+                for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
+                    auto *pImporter = *iter;
+                    if (!pImporter->next()) {
+                        importerSet_.erase(pImporter);
+                        doneIterators.push_back(iter);
+                    }
+                }
+                for (auto iter : doneIterators) {
+                    importers_.erase(iter);
+                }
+                while (!taskQueue_.empty()) {
+                    auto *topTask = taskQueue_.top();
+                    taskQueue_.pop();
+                    bool isImporterTask = topTask->fromImporter();
+                    topTask->act(env);
+                    delete topTask;
+                    if (isImporterTask) {
+                        break;
+                    }
                 }
             }
             return !(importers_.empty() && taskQueue_.empty());
