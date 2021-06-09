@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <sstream>
+#include <any>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     class OutputRealTimeThreadBufferSizeComponent {};
@@ -2576,6 +2577,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void innerConnect(IHandler<A> *handler, Producer<A> *producer) {
             producer->addHandler(handler);
         }
+        template <class A>
+        class AnyHandlerAdapter : public IHandler<A> {
+        private:
+            IHandler<std::any> *handler_;
+        public:
+            AnyHandlerAdapter(IHandler<std::any> *handler) : handler_(handler) {}
+            virtual ~AnyHandlerAdapter() = default;
+            virtual void handle(InnerData<A> &&x) override final {
+                handler_->handle(std::move(x).moveToAny());
+            }
+        };
+        template <class A, typename = std::enable_if_t<!withtime_utils::IsVariant<A>::Value>>
+        static void innerConnectAny(IHandler<std::any> *handler, Producer<A> *producer) {
+            if constexpr (std::is_same_v<A, std::any>) {
+                innerConnect(handler, producer);
+            } else {
+                innerConnect(new AnyHandlerAdapter<A>(handler), producer);
+            }
+        }
         template <class A, class B>
         static void innerConnectFacility(Producer<Key<A>> *producer, typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *facility, IHandler<KeyedData<A,B>> *consumer) {
             class LocalC final : public virtual IHandler<Key<A>> {
@@ -2604,6 +2624,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         Source<B> execute(Action<A,B> &action, Source<A> &&variable) {
             innerConnect(dynamic_cast<IHandler<A> *>(action.core_.get()), variable.producer);
+            return {dynamic_cast<Producer<B> *>(action.core_.get())};
+        }
+        template <class A, class B>
+        Source<B> executeAny(Action<std::any,B> &action, Source<A> &&variable) {
+            innerConnectAny(dynamic_cast<IHandler<std::any> *>(action.core_.get()), variable.producer);
             return {dynamic_cast<Producer<B> *>(action.core_.get())};
         }
 
@@ -2716,6 +2741,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
             innerConnect(sink.consumer, src.producer);
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        void connectAny(Source<T> &&src, Sink<std::any> const &sink) {
+            innerConnectAny(sink.consumer, src.producer);
         }
 
         #include <tm_kit/infra/RealTimeApp_ConnectN_Piece.hpp>

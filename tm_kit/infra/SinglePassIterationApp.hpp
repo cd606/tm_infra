@@ -2649,6 +2649,55 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             consumer->connectToSource(getMultiplexerOutput(provider));
             m[dynamic_cast<ProviderBase *>(provider)].insert(dynamic_cast<ConsumerBase *>(consumer));
         }
+        template <class A>
+        class AnyProviderAdapter : public Provider<std::any> {
+        private:
+            Provider<A> *provider_;
+        public:
+            AnyProviderAdapter(Provider<A> *provider) : provider_(provider) {}
+            virtual ~AnyProviderAdapter() = default;
+            virtual Certificate<std::any> poll() override final {
+                auto cert = provider_->poll();
+                if (cert.check()) {
+                    return Certificate<std::any>(cert.timePoint(), this, new Certificate<A>(cert));
+                } else {
+                    return Certificate<std::any>(std::nullopt, this, (Certificate<A> *) nullptr);
+                }
+            }
+            virtual Data<std::any> next(Certificate<std::any> &&cert) override final {
+                if (cert.check()) {
+                    auto *c = (Certificate<A> *) cert.additionalInfo();
+                    if (c == nullptr) {
+                        return std::nullopt;
+                    }
+                    if (!c->check()) {
+                        return std::nullopt;
+                    }
+                    auto d = provider_->next(std::move(*c));
+                    delete c;
+                    if (!d) {
+                        return std::nullopt;
+                    }
+                    return {std::move(*d).moveToAny()};
+                } else {
+                    return std::nullopt;
+                }
+            }
+        };
+        template <class A, typename = std::enable_if_t<!withtime_utils::IsVariant<A>::Value>>
+        void innerConnectAny(AbstractConsumer<std::any> *consumer, Provider<A> *provider) {
+            if constexpr (std::is_same_v<A, std::any>) {
+                innerConnect(consumer, provider);
+            } else {
+                auto &m = connectionMap_[typeid(A).hash_code()];
+                auto iter = m.find(dynamic_cast<ProviderBase *>(provider));
+                if (iter != m.end() && iter->second.find(dynamic_cast<ConsumerBase *>(consumer)) != iter->second.end()) {
+                    return;
+                }
+                consumer->connectToSource(new AnyProviderAdapter<A>(getMultiplexerOutput(provider)));
+                m[dynamic_cast<ProviderBase *>(provider)].insert(dynamic_cast<ConsumerBase *>(consumer));
+            }
+        }
         template <class A, class B>
         void innerConnectFacility(Provider<Key<A>> *provider, OnOrderFacilityCore<A,B> *facility, AbstractConsumer<KeyedData<A,B>> *consumer) {
             class LocalE final : public virtual AbstractExporterCore<Key<A>> {
@@ -2683,6 +2732,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         Source<B> execute(Action<A,B> &action, Source<A> &&variable) {
             innerConnect(dynamic_cast<AbstractConsumer<A> *>(action.core_.get()), variable.provider);
+            return {dynamic_cast<Provider<B> *>(action.core_.get())};
+        }
+        template <class A, class B>
+        Source<B> executeAny(Action<std::any,B> &action, Source<A> &&variable) {
+            innerConnectAny(dynamic_cast<AbstractConsumer<std::any> *>(action.core_.get()), variable.provider);
             return {dynamic_cast<Provider<B> *>(action.core_.get())};
         }
 
@@ -2794,6 +2848,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
             innerConnect(sink.consumer, src.provider);
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        void connectAny(Source<T> &&src, Sink<std::any> const &sink) {
+            innerConnectAny(sink.consumer, src.provider);
         }
 
         #include <tm_kit/infra/SinglePassIterationApp_ConnectN_Piece.hpp>

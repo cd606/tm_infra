@@ -29,6 +29,7 @@
 #include <sstream>
 #include <iomanip>
 #include <regex>
+#include <any>
 
 #include <tm_kit/infra/ChronoUtils.hpp>
 #include <tm_kit/infra/LogLevel.hpp>
@@ -374,6 +375,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         #include <tm_kit/infra/WithTimeData_TupleCopy_Piece.hpp>
+
+        template <class TimePoint, class A>
+        inline WithTime<std::any, TimePoint> moveToAny(WithTime<A, TimePoint> &&a) {
+            if constexpr (std::is_copy_constructible_v<A>) {
+                return WithTime<std::any, TimePoint> {std::move(a.timePoint), std::any(std::move(a.value)), a.finalFlag};
+            } else {
+                return WithTime<std::any, TimePoint> {std::move(a.timePoint), std::any(std::make_shared<A const>(std::move(a.value))), a.finalFlag};
+            }
+        }
     }
 
     template <class T, class TimePoint>
@@ -435,6 +445,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         TimedDataWithEnvironment &overrideTime() {
             timedData.timePoint = environment->resolveTime(timedData.timePoint);
             return *this;
+        }
+        auto moveToAny() && -> TimedDataWithEnvironment<std::any, Environment, TimePoint> {
+            return {
+                environment,
+                withtime_utils::moveToAny<TimePoint,T>(std::move(timedData))
+            };
         }
     };
 
@@ -1266,6 +1282,45 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
         }
+        template <
+            class Action
+            , class A
+            , std::enable_if_t<
+                std::is_same_v<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, std::any>
+                && 
+                !withtime_utils::IsVariant<A>::Value
+            >
+        >
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> executeAny(std::string const &name, std::shared_ptr<Action> const &f, Source<A> &&x) {
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                registerAction_<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
+                if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
+                    return { m_.template actionAsSource<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
+                }
+            }
+            return { m_.template executeAny<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
+        }
+        template <
+            class Action
+            , class A
+            , std::enable_if_t<
+                std::is_same_v<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, std::any>
+                && 
+                !withtime_utils::IsVariant<A>::Value
+            >
+        >        
+        Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> executeAny(std::shared_ptr<Action> const &f, Source<A> &&x) {
+            std::string name;
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
+                    return { m_.template actionAsSource<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
+                }
+                name = nameMap_[(void *) f.get()].name;
+            }
+            return { m_.template executeAny<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
+        }
 
         #include <tm_kit/infra/WithTimeData_VariantExecute_Piece.hpp>
 
@@ -1276,6 +1331,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Exp>
         void exportItem(std::shared_ptr<Exp> const &f, Source<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType> &&x) {
             connect(std::move(x), exporterAsSink<Exp>(f));
+        }
+        template <
+            class Exp
+            , class T
+            , std::enable_if_t<
+                std::is_same_v<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType, std::any>
+                && 
+                !withtime_utils::IsVariant<T>::Value
+            >
+        >
+        void exportAnyItem(std::string const &name, std::shared_ptr<Exp> const &f, Source<T> &&x) {
+            connectAny(std::move(x), exporterAsSink<Exp>(name, f));
+        }
+        template <
+            class Exp
+            , class T
+            , std::enable_if_t<
+                std::is_same_v<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType, std::any>
+                && 
+                !withtime_utils::IsVariant<T>::Value
+            >
+        >
+        void exportItem(std::shared_ptr<Exp> const &f, Source<T> &&x) {
+            connectAny(std::move(x), exporterAsSink<Exp>(f));
         }
         template <class Fac>
         void feedItemToLocalFacility(std::string const &name, std::shared_ptr<Fac> const &f, Source<typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType> &&x) {
@@ -1804,6 +1883,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return;
             }
             m_.connect(std::move(source.mSource), sink.mSink);
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        void connectAny(Source<T> &&source, Sink<std::any> const &sink) {
+            std::lock_guard<std::mutex> _(mutex_);
+            auto iter = reverseLookup_.find(sink.consumer);
+            if (iter == reverseLookup_.end()) {
+                throw AppRunnerException(
+                    "No such sink '"+sink.consumer+"'"
+                );
+            }
+            if (!connectAndCheck_(sink.pos, iter->second, source.producer, 0, source.useAltOutput)) {
+                return;
+            }
+            m_.connectAny(std::move(source.mSource), sink.mSink);
         }
 
         #include <tm_kit/infra/WithTimeData_ConnectN_Piece.hpp>
@@ -2846,6 +2939,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if constexpr (std::is_same_v<A,C>) {
                     Connect<1,0>::template call<R, A>(r, std::move(source), sink);
                     return true;
+                } else if constexpr (std::is_same_v<A, std::any>) {
+                    ConnectAny<1,0>::template call<R,C>(r, std::move(source), sink);
+                    return true;
                 } else {
                     return false;
                 }
@@ -2860,6 +2956,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if constexpr (std::is_same_v<A,C>) {
                     if (sourceBranchNumber == 0) {
                         Connect<1,0>::template call<R, A>(r, std::move(source), sink);
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else if constexpr (std::is_same_v<A, std::any>) {
+                    if (sourceBranchNumber == 0) {
+                        ConnectAny<1,0>::template call<R, C>(r, std::move(source), sink);
                         return true;
                     } else {
                         return false;
@@ -2884,6 +2987,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             , K
                         >::template call<R, VariantSourceType>(r, std::move(source), sink);
                         accum = true;
+                    } else if constexpr (std::is_same_v<A, std::any>) {
+                        ConnectAny<
+                            std::variant_size_v<VariantSourceType>
+                            , K
+                        >::template call<R, VariantSourceType>(r, std::move(source), sink);
+                        accum = true;
                     } 
                     return simple_sink_variant_source_connect_internal_<A, VariantSourceType, K+1>(r, std::move(source), sink, accum);
                 }
@@ -2902,6 +3011,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if constexpr (std::is_same_v<A, std::variant_alternative_t<K,VariantSourceType>>) {
                         if (K == sourceBranchNumber) {
                             Connect<
+                                std::variant_size_v<VariantSourceType>
+                                , K
+                            >::template call<R, VariantSourceType>(r, std::move(source), sink);
+                            accum = true;
+                        }
+                    } else if constexpr (std::is_same_v<A, std::any>) {
+                        if (K == sourceBranchNumber) {
+                            ConnectAny<
                                 std::variant_size_v<VariantSourceType>
                                 , K
                             >::template call<R, VariantSourceType>(r, std::move(source), sink);
@@ -2952,6 +3069,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ) {
                 if constexpr (std::is_same_v<A, std::variant_alternative_t<SourceBranchNumber,C>>) {
                     Connect<
+                        std::variant_size_v<C>
+                        , SourceBranchNumber
+                    >::template call<R, C>(r, std::move(source), sink);
+                    return true;
+                } else if constexpr (std::is_same_v<A, std::any>) {
+                    ConnectAny<
                         std::variant_size_v<C>
                         , SourceBranchNumber
                     >::template call<R, C>(r, std::move(source), sink);
