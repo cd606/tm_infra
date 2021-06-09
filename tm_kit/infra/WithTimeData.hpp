@@ -2437,6 +2437,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return Sourceoid<A> {};
             }
         }
+        template <std::size_t Idx, class... As>
+        static Sourceoid<std::variant_alternative_t<Idx, std::variant<As...>>> subSourceoid(Source<std::variant<As...>> &&src) {
+            auto s = sourceAsSourceoid<As...>(std::move(src));
+            return [s](AppRunner &r, Sink<std::variant_alternative_t<Idx,std::variant<As...>>> const &sink) {
+                s(r, std::variant<Sink<As>...> {std::in_place_index<Idx>, sink});
+            };
+        }
         template <class A>
         using ConvertibleToSourceoid = std::variant<
             Source<A>
