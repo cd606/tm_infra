@@ -1856,7 +1856,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void addTouchup(std::function<void(AppRunner &)> const &touchup) {
             std::lock_guard<std::mutex> _(touchupMutex_);
             if (touchupDone_) {
-                throw std::runtime_error("Cannot add touch up after touch up phase is complete");
+                throw AppRunnerException("Cannot add touch up after touch up phase is complete");
             }
             touchups_.push_back(touchup);
         }
