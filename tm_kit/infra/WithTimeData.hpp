@@ -1103,14 +1103,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nextColorCode_ = (nextColorCode_+1)%10;
             return res;
         }
+
+        std::mutex touchupMutex_;
+        std::list<std::function<void(AppRunner &)>> touchups_;
+        bool touchupDone_;
     public:
         class AppRunnerException : public std::runtime_error {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false) {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false) {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -1849,8 +1853,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return checkName_((void *) p.get());
         }
 
-        void writeGraphVizDescription(std::ostream &os, std::string const &graphName) const {
-            std::lock_guard<std::mutex> _(mutex_);
+        void addTouchup(std::function<void(AppRunner &)> const &touchup) {
+            std::lock_guard<std::mutex> _(touchupMutex_);
+            if (touchupDone_) {
+                throw std::runtime_error("Cannot add touch up after touch up phase is complete");
+            }
+            touchups_.push_back(touchup);
+        }
+    
+    private:
+        void doTouchups() {
+            std::lock_guard<std::mutex> _(touchupMutex_);
+            if (!touchupDone_) {
+                if (!touchups_.empty()) {
+                    for (auto &t : touchups_) {
+                        t(*this);
+                    }
+                    touchups_.clear();
+                }
+                touchupDone_ = true;
+            }
+        }
+
+    public:
+        void writeGraphVizDescription(std::ostream &os, std::string const &graphName) {
+            doTouchups();
+            {
+                std::lock_guard<std::mutex> _(mutex_);
+                writeGraphVizDescription_internal(os, graphName);
+            }
+        }
+    private:
+        void writeGraphVizDescription_internal(std::ostream &os, std::string const &graphName) const {
             os << "digraph " << graphName << "{\n";
             int counter = 1;
             int subclusterCounter = 1;
@@ -2200,6 +2234,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         void finalizeBegin() {
+            doTouchups();
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 for (auto const &item : nameMap_) {
