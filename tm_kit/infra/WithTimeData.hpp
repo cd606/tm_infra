@@ -2196,7 +2196,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             connectSourceoidToAllSinks_internal<A>(sourceAsSourceoid<A>(std::move(source)), false);
         }
         template <class A>
-        void connectSourceToAllUnusedSinks(Source<A> const &&source) {
+        void connectSourceToAllUnusedSinks(Source<A> &&source) {
             connectSourceoidToAllSinks_internal<A>(sourceAsSourceoid<A>(std::move(source)), true);
         }
     
