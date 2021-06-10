@@ -638,6 +638,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return consumer;
             }
         };
+    
+    private:
+        template <class A>
+        class SinkMatch {
+        public:
+            using TheType = Sink<A>;
+        };
+        template <class... As>
+        class SinkMatch<std::variant<As...>> {
+        public:
+            using TheType = std::variant<Sink<As>...>;
+        };
+        template <class A>
+        class AnySinkMatch {
+        public:
+            using TheType = Sink<std::any>;
+        };
+        template <class... As>
+        class AnySinkMatch<std::variant<As...>> {
+        public:
+            using TheType = std::variant<typename AnySinkMatch<As>::TheType...>;
+        };
+
+    public:
+        template <class A>
+        using Sourceoid = std::function<void(AppRunner &, typename SinkMatch<A>::TheType const &)>;
+        using SingleSourceoidForAny = std::function<void(AppRunner &, Sink<std::any> const &)>;
+        template <class A>
+        using SourceoidForAny = std::function<void(AppRunner &, typename AnySinkMatch<A>::TheType const &)>;
+        template <class A>
+        using Sinkoid = std::function<void(AppRunner &, Source<A> &&)>;
+
     private:
         App m_;
         StateT *env_;
@@ -793,6 +825,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
 
+        template <class T>
+        static void addSourceoidForAny(Source<T> &&s, std::list<SingleSourceoidForAny> &l) {
+            auto s1 = sourceAsSourceoidForAny(std::move(s));
+            l.push_back(s1);
+        }
+        template <std::size_t N, std::size_t K, class... As>
+        static void addSourceoidForAny_multi(Source<std::variant<As...>> &&s, std::list<SingleSourceoidForAny> &l) {
+            if constexpr (K < N) {
+                auto s1 = subSourceoidForAny<K>(s.clone());
+                l.push_back(s1);
+                addSourceoidForAny_multi<N,K+1,As...>(std::move(s), l);
+            }
+        }
+        template <class... As>
+        static void addSourceoidForAny(Source<std::variant<As...>> &&s, std::list<SingleSourceoidForAny> &l) {
+            addSourceoidForAny_multi<sizeof...(As), 0, As...>(std::move(s), l);
+        }
+
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
             if (reverseLookup_.find(name) != reverseLookup_.end()) {
@@ -824,6 +874,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             prop.threaded = AppType::template actionIsThreaded<A,B>(f);
             prop.oneTimeOnly = AppType::template actionIsOneTimeOnly<A,B>(f);
             actionPropertiesMap_.insert({name, prop});
+
+            addSourceoidForAny(actionAsSource(f), sourceoidsForAny_);
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -852,6 +904,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nameMap_.insert({p, ActionCheckData::template createForImporter<A>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
+
+            addSourceoidForAny(importItem(f), sourceoidsForAny_);
+            addSourceoidForAny(importItem(f), sourceoidsForAnyFromImporter_);
         }
         template <class A>
         void registerExporter_(ExporterPtr<A> const &f, std::string const &name) {
@@ -973,6 +1028,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (restrictFacilityOutputConnectionByDefault_) {
                 setMaxOutputConnectivity_(name, 1);
             }
+
+            addSourceoidForAny(facilityWithExternalEffectsAsSource(f), sourceoidsForAny_);
+            addSourceoidForAny(facilityWithExternalEffectsAsSource(f), sourceoidsForAnyFromImporter_);
         }
         template <class A, class B, class C, class D>
         void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
@@ -1004,6 +1062,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (restrictFacilityOutputConnectionByDefault_) {
                 setMaxOutputConnectivity_(name, 1);
             }
+            addSourceoidForAny(vieFacilityAsSource(f), sourceoidsForAny_);
+            addSourceoidForAny(vieFacilityAsSource(f), sourceoidsForAnyFromImporter_);
         }
         std::string checkName_(void *p) {
             auto iter = nameMap_.find(p);
@@ -1123,14 +1183,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::mutex touchupMutex_;
         std::list<std::function<void(AppRunner &)>> touchups_;
         bool touchupDone_;
+
+        std::list<SingleSourceoidForAny> sourceoidsForAny_;
+        std::list<SingleSourceoidForAny> sourceoidsForAnyFromImporter_;
+
     public:
         class AppRunnerException : public std::runtime_error {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false) {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false) {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -1953,6 +2017,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             touchups_.push_back(touchup);
         }
+
+        void connectAnySinkToAllNodes(Sink<std::any> const &sink) {
+            addTouchup([sink](AppRunner &x) {
+                std::list<SingleSourceoidForAny> l;
+                {
+                    std::lock_guard<std::mutex> _(x.mutex_);
+                    l = x.sourceoidsForAny_;
+                }
+                for (auto const &f : l) {
+                    f(x, sink);
+                }
+            });
+        }
+        void connectAnySinkToAllImporters(Sink<std::any> const &sink) {
+            addTouchup([sink](AppRunner &x) {
+                std::list<SingleSourceoidForAny> l;
+                {
+                    std::lock_guard<std::mutex> _(x.mutex_);
+                    l = x.sourceoidsForAnyFromImporter_;
+                }
+                for (auto const &f : l) {
+                    f(x, sink);
+                }
+            });
+        }
     
     private:
         void doTouchups() {
@@ -2519,33 +2608,27 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return vieFacilityConnector<A,B,C,D>(facility);
         }
 
-    private:
-        template <class A>
-        class SinkMatch {
-        public:
-            using TheType = Sink<A>;
-        };
-        template <class... As>
-        class SinkMatch<std::variant<As...>> {
-        public:
-            using TheType = std::variant<Sink<As>...>;
-        };
-
-    public:
-        template <class A>
-        using Sourceoid = std::function<void(AppRunner &, typename SinkMatch<A>::TheType const &)>;
-        template <class A>
-        using Sinkoid = std::function<void(AppRunner &, Source<A> &&)>;
-
         template <class A>
         static Sourceoid<A> sourceAsSourceoid(Source<A> &&src) {
             return [src1=src.clone()](AppRunner &r, Sink<A> const &sink) {
                 r.connect(src1.clone(), sink);
             };
         }
+        template <class A>
+        static SourceoidForAny<A> sourceAsSourceoidForAny(Source<A> &&src) {
+            return [src1=src.clone()](AppRunner &r, Sink<std::any> const &sink) {
+                r.connectAny(src1.clone(), sink);
+            };
+        }
     private:
         template <std::size_t Idx, std::size_t Total, class VariantSourceType, class VariantSinkType>
         static void connect_variant_source_to_variant_sink_internal_(
+            AppRunner &r 
+            , VariantSourceType &&src
+            , VariantSinkType const &sink
+        );
+        template <std::size_t Idx, std::size_t Total, class VariantSourceType, class VariantSinkType>
+        static void connect_variant_source_to_variant_any_sink_internal_(
             AppRunner &r 
             , VariantSourceType &&src
             , VariantSinkType const &sink
@@ -2557,6 +2640,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 connect_variant_source_to_variant_sink_internal_<0, sizeof...(As), Source<std::variant<As...>>, std::variant<Sink<As>...>>(r, src1.clone(), sink);
             };
         }
+        template <class... As>
+        static SourceoidForAny<std::variant<As...>> sourceAsSourceoidForAny(Source<std::variant<As...>> &&src) {
+            return [src1=src.clone()](AppRunner &r, typename AnySinkMatch<std::variant<As...>>::TheType const &sink) {
+                connect_variant_source_to_variant_any_sink_internal_<0, sizeof...(As), Source<std::variant<As...>>, typename AnySinkMatch<std::variant<As...>>::TheType>(r, src1.clone(), sink);
+            };
+        }
         template <class A>
         static Sourceoid<A> sourceAsSourceoid(std::optional<Source<A>> &&src) {
             if (src) {
@@ -2565,11 +2654,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return Sourceoid<A> {};
             }
         }
+        template <class A>
+        static SourceoidForAny<A> sourceAsSourceoid(std::optional<Source<A>> &&src) {
+            if (src) {
+                return sourceAsSourceoidForAny(std::move(*src));
+            } else {
+                return SourceoidForAny<A> {};
+            }
+        }
         template <std::size_t Idx, class... As>
         static Sourceoid<std::variant_alternative_t<Idx, std::variant<As...>>> subSourceoid(Source<std::variant<As...>> &&src) {
             auto s = sourceAsSourceoid<As...>(std::move(src));
             return [s](AppRunner &r, Sink<std::variant_alternative_t<Idx,std::variant<As...>>> const &sink) {
                 s(r, std::variant<Sink<As>...> {std::in_place_index<Idx>, sink});
+            };
+        }
+        template <std::size_t Idx, class... As>
+        static SourceoidForAny<std::variant_alternative_t<Idx, std::variant<As...>>> subSourceoidForAny(Source<std::variant<As...>> &&src) {
+            auto s = sourceAsSourceoidForAny<As...>(std::move(src));
+            return [s](AppRunner &r, Sink<std::any> const &sink) {
+                s(r, typename AnySinkMatch<std::variant<As...>>::TheType{std::in_place_index<Idx>, sink});
             };
         }
         template <class A>
@@ -3496,6 +3600,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 >(r, std::move(src), std::get<Idx>(sink));
             } else {
                 connect_variant_source_to_variant_sink_internal_<Idx+1,Total,VariantSourceType,VariantSinkType>(
+                    r, std::move(src), sink
+                );
+            }
+        }
+    }
+    template <class App>
+    template <std::size_t Idx, std::size_t Total, class VariantSourceType, class VariantSinkType>
+    void AppRunner<App>::connect_variant_source_to_variant_any_sink_internal_(
+        AppRunner<App> &r 
+        , VariantSourceType &&src
+        , VariantSinkType const &sink
+    ) {
+        if constexpr (Idx < Total) {
+            if (Idx == sink.index()) {
+                AppRunnerHelper::ConnectAny<Total,Idx>::template call<
+                    AppRunner<App>, typename VariantSourceType::TheDataTypeOfThisSource
+                >(r, std::move(src), std::get<Idx>(sink));
+            } else {
+                connect_variant_source_to_variant_any_sink_internal_<Idx+1,Total,VariantSourceType,VariantSinkType>(
                     r, std::move(src), sink
                 );
             }
