@@ -671,6 +671,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A>
         using Sinkoid = std::function<void(AppRunner &, Source<A> &&)>;
 
+        template <class A>
+        using ConvertibleToSourceoid = std::variant<
+            Source<A>
+            , Sourceoid<A>
+            , std::optional<Source<A>>
+        >;
+
     private:
         App m_;
         StateT *env_;
@@ -800,7 +807,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<std::string, std::vector<
             IObservableNode<StateT> *
         >> observableNodeMap_;
-        mutable std::mutex mutex_;
+        mutable std::recursive_mutex mutex_;
 
         void registerUnderlyingNames_(std::string const &name, std::unordered_set<void *> ptrs) {
             for (auto p : ptrs) {
@@ -862,6 +869,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addTypedSourceoid_multi<sizeof...(As), 0, As...>(std::move(s), m);
         }
 
+        template <class T>
+        void addTypedSink(Sink<T> const &s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+            m[std::type_index(typeid(T))].push_back(std::any {s});
+        }
+        template <class B, class A>
+        void addTypedSink_action(ActionPtr<A,B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
+        template <std::size_t N, std::size_t K, class B, class... As>
+        void addTypedSink_action_multi(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
+        template <class B, class... As>
+        void addTypedSink_action(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
+
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
             if (reverseLookup_.find(name) != reverseLookup_.end()) {
@@ -896,6 +914,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             addSourceoidForAny(actionAsSource(f), sourceoidsForAny_);
             addTypedSourceoid(actionAsSource(f), typedSourceoids_);
+            addTypedSink_action(f, typedSinks_);
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -957,6 +976,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nameMap_.insert({p, ActionCheckData::template createForExporter<A>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
+            addTypedSink(exporterAsSink(f), typedSinks_);
         }
         template <class A, class B>
         void registerOnOrderFacility_(OnOrderFacilityPtr<A,B> const &f, std::string const &name) {
@@ -1019,6 +1039,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (restrictFacilityOutputConnectionByDefault_) {
                 setMaxOutputConnectivity_(name, 1);
             }
+            addTypedSink(localFacilityAsSink(f), typedSinks_);
         }
         template <class A, class B, class C>
         void registerOnOrderFacilityWithExternalEffects_(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &f, std::string const &name) {
@@ -1090,6 +1111,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addSourceoidForAny(vieFacilityAsSource(f), sourceoidsForAnyFromImporter_);
             addTypedSourceoid(vieFacilityAsSource(f), typedSourceoids_);
             addTypedSourceoid(vieFacilityAsSource(f), typedSourceoidsFromImporter_);
+            addTypedSink(vieFacilityAsSink(f), typedSinks_);
         }
         std::string checkName_(void *p) {
             auto iter = nameMap_.find(p);
@@ -1213,15 +1235,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<SingleSourceoidForAny> sourceoidsForAny_;
         std::list<SingleSourceoidForAny> sourceoidsForAnyFromImporter_;
         std::unordered_map<std::type_index, std::list<std::any>> typedSourceoids_, typedSourceoidsFromImporter_;
+        std::unordered_map<std::type_index, std::list<std::any>> typedSinks_;
 
     public:
         class AppRunnerException : public std::runtime_error {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -1311,7 +1334,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Imp>
         Source<typename withtime_utils::ImporterTypeInfo<App,Imp>::DataType> importerAsSource(std::string const &name, std::shared_ptr<Imp> const &importer) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerImporter_<typename withtime_utils::ImporterTypeInfo<App,Imp>::DataType>(importer, name);
             }
             return { m_.template importerAsSource<typename withtime_utils::ImporterTypeInfo<App,Imp>::DataType>(env_, *importer), name };
@@ -1320,7 +1343,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::ImporterTypeInfo<App,Imp>::DataType> importerAsSource(std::shared_ptr<Imp> const &importer) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) importer.get());
             }
             return { m_.template importerAsSource<typename withtime_utils::ImporterTypeInfo<App,Imp>::DataType>(env_, *importer), name };
@@ -1336,7 +1359,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Action>
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> actionAsSource(std::string const &name, std::shared_ptr<Action> const &action) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(action, name);
             }
             return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *action), name };
@@ -1345,7 +1368,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> actionAsSource(std::shared_ptr<Action> const &action) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) action.get());
             }
             return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *action), name };
@@ -1353,7 +1376,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::string const &name, std::shared_ptr<Action> const &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
                 if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
                     return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
@@ -1365,7 +1388,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::shared_ptr<Action> const &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
                     return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
                 }
@@ -1384,7 +1407,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         >
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> executeAny(std::string const &name, std::shared_ptr<Action> const &f, Source<A> &&x) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerAction_<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(f, name);
                 if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
                     return { m_.template actionAsSource<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
@@ -1404,7 +1427,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> executeAny(std::shared_ptr<Action> const &f, Source<A> &&x) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 if (!connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
                     return { m_.template actionAsSource<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
                 }
@@ -1459,7 +1482,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Exp>
         Sink<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType> exporterAsSink(std::string const &name, std::shared_ptr<Exp> const &exporter) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerExporter_<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType>(exporter, name);
             }
             return { m_.template exporterAsSink<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType>(*exporter), name, 0 };
@@ -1468,7 +1491,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Sink<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType> exporterAsSink(std::shared_ptr<Exp> const &exporter) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) exporter.get());
             }
             return { m_.template exporterAsSink<typename withtime_utils::ExporterTypeInfo<App,Exp>::DataType>(*exporter), name, 0 };
@@ -1476,7 +1499,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
         Sink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> actionAsSink(std::string const &name, std::shared_ptr<Action> const &action) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerAction_<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(action, name);
             }
             return { m_.template actionAsSink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*action), name, 0 };
@@ -1485,7 +1508,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Sink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> actionAsSink(std::shared_ptr<Action> const &action) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) action.get());
             }
             return { m_.template actionAsSink<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*action), name, 0 };
@@ -1493,7 +1516,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Fac>
         Sink<typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType> localFacilityAsSink(std::string const &name, std::shared_ptr<Fac> const &facility) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerLocalOnOrderFacility_<
                     typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1509,7 +1532,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Sink<typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType> localFacilityAsSink(std::shared_ptr<Fac> const &facility) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) facility.get());
             }
             return { m_.template localFacilityAsSink<
@@ -1521,7 +1544,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Fac>
         Sink<typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraInputType> vieFacilityAsSink(std::string const &name, std::shared_ptr<Fac> const &facility) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerVIEOnOrderFacility_<
                     typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1539,7 +1562,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Sink<typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraInputType> vieFacilityAsSink(std::shared_ptr<Fac> const &facility) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) facility.get());
             }
             return { m_.template vieFacilityAsSink<
@@ -1552,7 +1575,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Fac>
         Source<typename withtime_utils::ImporterTypeInfo<App,Fac>::DataType> facilityWithExternalEffectsAsSource(std::string const &name, std::shared_ptr<Fac> const &facility) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerOnOrderFacilityWithExternalEffects_<
                     typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1568,7 +1591,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::ImporterTypeInfo<App,Fac>::DataType> facilityWithExternalEffectsAsSource(std::shared_ptr<Fac> const &facility) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) facility.get());
             }
             return { m_.template facilityWithExternalEffectsAsSource<
@@ -1580,7 +1603,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Fac>
         Source<typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraOutputType> vieFacilityAsSource(std::string const &name, std::shared_ptr<Fac> const &facility) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerVIEOnOrderFacility_<
                     typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1598,7 +1621,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         Source<typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraOutputType> vieFacilityAsSource(std::shared_ptr<Fac> const &facility) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) facility.get());
             }
             return { m_.template vieFacilityAsSource<
@@ -1618,7 +1641,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f
             , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerOnOrderFacility_<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(f, name);
                 int color = nextColorCode();
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
@@ -1639,7 +1662,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
@@ -1660,7 +1683,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerOnOrderFacility_<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(f, name);
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
@@ -1672,7 +1695,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 checkName_((void *) f.get());
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
@@ -1686,7 +1709,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f
             , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerLocalOnOrderFacility_<
                     typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1715,7 +1738,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
@@ -1740,7 +1763,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerLocalOnOrderFacility_<
                     typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1760,7 +1783,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 checkName_((void *) f.get());
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
@@ -1778,7 +1801,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f
             , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerOnOrderFacilityWithExternalEffects_<
                     typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1807,7 +1830,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , Sink<KeyedData<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
@@ -1832,7 +1855,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerOnOrderFacilityWithExternalEffects_<
                     typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1852,7 +1875,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 checkName_((void *) f.get());
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
@@ -1870,7 +1893,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f
             , Sink<KeyedData<typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerVIEOnOrderFacility_<
                     typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1901,7 +1924,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , Sink<KeyedData<typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType, StateT>> const &sink) {
             std::string name;
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 name = checkName_((void *) f.get());
                 int color = nextColorCode();
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
@@ -1927,7 +1950,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 registerVIEOnOrderFacility_<
                     typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::InputType
                     , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
@@ -1949,7 +1972,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , std::shared_ptr<Fac> const &f) {
             {
                 int color = nextColorCode();
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 checkName_((void *) f.get());
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
@@ -1963,7 +1986,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T>
         void connect(Source<T> &&source, Sink<T> const &sink) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto iter = reverseLookup_.find(sink.consumer);
             if (iter == reverseLookup_.end()) {
                 throw AppRunnerException(
@@ -1977,7 +2000,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void connectAny(Source<T> &&source, Sink<std::any> const &sink) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto iter = reverseLookup_.find(sink.consumer);
             if (iter == reverseLookup_.end()) {
                 throw AppRunnerException(
@@ -1994,46 +2017,46 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T>
         void setMaxOutputConnectivity(Source<T> &&source, size_t maxOutputConnectivity) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             setMaxOutputConnectivity_(source.producer, maxOutputConnectivity);
         }
         void setMaxOutputConnectivity(std::string const &source, size_t maxOutputConnectivity) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             setMaxOutputConnectivity_(source, maxOutputConnectivity);
         }
         template <class F>
         void setMaxOutputConnectivity(std::shared_ptr<F> const &source, size_t maxOutputConnectivity) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             std::string name = checkName_((void *) source.get());
             setMaxOutputConnectivity_(name, maxOutputConnectivity);
         }
         template <class T>
         void setMaxInputConnectivity(Sink<T> const &sink, size_t maxInputConnectivity) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             setMaxInputConnectivity_(sink.consumer, sink.pos, maxInputConnectivity);
         }
         void setMaxInputConnectivity(std::string const &sink, int pos, size_t maxInputConnectivity) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             setMaxInputConnectivity_(sink, pos, maxInputConnectivity);
         }
         template <class F>
         void setMaxInputConnectivity(std::shared_ptr<F> const &sink, int pos, size_t maxInputConnectivity) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             std::string name = checkName_((void *) sink.get());
             setMaxInputConnectivity_(name, pos, maxInputConnectivity);
         }
         void restrictFacilityOutputConnectionByDefault() {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             restrictFacilityOutputConnectionByDefault_ = true;
         }
         void dontRestrictFacilityOutputConnectionByDefault() {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             restrictFacilityOutputConnectionByDefault_ = false;
         }
 
         template <class F>
         std::string getRegisteredName(std::shared_ptr<F> const &p) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             return checkName_((void *) p.get());
         }
 
@@ -2120,7 +2143,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void writeGraphVizDescription(std::ostream &os, std::string const &graphName) {
             doTouchups();
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 writeGraphVizDescription_internal(os, graphName);
             }
         }
@@ -2477,7 +2500,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void finalizeBegin() {
             doTouchups();
             {
-                std::lock_guard<std::mutex> _(mutex_);
+                std::lock_guard<std::recursive_mutex> _(mutex_);
                 for (auto const &item : nameMap_) {
                     auto limitIter = maxConnectivityLimits_.find(item.second.name);
                     for (int ii=0; ii<item.second.paramCount; ++ii) {
@@ -2575,13 +2598,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T>
         void preservePointer(std::shared_ptr<T> const &ptr) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             otherPreservedPtrs_.insert(std::static_pointer_cast<void>(ptr));
         }
 
         template <class A, class B>
         void markStateSharing(std::shared_ptr<A> const &item1, std::shared_ptr<B> const &item2, std::string const &sharedStateName="") {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto name1 = checkName_((void *) item1.get());
             auto name2 = checkName_((void *) item2.get());
             if (name1 == name2) {
@@ -2735,12 +2758,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 s(r, typename AnySinkMatch<std::variant<As...>>::TheType{std::in_place_index<Idx>, sink});
             };
         }
-        template <class A>
-        using ConvertibleToSourceoid = std::variant<
-            Source<A>
-            , Sourceoid<A>
-            , std::optional<Source<A>>
-        >;
         template <class A>
         static Sourceoid<A> convertToSourceoid(ConvertibleToSourceoid<A> &&s) {
             return std::visit([](auto &&x) -> Sourceoid<A> {
@@ -2907,7 +2924,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::function<void(AppRunner &, Source<A> &&, Sink<B> const &)>;
 
         void controlFirst(std::string const &name, std::string const &command, std::vector<std::string> const &params) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto iter = controllableNodeMap_.find(name);
             if (iter != controllableNodeMap_.end()) {
                 if (!iter->second.empty()) {
@@ -2916,7 +2933,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         void controlAll(std::string const &name, std::string const &command, std::vector<std::string> const &params) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto iter = controllableNodeMap_.find(name);
             if (iter != controllableNodeMap_.end()) {
                 for (auto *p : iter->second) {
@@ -2925,7 +2942,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         void controlFirstRE(std::regex const &name, std::string const &command, std::vector<std::string> const &params) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             for (auto const &item : controllableNodeMap_) {
                 if (std::regex_match(item.first, name)) {
                     if (!item.second.empty()) {
@@ -2936,7 +2953,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         void controlAllRE(std::regex const &name, std::string const &command, std::vector<std::string> const &params) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             for (auto const &item : controllableNodeMap_) {
                 if (std::regex_match(item.first, name)) {
                     for (auto *p : item.second) {
@@ -2946,7 +2963,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         std::optional<std::string> findFirstControllableNodeAtOrAbove(std::string const &nodeName) {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             std::unordered_set<std::string> seen;
             std::deque<std::string> q;
             q.push_back(nodeName);
@@ -2976,7 +2993,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         std::vector<std::string> observeFirst(std::string const &name) const {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto iter = observableNodeMap_.find(name);
             if (iter != observableNodeMap_.end()) {
                 if (!iter->second.empty()) {
@@ -2986,7 +3003,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
         std::vector<std::string> observeAll(std::string const &name) const {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             auto iter = observableNodeMap_.find(name);
             if (iter != observableNodeMap_.end()) {
                 std::vector<std::string> ret;
@@ -2999,7 +3016,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
         std::vector<std::string> observeFirstRE(std::regex const &name) const {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             for (auto const &item : observableNodeMap_) {
                 if (std::regex_match(item.first, name)) {
                     if (!item.second.empty()) {
@@ -3010,7 +3027,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
         std::vector<std::string> observeAllRE(std::regex const &name) const {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             for (auto const &item : observableNodeMap_) {
                 if (std::regex_match(item.first, name)) {
                     std::vector<std::string> ret;
@@ -3024,7 +3041,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return {};
         }
         std::unordered_map<std::string, std::vector<std::string>> observeAllNodes() const {
-            std::lock_guard<std::mutex> _(mutex_);
+            std::lock_guard<std::recursive_mutex> _(mutex_);
             std::unordered_map<std::string, std::vector<std::string>> ret;
             for (auto const &item : observableNodeMap_) {
                 std::vector<std::string> innerRet;
@@ -3682,6 +3699,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
         }
+    }
+    template <class App>
+    template <class B, class A>
+    void AppRunner<App>::addTypedSink_action(ActionPtr<A,B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+        addTypedSink<A>(actionAsSink(f), m);
+    }
+    template <class App>
+    template <std::size_t N, std::size_t K, class B, class... As>
+    void AppRunner<App>::addTypedSink_action_multi(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+        if constexpr (K < N) {
+            using T = std::variant_alternative_t<K, std::variant<As...>>;
+            addTypedSink<T>(AppRunnerHelper::ActionAsSink<N,K>::template call<AppRunner,std::variant<As...>,B>(*this, f), m);
+            addTypedSink_action_multi<N,K+1,B,As...>(f, m);
+        }
+    }
+    template <class App>
+    template <class B, class... As>
+    void AppRunner<App>::addTypedSink_action(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+        addTypedSink_action_multi<sizeof...(As), 0, B, As...>(f, m);
     }
 
 }}}}

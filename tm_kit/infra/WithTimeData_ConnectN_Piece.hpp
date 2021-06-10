@@ -1,6 +1,6 @@
 template <class A0, class A1>
 void connect_2_0(Source<std::variant<A0,A1>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -14,7 +14,7 @@ void connect_2_0(Source<std::variant<A0,A1>> &&source, Sink<A0> const &sink) {
 };
 template <class A0, class A1>
 void connectAny_2_0(Source<std::variant<A0,A1>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -28,7 +28,7 @@ void connectAny_2_0(Source<std::variant<A0,A1>> &&source, Sink<std::any> const &
 };
 template <class A0, class A1>
 void connect_2_1(Source<std::variant<A0,A1>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -42,7 +42,7 @@ void connect_2_1(Source<std::variant<A0,A1>> &&source, Sink<A1> const &sink) {
 };
 template <class A0, class A1>
 void connectAny_2_1(Source<std::variant<A0,A1>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -56,7 +56,7 @@ void connectAny_2_1(Source<std::variant<A0,A1>> &&source, Sink<std::any> const &
 };
 template <class A0, class A1, class A2>
 void connect_3_0(Source<std::variant<A0,A1,A2>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -70,7 +70,7 @@ void connect_3_0(Source<std::variant<A0,A1,A2>> &&source, Sink<A0> const &sink) 
 };
 template <class A0, class A1, class A2>
 void connectAny_3_0(Source<std::variant<A0,A1,A2>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -84,7 +84,7 @@ void connectAny_3_0(Source<std::variant<A0,A1,A2>> &&source, Sink<std::any> cons
 };
 template <class A0, class A1, class A2>
 void connect_3_1(Source<std::variant<A0,A1,A2>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -98,7 +98,7 @@ void connect_3_1(Source<std::variant<A0,A1,A2>> &&source, Sink<A1> const &sink) 
 };
 template <class A0, class A1, class A2>
 void connectAny_3_1(Source<std::variant<A0,A1,A2>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -112,7 +112,7 @@ void connectAny_3_1(Source<std::variant<A0,A1,A2>> &&source, Sink<std::any> cons
 };
 template <class A0, class A1, class A2>
 void connect_3_2(Source<std::variant<A0,A1,A2>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -126,7 +126,7 @@ void connect_3_2(Source<std::variant<A0,A1,A2>> &&source, Sink<A2> const &sink) 
 };
 template <class A0, class A1, class A2>
 void connectAny_3_2(Source<std::variant<A0,A1,A2>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -140,7 +140,7 @@ void connectAny_3_2(Source<std::variant<A0,A1,A2>> &&source, Sink<std::any> cons
 };
 template <class A0, class A1, class A2, class A3>
 void connect_4_0(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -154,7 +154,7 @@ void connect_4_0(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A0> const &sin
 };
 template <class A0, class A1, class A2, class A3>
 void connectAny_4_0(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -168,7 +168,7 @@ void connectAny_4_0(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> c
 };
 template <class A0, class A1, class A2, class A3>
 void connect_4_1(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -182,7 +182,7 @@ void connect_4_1(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A1> const &sin
 };
 template <class A0, class A1, class A2, class A3>
 void connectAny_4_1(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -196,7 +196,7 @@ void connectAny_4_1(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> c
 };
 template <class A0, class A1, class A2, class A3>
 void connect_4_2(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -210,7 +210,7 @@ void connect_4_2(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A2> const &sin
 };
 template <class A0, class A1, class A2, class A3>
 void connectAny_4_2(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -224,7 +224,7 @@ void connectAny_4_2(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> c
 };
 template <class A0, class A1, class A2, class A3>
 void connect_4_3(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -238,7 +238,7 @@ void connect_4_3(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<A3> const &sin
 };
 template <class A0, class A1, class A2, class A3>
 void connectAny_4_3(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -252,7 +252,7 @@ void connectAny_4_3(Source<std::variant<A0,A1,A2,A3>> &&source, Sink<std::any> c
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connect_5_0(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -266,7 +266,7 @@ void connect_5_0(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A0> const &
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connectAny_5_0(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -280,7 +280,7 @@ void connectAny_5_0(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connect_5_1(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -294,7 +294,7 @@ void connect_5_1(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A1> const &
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connectAny_5_1(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -308,7 +308,7 @@ void connectAny_5_1(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connect_5_2(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -322,7 +322,7 @@ void connect_5_2(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A2> const &
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connectAny_5_2(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -336,7 +336,7 @@ void connectAny_5_2(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connect_5_3(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -350,7 +350,7 @@ void connect_5_3(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A3> const &
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connectAny_5_3(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -364,7 +364,7 @@ void connectAny_5_3(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connect_5_4(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A4> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -378,7 +378,7 @@ void connect_5_4(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<A4> const &
 };
 template <class A0, class A1, class A2, class A3, class A4>
 void connectAny_5_4(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -392,7 +392,7 @@ void connectAny_5_4(Source<std::variant<A0,A1,A2,A3,A4>> &&source, Sink<std::any
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connect_6_0(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -406,7 +406,7 @@ void connect_6_0(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A0> cons
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connectAny_6_0(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -420,7 +420,7 @@ void connectAny_6_0(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connect_6_1(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -434,7 +434,7 @@ void connect_6_1(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A1> cons
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connectAny_6_1(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -448,7 +448,7 @@ void connectAny_6_1(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connect_6_2(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -462,7 +462,7 @@ void connect_6_2(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A2> cons
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connectAny_6_2(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -476,7 +476,7 @@ void connectAny_6_2(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connect_6_3(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -490,7 +490,7 @@ void connect_6_3(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A3> cons
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connectAny_6_3(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -504,7 +504,7 @@ void connectAny_6_3(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connect_6_4(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A4> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -518,7 +518,7 @@ void connect_6_4(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A4> cons
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connectAny_6_4(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -532,7 +532,7 @@ void connectAny_6_4(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connect_6_5(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A5> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -546,7 +546,7 @@ void connect_6_5(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<A5> cons
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5>
 void connectAny_6_5(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -560,7 +560,7 @@ void connectAny_6_5(Source<std::variant<A0,A1,A2,A3,A4,A5>> &&source, Sink<std::
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -574,7 +574,7 @@ void connect_7_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A0> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -588,7 +588,7 @@ void connectAny_7_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -602,7 +602,7 @@ void connect_7_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A1> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -616,7 +616,7 @@ void connectAny_7_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -630,7 +630,7 @@ void connect_7_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A2> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -644,7 +644,7 @@ void connectAny_7_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -658,7 +658,7 @@ void connect_7_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A3> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -672,7 +672,7 @@ void connectAny_7_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A4> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -686,7 +686,7 @@ void connect_7_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A4> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -700,7 +700,7 @@ void connectAny_7_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A5> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -714,7 +714,7 @@ void connect_7_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A5> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -728,7 +728,7 @@ void connectAny_7_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connect_7_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A6> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -742,7 +742,7 @@ void connect_7_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<A6> c
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
 void connectAny_7_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -756,7 +756,7 @@ void connectAny_7_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&source, Sink<st
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -770,7 +770,7 @@ void connect_8_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A0
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -784,7 +784,7 @@ void connectAny_8_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -798,7 +798,7 @@ void connect_8_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A1
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -812,7 +812,7 @@ void connectAny_8_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -826,7 +826,7 @@ void connect_8_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A2
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -840,7 +840,7 @@ void connectAny_8_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -854,7 +854,7 @@ void connect_8_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A3
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -868,7 +868,7 @@ void connectAny_8_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A4> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -882,7 +882,7 @@ void connect_8_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A4
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -896,7 +896,7 @@ void connectAny_8_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A5> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -910,7 +910,7 @@ void connect_8_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A5
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -924,7 +924,7 @@ void connectAny_8_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A6> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -938,7 +938,7 @@ void connect_8_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A6
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -952,7 +952,7 @@ void connectAny_8_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connect_8_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A7> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -966,7 +966,7 @@ void connect_8_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<A7
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
 void connectAny_8_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -980,7 +980,7 @@ void connectAny_8_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -994,7 +994,7 @@ void connect_9_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1008,7 +1008,7 @@ void connectAny_9_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1022,7 +1022,7 @@ void connect_9_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1036,7 +1036,7 @@ void connectAny_9_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1050,7 +1050,7 @@ void connect_9_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1064,7 +1064,7 @@ void connectAny_9_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1078,7 +1078,7 @@ void connect_9_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1092,7 +1092,7 @@ void connectAny_9_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A4> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1106,7 +1106,7 @@ void connect_9_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1120,7 +1120,7 @@ void connectAny_9_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A5> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1134,7 +1134,7 @@ void connect_9_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1148,7 +1148,7 @@ void connectAny_9_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A6> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1162,7 +1162,7 @@ void connect_9_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1176,7 +1176,7 @@ void connectAny_9_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A7> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1190,7 +1190,7 @@ void connect_9_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1204,7 +1204,7 @@ void connectAny_9_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connect_9_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<A8> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1218,7 +1218,7 @@ void connect_9_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
 void connectAny_9_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1232,7 +1232,7 @@ void connectAny_9_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&source, S
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A0> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1246,7 +1246,7 @@ void connect_10_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1260,7 +1260,7 @@ void connectAny_10_0(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A1> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1274,7 +1274,7 @@ void connect_10_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1288,7 +1288,7 @@ void connectAny_10_1(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A2> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1302,7 +1302,7 @@ void connect_10_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1316,7 +1316,7 @@ void connectAny_10_2(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A3> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1330,7 +1330,7 @@ void connect_10_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1344,7 +1344,7 @@ void connectAny_10_3(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A4> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1358,7 +1358,7 @@ void connect_10_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1372,7 +1372,7 @@ void connectAny_10_4(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A5> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1386,7 +1386,7 @@ void connect_10_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1400,7 +1400,7 @@ void connectAny_10_5(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A6> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1414,7 +1414,7 @@ void connect_10_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1428,7 +1428,7 @@ void connectAny_10_6(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A7> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1442,7 +1442,7 @@ void connect_10_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1456,7 +1456,7 @@ void connectAny_10_7(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A8> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1470,7 +1470,7 @@ void connect_10_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1484,7 +1484,7 @@ void connectAny_10_8(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&sourc
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connect_10_9(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<A9> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(
@@ -1498,7 +1498,7 @@ void connect_10_9(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, 
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
 void connectAny_10_9(Source<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&source, Sink<std::any> const &sink) {
-    std::lock_guard<std::mutex> _(mutex_);
+    std::lock_guard<std::recursive_mutex> _(mutex_);
     auto iter = reverseLookup_.find(sink.consumer);
     if (iter == reverseLookup_.end()) {
         throw AppRunnerException(

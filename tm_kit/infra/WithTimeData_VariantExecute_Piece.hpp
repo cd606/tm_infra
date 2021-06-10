@@ -1,7 +1,7 @@
 template <class A0, class A1, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -12,7 +12,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> cons
 template <class A0, class A1, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -23,7 +23,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> cons
 template <class A0, class A1, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x0, Source<A1> &&x1) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -38,7 +38,7 @@ template <class A0, class A1, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -50,7 +50,7 @@ template <class A0, class A1, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -62,7 +62,7 @@ template <class A0, class A1, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x0, Source<A1> &&x1) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -76,7 +76,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1>,B> const &f, Source<A0> &&x0, So
 template <class A0, class A1, class A2, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -87,7 +87,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
 template <class A0, class A1, class A2, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -98,7 +98,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
 template <class A0, class A1, class A2, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -109,7 +109,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> c
 template <class A0, class A1, class A2, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -127,7 +127,7 @@ template <class A0, class A1, class A2, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -139,7 +139,7 @@ template <class A0, class A1, class A2, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -151,7 +151,7 @@ template <class A0, class A1, class A2, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -163,7 +163,7 @@ template <class A0, class A1, class A2, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -180,7 +180,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2>,B> const &f, Source<A0> &&x0,
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -191,7 +191,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -202,7 +202,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -213,7 +213,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -224,7 +224,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B
 template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -245,7 +245,7 @@ template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -257,7 +257,7 @@ template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -269,7 +269,7 @@ template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -281,7 +281,7 @@ template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -293,7 +293,7 @@ template <class A0, class A1, class A2, class A3, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -313,7 +313,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3>,B> const &f, Source<A0> &&
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -324,7 +324,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -335,7 +335,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -346,7 +346,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -357,7 +357,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A4> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -368,7 +368,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -392,7 +392,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -404,7 +404,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -416,7 +416,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -428,7 +428,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -440,7 +440,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A4> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -452,7 +452,7 @@ template <class A0, class A1, class A2, class A3, class A4, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -475,7 +475,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4>,B> const &f, Source<A0>
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -486,7 +486,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -497,7 +497,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -508,7 +508,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -519,7 +519,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A4> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -530,7 +530,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A5> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -541,7 +541,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -568,7 +568,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -580,7 +580,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -592,7 +592,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -604,7 +604,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -616,7 +616,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A4> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -628,7 +628,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A5> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -640,7 +640,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class B>
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -666,7 +666,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5>,B> const &f, Source<
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -677,7 +677,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -688,7 +688,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -699,7 +699,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -710,7 +710,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A4> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -721,7 +721,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A5> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -732,7 +732,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A6> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -743,7 +743,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -773,7 +773,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -785,7 +785,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -797,7 +797,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -809,7 +809,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -821,7 +821,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A4> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -833,7 +833,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A5> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -845,7 +845,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A6> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -857,7 +857,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -886,7 +886,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> const &f, Sour
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -897,7 +897,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -908,7 +908,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -919,7 +919,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -930,7 +930,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A4> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -941,7 +941,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A5> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -952,7 +952,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A6> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -963,7 +963,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A7> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -974,7 +974,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6, Source<A7> &&x7) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -1007,7 +1007,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1019,7 +1019,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1031,7 +1031,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1043,7 +1043,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1055,7 +1055,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A4> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1067,7 +1067,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A5> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1079,7 +1079,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A6> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1091,7 +1091,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A7> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1103,7 +1103,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6, Source<A7> &&x7) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -1135,7 +1135,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> const &f, S
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1146,7 +1146,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1157,7 +1157,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1168,7 +1168,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1179,7 +1179,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A4> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1190,7 +1190,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A5> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1201,7 +1201,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A6> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1212,7 +1212,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A7> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1223,7 +1223,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A8> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1234,7 +1234,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6, Source<A7> &&x7, Source<A8> &&x8) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -1270,7 +1270,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1282,7 +1282,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1294,7 +1294,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1306,7 +1306,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1318,7 +1318,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A4> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1330,7 +1330,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A5> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1342,7 +1342,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A6> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1354,7 +1354,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A7> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1366,7 +1366,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A8> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1378,7 +1378,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6, Source<A7> &&x7, Source<A8> &&x8) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
@@ -1413,7 +1413,7 @@ Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> const &f
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A0> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1424,7 +1424,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A1> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1435,7 +1435,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A2> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1446,7 +1446,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A3> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1457,7 +1457,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A4> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1468,7 +1468,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A5> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1479,7 +1479,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A6> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1490,7 +1490,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A7> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1501,7 +1501,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A8> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1512,7 +1512,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A9> &&x) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(9, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
@@ -1523,7 +1523,7 @@ Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B>
 Source<B> execute(std::string const &name, ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6, Source<A7> &&x7, Source<A8> &&x8, Source<A9> &&x9) {
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         registerAction_(f, name);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
@@ -1562,7 +1562,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A0> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1574,7 +1574,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A1> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(1, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1586,7 +1586,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A2> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(2, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1598,7 +1598,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A3> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(3, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1610,7 +1610,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A4> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(4, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1622,7 +1622,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A5> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(5, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1634,7 +1634,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A6> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(6, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1646,7 +1646,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A7> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(7, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1658,7 +1658,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A8> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(8, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1670,7 +1670,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A9> &&x) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(9, (void *) f.get(), x.producer, 0, x.useAltOutput)) {
             m_.execute(*f, std::move(x.mSource));
         }
@@ -1682,7 +1682,7 @@ template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, 
 Source<B> execute(ActionPtr<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> const &f, Source<A0> &&x0, Source<A1> &&x1, Source<A2> &&x2, Source<A3> &&x3, Source<A4> &&x4, Source<A5> &&x5, Source<A6> &&x6, Source<A7> &&x7, Source<A8> &&x8, Source<A9> &&x9) {
     std::string name;
     {
-        std::lock_guard<std::mutex> _(mutex_);
+        std::lock_guard<std::recursive_mutex> _(mutex_);
         if (connectAndCheck_(0, (void *) f.get(), x0.producer, 0, x0.useAltOutput)) {
             m_.execute(*f, std::move(x0.mSource));
         }
