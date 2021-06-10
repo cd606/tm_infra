@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <regex>
 #include <any>
+#include <typeindex>
 
 #include <tm_kit/infra/ChronoUtils.hpp>
 #include <tm_kit/infra/LogLevel.hpp>
@@ -842,6 +843,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void addSourceoidForAny(Source<std::variant<As...>> &&s, std::list<SingleSourceoidForAny> &l) {
             addSourceoidForAny_multi<sizeof...(As), 0, As...>(std::move(s), l);
         }
+        template <class T>
+        static void addTypedSourceoid(Source<T> &&s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+            auto s1 = sourceAsSourceoid(std::move(s));
+            m[std::type_index(typeid(T))].push_back(std::any {s1});
+        }
+        template <std::size_t N, std::size_t K, class... As>
+        static void addTypedSourceoid_multi(Source<std::variant<As...>> &&s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+            if constexpr (K < N) {
+                auto s1 = subSourceoid<K>(s.clone());
+                using T = std::variant_alternative_t<K, std::variant<As...>>;
+                m[std::type_index(typeid(T))].push_back(std::any {s1});
+                addTypedSourceoid_multi<N,K+1,As...>(std::move(s), m);
+            }
+        }
+        template <class... As>
+        static void addTypedSourceoid(Source<std::variant<As...>> &&s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+            addTypedSourceoid_multi<sizeof...(As), 0, As...>(std::move(s), m);
+        }
 
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
@@ -876,6 +895,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             actionPropertiesMap_.insert({name, prop});
 
             addSourceoidForAny(actionAsSource(f), sourceoidsForAny_);
+            addTypedSourceoid(actionAsSource(f), typedSourceoids_);
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -907,6 +927,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             addSourceoidForAny(importItem(f), sourceoidsForAny_);
             addSourceoidForAny(importItem(f), sourceoidsForAnyFromImporter_);
+            addTypedSourceoid(importItem(f), typedSourceoids_);
+            addTypedSourceoid(importItem(f), typedSourceoidsFromImporter_);
         }
         template <class A>
         void registerExporter_(ExporterPtr<A> const &f, std::string const &name) {
@@ -1031,6 +1053,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             addSourceoidForAny(facilityWithExternalEffectsAsSource(f), sourceoidsForAny_);
             addSourceoidForAny(facilityWithExternalEffectsAsSource(f), sourceoidsForAnyFromImporter_);
+            addTypedSourceoid(facilityWithExternalEffectsAsSource(f), typedSourceoids_);
+            addTypedSourceoid(facilityWithExternalEffectsAsSource(f), typedSourceoidsFromImporter_);
         }
         template <class A, class B, class C, class D>
         void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
@@ -1064,6 +1088,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             addSourceoidForAny(vieFacilityAsSource(f), sourceoidsForAny_);
             addSourceoidForAny(vieFacilityAsSource(f), sourceoidsForAnyFromImporter_);
+            addTypedSourceoid(vieFacilityAsSource(f), typedSourceoids_);
+            addTypedSourceoid(vieFacilityAsSource(f), typedSourceoidsFromImporter_);
         }
         std::string checkName_(void *p) {
             auto iter = nameMap_.find(p);
@@ -1186,15 +1212,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         std::list<SingleSourceoidForAny> sourceoidsForAny_;
         std::list<SingleSourceoidForAny> sourceoidsForAnyFromImporter_;
+        std::unordered_map<std::type_index, std::list<std::any>> typedSourceoids_, typedSourceoidsFromImporter_;
 
     public:
         class AppRunnerException : public std::runtime_error {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -2039,6 +2066,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 for (auto const &f : l) {
                     f(x, sink);
+                }
+            });
+        }
+        template <class T>
+        void connectTypedSinkToAllNodes(Sink<T> const &sink) {
+            addTouchup([sink](AppRunner &x) {
+                std::list<std::any> l;
+                {
+                    std::lock_guard<std::mutex> _(x.mutex_);
+                    auto iter = x.typedSourceoids_.find(std::type_index(typeid(T)));
+                    if (iter != x.typedSourceoids_.end())
+                    l = iter->second;
+                }
+                for (auto const &f : l) {
+                    auto s = std::any_cast<Sourceoid<T>>(f);
+                    s(x, sink);
+                }
+            });
+        }
+        template <class T>
+        void connectTypedSinkToAllImporters(Sink<T> const &sink) {
+            addTouchup([sink](AppRunner &x) {
+                std::list<std::any> l;
+                {
+                    std::lock_guard<std::mutex> _(x.mutex_);
+                    auto iter = x.typedSourceoidsFromImporter_.find(std::type_index(typeid(T)));
+                    if (iter != x.typedSourceoidsFromImporter_.end())
+                    l = iter->second;
+                }
+                for (auto const &f : l) {
+                    auto s = std::any_cast<Sourceoid<T>>(f);
+                    s(x, sink);
                 }
             });
         }
