@@ -2072,7 +2072,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addTouchup([sink](AppRunner &x) {
                 std::list<SingleSourceoidForAny> l;
                 {
-                    std::lock_guard<std::mutex> _(x.mutex_);
+                    std::lock_guard<std::recursive_mutex> _(x.mutex_);
                     l = x.sourceoidsForAny_;
                 }
                 for (auto const &f : l) {
@@ -2084,7 +2084,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addTouchup([sink](AppRunner &x) {
                 std::list<SingleSourceoidForAny> l;
                 {
-                    std::lock_guard<std::mutex> _(x.mutex_);
+                    std::lock_guard<std::recursive_mutex> _(x.mutex_);
                     l = x.sourceoidsForAnyFromImporter_;
                 }
                 for (auto const &f : l) {
@@ -2097,7 +2097,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addTouchup([sink](AppRunner &x) {
                 std::list<std::any> l;
                 {
-                    std::lock_guard<std::mutex> _(x.mutex_);
+                    std::lock_guard<std::recursive_mutex> _(x.mutex_);
                     auto iter = x.typedSourceoids_.find(std::type_index(typeid(T)));
                     if (iter != x.typedSourceoids_.end())
                     l = iter->second;
@@ -2113,7 +2113,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addTouchup([sink](AppRunner &x) {
                 std::list<std::any> l;
                 {
-                    std::lock_guard<std::mutex> _(x.mutex_);
+                    std::lock_guard<std::recursive_mutex> _(x.mutex_);
                     auto iter = x.typedSourceoidsFromImporter_.find(std::type_index(typeid(T)));
                     if (iter != x.typedSourceoidsFromImporter_.end())
                     l = iter->second;
