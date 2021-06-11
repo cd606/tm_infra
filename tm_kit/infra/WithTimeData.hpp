@@ -2811,7 +2811,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class A>
-        static SourceoidForAny<A> sourceAsSourceoid(std::optional<Source<A>> &&src) {
+        static SourceoidForAny<A> sourceAsSourceoidForAny(std::optional<Source<A>> &&src) {
             if (src) {
                 return sourceAsSourceoidForAny(std::move(*src));
             } else {

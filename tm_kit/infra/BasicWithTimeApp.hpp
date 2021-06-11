@@ -2,6 +2,7 @@
 #define TM_KIT_INFRA_BASIC_WITHTIME_APP_HPP_
 
 #include <future>
+#include <any>
 #include <tm_kit/infra/WithTimeData.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
@@ -708,6 +709,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class T>
         void connect(Source<T> &&src, Sink<T> const &sink) {
+        }
+        template <class T>
+        void connectAny(Source<T> &&src, Sink<std::any> const &sink) {
         }
 
         #include <tm_kit/infra/BasicWithTimeApp_ConnectN_Piece.hpp>
