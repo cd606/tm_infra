@@ -873,13 +873,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void addTypedSink(Sink<T> const &s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
             m[std::type_index(typeid(T))].push_back(std::any {s});
         }
-        template <class B, class A>
+        template <std::size_t N, std::size_t K, class A, class B>
+        void addTypedSink_action_multi(ActionPtr<A, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
+        template <class A, class B>
         void addTypedSink_action(ActionPtr<A,B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
-        template <std::size_t N, std::size_t K, class B, class... As>
-        void addTypedSink_action_multi(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
-        template <class B, class... As>
-        void addTypedSink_action(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
-
+        
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
             if (reverseLookup_.find(name) != reverseLookup_.end()) {
@@ -3775,24 +3773,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     }
     template <class App>
-    template <class B, class A>
-    void AppRunner<App>::addTypedSink_action(ActionPtr<A,B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
-        addTypedSink<A>(actionAsSink(f), m);
-    }
-    template <class App>
-    template <std::size_t N, std::size_t K, class B, class... As>
-    void AppRunner<App>::addTypedSink_action_multi(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+    template <std::size_t N, std::size_t K, class A, class B>
+    void AppRunner<App>::addTypedSink_action_multi(ActionPtr<A, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
         if constexpr (K < N) {
-            using T = std::variant_alternative_t<K, std::variant<As...>>;
-            addTypedSink<T>(AppRunnerHelper::ActionAsSink<N,K>::template call<AppRunner,std::variant<As...>,B>(*this, f), m);
-            addTypedSink_action_multi<N,K+1,B,As...>(f, m);
+            using T = std::variant_alternative_t<K,A>;
+            addTypedSink<T>(AppRunnerHelper::ActionAsSink<N,K>::template call<AppRunner,A,B>(*this, f), m);
+            addTypedSink_action_multi<N,K+1,A,B>(f, m);
         }
     }
     template <class App>
-    template <class B, class... As>
-    void AppRunner<App>::addTypedSink_action(ActionPtr<std::variant<As...>, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
-        addTypedSink_action_multi<sizeof...(As), 0, B, As...>(f, m);
+    template <class A, class B>
+    void AppRunner<App>::addTypedSink_action(ActionPtr<A,B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m) {
+        if constexpr (withtime_utils::IsVariant<A>::Value) {
+            addTypedSink_action_multi<std::variant_size_v<A>,0,A,B>(f, m);
+        } else {
+            addTypedSink<A>(actionAsSink(f), m);
+        }
     }
+    
 
 }}}}
 
