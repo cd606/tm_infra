@@ -68,6 +68,7 @@ tm_infra_headers = [
     , 'ControllableNode.hpp'
     , 'ObservableNode.hpp'
     , 'StoppableProducer.hpp'
+    , 'GenericLift.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
