@@ -117,6 +117,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return M::template simpleExporter<A>(std::move(f), liftParam);
             }
         };
+        template <class A>
+        class GenericLiftImpl<typename M::EnvironmentType *, std::tuple<bool, typename M::template Data<A>>> {
+        public:
+            template <class F>
+            static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
+                return M::template uniformSimpleImporter<A>(std::move(f), liftParam);
+            }
+        };
         template <class A, class B>
         class GenericLiftMultiImpl {
         };

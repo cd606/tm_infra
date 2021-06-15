@@ -1909,6 +1909,56 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>(std::make_unique<SimpleImporter<T,F>>(std::move(f), liftParam.suggestThreaded));
         }
+    private:
+        template <class T, class F>
+        class UniformSimpleImporter final : public IRealTimeAppPossiblyThreadedNode, public AbstractImporter<T> {
+        private:
+            F f_;
+            std::thread th_;
+            std::optional<std::thread::native_handle_type> thHandle_;
+            std::atomic<bool> running_;
+            void run(StateT *env) {
+                while (running_) {
+                    auto x = f_(env);
+                    if (std::get<1>(x)) {
+                        bool final = std::get<1>(x)->timedData.finalFlag;
+                        this->publish(std::move(*(std::get<1>(x))));
+                        if (final) {
+                            break;
+                        }
+                    }
+                    if (!std::get<0>(x)) {
+                        break;
+                    }
+                }
+            }
+        public:
+            UniformSimpleImporter(F &&f) : f_(std::move(f)), th_(), thHandle_(std::nullopt), running_(false) {}
+            ~UniformSimpleImporter() {
+                if (running_) {
+                    running_ = false;
+                    try {
+                        th_.join();
+                    } catch (std::exception &) {}
+                }
+            }
+            virtual void start(StateT *env) override final {
+                running_ = true;
+                th_ = std::thread ([this,env]() {
+                    run(env);
+                });
+                th_.detach();
+                thHandle_ = th_.native_handle();
+            }
+            virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                return thHandle_;
+            }
+        };
+    public:
+        template <class T, class F>
+        static std::shared_ptr<Importer<T>> uniformSimpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+            return std::make_shared<Importer<T>>(std::make_unique<UniformSimpleImporter<T,F>>(std::move(f)));
+        }
         template <class T>
         static std::shared_ptr<Importer<T>> constFirstPushImporter(T &&t = T()) {
             return simpleImporter<T>([t=std::move(t)](PublisherCall<T> &pub) {

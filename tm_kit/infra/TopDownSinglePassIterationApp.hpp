@@ -1578,6 +1578,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> simpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>(std::make_unique<SimpleImporter<T,F>>(std::move(f), liftParam.delaySimulator));
         }
+        template <class T, class F>
+        static std::shared_ptr<Importer<T>> uniformSimpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+            return simpleImporter<T,F>(std::move(f), liftParam);
+        }
         template <class T>
         static std::shared_ptr<Importer<T>> constFirstPushImporter(T &&t = T()) {
             return simpleImporter<T>(
