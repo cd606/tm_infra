@@ -69,6 +69,7 @@ tm_infra_headers = [
     , 'ObservableNode.hpp'
     , 'StoppableProducer.hpp'
     , 'GenericLift.hpp'
+    , 'AutoConnectionSubGraph.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
