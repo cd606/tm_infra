@@ -164,13 +164,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     struct IsKeyedData<KeyedData<A,B,Env>> {
         enum {value=true};
     };
+    /*
     template <class A, class B>
     struct IsKeyedData<std::variant<A,B>> {
 	enum {value=(IsKeyedData<A>::value || IsKeyedData<B>::value)};
     };
-    template <class A, class B, class C>
-    struct IsKeyedData<std::variant<A,B,C>> {
-	enum {value=(IsKeyedData<A>::value || IsKeyedData<B>::value || IsKeyedData<C>::value)};
+    */
+    template <class A, class... OtherAs>
+    struct IsKeyedData<std::variant<A,OtherAs...>> {
+	enum {value=(IsKeyedData<A>::value || IsKeyedData<std::variant<OtherAs...>>::value)};
     };
     template <class T>
     inline constexpr bool is_keyed_data_v = IsKeyedData<T>::value;
@@ -943,7 +945,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             addSourceoidForAny(actionAsSource(f), sourceoidsForAny_);
             addTypedSourceoid(actionAsSource(f), typedSourceoids_);
-            if constexpr (IsKey<A>::value) {
+            if constexpr (IsKey<B>::value) {
                 addTypedKeySource(actionAsSource(f), typedKeySources_);
             }
             addTypedSink_action<A,B>(f, typedSinks_);

@@ -6,6 +6,8 @@
 #include <tm_kit/infra/WithTimeData.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+    class LiftAsMulti {};
+
     template <class M>
     class GenericLift {
     private:
@@ -166,6 +168,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename GenericLiftTypeFinder<F>::InputType
                 , typename GenericLiftTypeFinder<F>::OutputType
             >::template lift<F>(std::move(f), liftParam);
+        }
+        template <class F>
+        static auto lift(LiftAsMulti &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
+            return liftMulti<F>(std::move(f), liftParam);
         }
     };
 } } } }
