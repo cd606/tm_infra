@@ -868,6 +868,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void addTypedSourceoid(Source<std::variant<As...>> &&s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
             addTypedSourceoid_multi<sizeof...(As), 0, As...>(std::move(s), m);
         }
+        template <class A>
+        static void addTypedKeySource(Source<Key<A,StateT>> &&s, std::map<std::type_index,std::list<std::any>> &m) {
+            m[std::type_index(typeid(A))].push_back(std::any {std::move(s)});
+        }
 
         template <class T>
         void addTypedSink(Sink<T> const &s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
@@ -912,7 +916,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             addSourceoidForAny(actionAsSource(f), sourceoidsForAny_);
             addTypedSourceoid(actionAsSource(f), typedSourceoids_);
-            addTypedSink_action(f, typedSinks_);
+            if constexpr (IsKey<A>::value) {
+                addTypedKeySource(actionAsSource(f), typedKeySources_);
+            }
+            addTypedSink_action<A,B>(f, typedSinks_);
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -946,6 +953,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addSourceoidForAny(importItem(f), sourceoidsForAnyFromImporter_);
             addTypedSourceoid(importItem(f), typedSourceoids_);
             addTypedSourceoid(importItem(f), typedSourceoidsFromImporter_);
+            if constexpr (IsKey<A>::value) {
+                addTypedKeySource(importItem(f), typedKeySources_);
+            }
         }
         template <class A>
         void registerExporter_(ExporterPtr<A> const &f, std::string const &name) {
@@ -1074,6 +1084,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addSourceoidForAny(facilityWithExternalEffectsAsSource(f), sourceoidsForAnyFromImporter_);
             addTypedSourceoid(facilityWithExternalEffectsAsSource(f), typedSourceoids_);
             addTypedSourceoid(facilityWithExternalEffectsAsSource(f), typedSourceoidsFromImporter_);
+            if constexpr (IsKey<C>::value) {
+                addTypedKeySource(facilityWithExternalEffectsAsSource(f), typedKeySources_);
+            }
         }
         template <class A, class B, class C, class D>
         void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
@@ -1109,6 +1122,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addSourceoidForAny(vieFacilityAsSource(f), sourceoidsForAnyFromImporter_);
             addTypedSourceoid(vieFacilityAsSource(f), typedSourceoids_);
             addTypedSourceoid(vieFacilityAsSource(f), typedSourceoidsFromImporter_);
+            if constexpr (IsKey<D>::value) {
+                addTypedKeySource(vieFacilityAsSource(f), typedKeySources_);
+            }
             addTypedSink(vieFacilityAsSink(f), typedSinks_);
         }
         std::string checkName_(void *p) {
@@ -1236,6 +1252,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<SingleSourceoidForAny> sourceoidsForAnyFromImporter_;
         std::unordered_map<std::type_index, std::list<std::any>> typedSourceoids_, typedSourceoidsFromImporter_;
         std::unordered_map<std::type_index, std::list<std::any>> typedSinks_;
+        std::map<std::type_index, std::list<std::any>> typedKeySources_;
+        std::map<std::tuple<std::type_index, std::type_index>, std::list<std::any>> typedKeyedDataSinks_;
         std::set<std::tuple<std::string, int>> usedSinks_;
 
     public:
@@ -1243,9 +1261,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_(), typedKeySources_(), typedKeyedDataSinks_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_(), typedKeySources_(), typedKeyedDataSinks_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
