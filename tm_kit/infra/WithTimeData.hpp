@@ -677,6 +677,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , Sourceoid<A>
             , std::optional<Source<A>>
         >;
+        
+        template <class A, class B>
+        using FacilitioidConnector =
+            std::function<void(AppRunner &, Source<typename App::template Key<A>> &&, std::optional<Sink<typename App::template KeyedData<A,B>>> const &)>;
+        template <class A, class B>
+        using FacilityWrapper =
+            std::optional<std::function<void(AppRunner &, OnOrderFacilityPtr<A,B> const &)>>;
+        template <class A, class B, class C>
+        using LocalFacilityWrapper =
+            std::optional<std::function<void(AppRunner &, LocalOnOrderFacilityPtr<A,B,C> const &)>>;
+        template <class A, class B, class C>
+        using FacilityWithExternalEffectsWrapper =
+            std::optional<std::function<void(AppRunner &, OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &)>>;
+        template <class A, class B, class C, class D>
+        using VIEFacilityWrapper =
+            std::optional<std::function<void(AppRunner &, VIEOnOrderFacilityPtr<A,B,C,D> const &)>>;
+        template <class A, class B>
+        using FacilitioidConnectorWrapper =
+            std::optional<std::function<void(AppRunner &, FacilitioidConnector<A,B> const &)>>;
 
     private:
         App m_;
@@ -872,6 +891,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void addTypedKeySource(Source<Key<A,StateT>> &&s, std::map<std::type_index,std::list<std::any>> &m) {
             m[std::type_index(typeid(A))].push_back(std::any {std::move(s)});
         }
+        template <class A, class B>
+        static void addTypedKeyedDataSink(Sink<KeyedData<A,B,StateT>> const &s, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m) {
+            m[{std::type_index(typeid(A)), std::type_index(typeid(B))}].push_back(std::any {s});
+        }
 
         template <class T>
         void addTypedSink(Sink<T> const &s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
@@ -881,6 +904,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void addTypedSink_action_multi(ActionPtr<A, B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
         template <class A, class B>
         void addTypedSink_action(ActionPtr<A,B> const &f, std::unordered_map<std::type_index, std::list<std::any>> &m);
+        template <std::size_t N, std::size_t K, class A, class B>
+        void addTypedKeyedDataSink_action_multi(ActionPtr<A, B> const &f, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m);
+        template <class A, class B>
+        void addTypedKeyedDataSink_action(ActionPtr<A,B> const &f, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m);
         
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
@@ -920,6 +947,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 addTypedKeySource(actionAsSource(f), typedKeySources_);
             }
             addTypedSink_action<A,B>(f, typedSinks_);
+            addTypedKeyedDataSink_action<A,B>(f, typedKeyedDataSinks_);
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -985,6 +1013,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
             addTypedSink(exporterAsSink(f), typedSinks_);
+            if constexpr (IsKeyedData<A>::value) {
+                addTypedKeyedDataSink(exporterAsSink(f), typedKeyedDataSinks_);
+            }
         }
         template <class A, class B>
         void registerOnOrderFacility_(OnOrderFacilityPtr<A,B> const &f, std::string const &name) {
@@ -1048,6 +1079,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 setMaxOutputConnectivity_(name, 1);
             }
             addTypedSink(localFacilityAsSink(f), typedSinks_);
+            if constexpr (IsKeyedData<C>::value) {
+                addTypedKeyedDataSink(localFacilityAsSink(f), typedKeyedDataSinks_);
+            }
         }
         template <class A, class B, class C>
         void registerOnOrderFacilityWithExternalEffects_(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &f, std::string const &name) {
@@ -1126,6 +1160,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 addTypedKeySource(vieFacilityAsSource(f), typedKeySources_);
             }
             addTypedSink(vieFacilityAsSink(f), typedSinks_);
+            if constexpr (IsKeyedData<C>::value) {
+                addTypedKeyedDataSink(vieFacilityAsSink(f), typedKeyedDataSinks_);
+            }
         }
         std::string checkName_(void *p) {
             auto iter = nameMap_.find(p);
@@ -2215,6 +2252,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void connectSourceToAllUnusedSinks(Source<A> &&source) {
             connectSourceoidToAllSinks_internal<A>(sourceAsSourceoid<A>(std::move(source)), true);
         }
+
+        template <class A, class B>
+        void connectFacilitioidToAllPossiblePlaces(FacilitioidConnector<A,B> const &f) {
+            addTouchup([f](AppRunner &x) {
+                auto sourceIter = x.typedKeySources_.find(std::type_index(typeid(A)));
+                if (sourceIter == x.typedKeySources_.end()) {
+                    return;
+                }
+                auto sinkIter = x.typedKeyedDataSinks_.find({std::type_index(typeid(A)), std::type_index(typeid(B))});
+                if (sinkIter == x.typedKeyedDataSinks_.end()) {
+                    return;
+                }
+                for (auto &source : sourceIter->second) {
+                    for (auto &sink : sinkIter->second) {
+                        f(x, std::any_cast<Source<Key<A,StateT>> &>(source).clone(), std::any_cast<Sink<KeyedData<A,B,StateT>> &>(sink));
+                    }
+                }
+            });
+        }
     
     private:
         void doTouchups() {
@@ -2707,26 +2763,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto biggerName = std::max(name1, name2);
             stateSharingRecords_[{smallerName, biggerName}] = sharedStateName;
         }
-
-        
-        template <class A, class B>
-        using FacilitioidConnector =
-            std::function<void(AppRunner &, Source<typename App::template Key<A>> &&, std::optional<Sink<typename App::template KeyedData<A,B>>> const &)>;
-        template <class A, class B>
-        using FacilityWrapper =
-            std::optional<std::function<void(AppRunner &, OnOrderFacilityPtr<A,B> const &)>>;
-        template <class A, class B, class C>
-        using LocalFacilityWrapper =
-            std::optional<std::function<void(AppRunner &, LocalOnOrderFacilityPtr<A,B,C> const &)>>;
-        template <class A, class B, class C>
-        using FacilityWithExternalEffectsWrapper =
-            std::optional<std::function<void(AppRunner &, OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &)>>;
-        template <class A, class B, class C, class D>
-        using VIEFacilityWrapper =
-            std::optional<std::function<void(AppRunner &, VIEOnOrderFacilityPtr<A,B,C,D> const &)>>;
-        template <class A, class B>
-        using FacilitioidConnectorWrapper =
-            std::optional<std::function<void(AppRunner &, FacilitioidConnector<A,B> const &)>>;
 
         template <class A, class B>
         static FacilitioidConnector<A,B> facilityConnector(OnOrderFacilityPtr<A,B> const &facility) {
@@ -3806,6 +3842,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             addTypedSink_action_multi<std::variant_size_v<A>,0,A,B>(f, m);
         } else {
             addTypedSink<A>(actionAsSink(f), m);
+        }
+    }
+    template <class App>
+    template <std::size_t N, std::size_t K, class A, class B>
+    void AppRunner<App>::addTypedKeyedDataSink_action_multi(ActionPtr<A, B> const &f, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m) {
+        if constexpr (K < N) {
+            using T = std::variant_alternative_t<K,A>;
+            if constexpr (IsKeyedData<T>::value) {
+                addTypedKeyedDataSink<typename T::KeyType, typename T::DataType>(AppRunnerHelper::ActionAsSink<N,K>::template call<AppRunner,A,B>(*this, f), m);
+            }
+            addTypedKeyedDataSink_action_multi<N,K+1,A,B>(f, m);
+        }
+    }
+    template <class App>
+    template <class A, class B>
+    void AppRunner<App>::addTypedKeyedDataSink_action(ActionPtr<A,B> const &f, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m) {
+        if constexpr (withtime_utils::IsVariant<A>::Value) {
+            addTypedKeyedDataSink_action_multi<std::variant_size_v<A>,0,A,B>(f, m);
+        } else {
+            if constexpr (IsKeyedData<A>::value) {
+                addTypedKeyedDataSink<typename A::KeyType, typename A::DataType>(actionAsSink(f), m);
+            }
         }
     }
     
