@@ -702,6 +702,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         App m_;
         StateT *env_;
+        
+        struct NamedSourceRep {
+            std::any theSource_;
+            std::function<void(std::any const &)> theSourceoid_;
+        };
+
         struct ActionCheckData {
             std::string name;
             int paramCount;
@@ -897,6 +903,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void addTypedKeyedDataSink(Sink<KeyedData<A,B,StateT>> const &s, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m) {
             m[{std::type_index(typeid(A)), std::type_index(typeid(B))}].push_back(std::any {s});
         }
+        template <std::size_t N, std::size_t K, class A>
+        void addNamedSource_multi(std::string const &name, Source<A> &&s);
+        template <class A>
+        void addNamedSource_single(std::string const &name, std::optional<Source<A>> &&s1, Sourceoid<A> const &s2) {
+            namedSources_[name].push_back({std::any {std::move(s1)}, [this,name,s2](std::any const &sink) {
+                try {
+                    s2(*this, std::any_cast<Sink<A> const &>(sink));
+                } catch (std::bad_any_cast const &) {
+                    throw AppRunnerException(
+                        name+" is being connected to a wrong-typed destination through dynamic connection"
+                    );
+                }
+            }});
+        }
+        template <class A>
+        void addNamedSource(std::string const &name, Source<A> &&s) {
+            if constexpr (withtime_utils::IsVariant<A>::Value) {
+                addNamedSource_multi<std::variant_size_v<A>, 0, A>(name, s.clone());
+            } else {
+                addNamedSource_single<A>(name, std::optional<Source<A>> {s.clone()}, sourceAsSourceoid<A>(s.clone()));
+            }
+        }
+        template <class A>
+        void addNamedSink(std::string const &name, Sink<A> const &s) {
+            namedSinks_[name].push_back(std::any {s});
+        }
+        template <class A, class B>
+        void addNamedFacility(std::string const &name, FacilitioidConnector<A,B> const &s) {
+            namedFacilities_[name] = [this,name,s](std::any const &source, std::any const &sink) {
+                try {
+                    s(*this, std::any_cast<Source<Key<A,StateT>> const &>(source).clone(), std::any_cast<Sink<KeyedData<A,B,StateT>> const &>(sink));
+                } catch (std::bad_any_cast const &) {
+                    throw AppRunnerException(
+                        name+" is being connected to wrong-typed source and/or sink through dynamic connection"
+                    );
+                }
+            };
+        }
 
         template <class T>
         void addTypedSink(Sink<T> const &s, std::unordered_map<std::type_index, std::list<std::any>> &m) {
@@ -910,6 +954,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void addTypedKeyedDataSink_action_multi(ActionPtr<A, B> const &f, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m);
         template <class A, class B>
         void addTypedKeyedDataSink_action(ActionPtr<A,B> const &f, std::map<std::tuple<std::type_index,std::type_index>,std::list<std::any>> &m);
+        template <std::size_t N, std::size_t K, class A, class B>
+        void addNamedSink_action_multi(std::string const &name, ActionPtr<A,B> const &f);
+        template <class A, class B>
+        void addNamedSink_action(std::string const &name, ActionPtr<A,B> const &f);
         
         template <class A, class B>
         void registerAction_(ActionPtr<A,B> const &f, std::string const &name) {
@@ -950,6 +998,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             addTypedSink_action<A,B>(f, typedSinks_);
             addTypedKeyedDataSink_action<A,B>(f, typedKeyedDataSinks_);
+
+            addNamedSource<B>(name, actionAsSource(f));
+            addNamedSink_action<A,B>(name, f);
         }
         template <class A>
         void registerImporter_(ImporterPtr<A> const &f, std::string const &name) {
@@ -1295,14 +1346,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::map<std::tuple<std::type_index, std::type_index>, std::list<std::any>> typedKeyedDataSinks_;
         std::set<std::tuple<std::string, int>> usedSinks_;
 
+        std::unordered_map<std::string, std::vector<NamedSourceRep>> namedSources_;
+        std::unordered_map<std::string, std::vector<std::any>> namedSinks_;
+        std::unordered_map<std::string, std::function<void(std::any const &, std::any const &)>> namedFacilities_;
+
     public:
         class AppRunnerException : public std::runtime_error {
         public:
             AppRunnerException(std::string const &s) : std::runtime_error(s) {}
         };
-        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_(), typedKeySources_(), typedKeyedDataSinks_() {}
+        AppRunner(StateT *env) : m_(), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_(), typedKeySources_(), typedKeyedDataSinks_(), namedSources_(), namedSinks_(), namedFacilities_() {}
         template <class T>
-        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_(), typedKeySources_(), typedKeyedDataSinks_() {}
+        AppRunner(T t, StateT *env) : m_(t), env_(env), nameMap_(), reverseLookup_(), nextColorCode_(0), components_(), otherPreservedPtrs_(), stateSharingRecords_(), maxConnectivityLimits_(), actionPropertiesMap_(), restrictFacilityOutputConnectionByDefault_(true), underlyingPointerNameMap_(), mutex_(), touchupMutex_(), touchups_(), touchupDone_(false), sourceoidsForAny_(), sourceoidsForAnyFromImporter_(), typedSourceoids_(), typedSourceoidsFromImporter_(), typedSinks_(), usedSinks_(), typedKeySources_(), typedKeyedDataSinks_(), namedSources_(), namedSinks_(), namedFacilities_() {}
         AppRunner(AppRunner const &) = delete;
         AppRunner &operator=(AppRunner const &) = delete;
         AppRunner(AppRunner &&) = default;
@@ -3866,6 +3921,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKeyedData<A>::value) {
                 addTypedKeyedDataSink<typename A::KeyType, typename A::DataType>(actionAsSink(f), m);
             }
+        }
+    }
+    template <class App>
+    template <std::size_t N, std::size_t K, class A>
+    void AppRunner<App>::addNamedSource_multi(std::string const &name, Source<A> &&s) {
+        if constexpr (K < N) {
+            addNamedSource_single<
+                std::variant_alternative_t<K,A>
+            >(
+                name 
+                , std::nullopt
+                , subSourceoid<K>(s.clone())
+            );
+            addNamedSource_multi<N,K+1,A>(name, s.clone());
+        }
+    }
+    template <class App>
+    template <std::size_t N, std::size_t K, class A, class B>
+    void AppRunner<App>::addNamedSink_action_multi(std::string const &name, ActionPtr<A,B> const &f) {
+        if constexpr (K < N) {
+            using T = std::variant_alternative_t<K,A>;
+            addNamedSink<T>(name, AppRunnerHelper::ActionAsSink<N,K>::template call<AppRunner<App>,A,B>(*this, f));
+            addNamedSink_action_multi<N,K+1,A,B>(name, f);
+        }
+    }
+    template <class App>
+    template <class A, class B>
+    void AppRunner<App>::addNamedSink_action(std::string const &name, ActionPtr<A,B> const &f) {
+        if constexpr (withtime_utils::IsVariant<A>::Value) {
+            addNamedSink_action_multi<std::variant_size_v<A>,0,A,B>(name, f);
+        } else {
+            addNamedSink<A>(name, actionAsSink(f));
         }
     }
     
