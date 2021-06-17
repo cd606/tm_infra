@@ -70,6 +70,7 @@ tm_infra_headers = [
     , 'StoppableProducer.hpp'
     , 'GenericLift.hpp'
     , 'AutoConnectionSubGraph.hpp'
+    , 'DeclarativeGraph.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
