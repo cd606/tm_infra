@@ -75,7 +75,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
         template <class A, class B>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractOnOrderFacility<A,B> *facility) {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractOnOrderFacility<A,B> *facility) : registration_() {
             auto component = R::AppType::template fromAbstractOnOrderFacility<A,B>(facility);
             registration_ = [name,component](R &r) {
                 r.registerOnOrderFacility(name, component);
@@ -83,7 +83,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A, class B, class C>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) : registration_() {
             auto component = R::AppType::template localOnOrderFacility<A,B,C>(facility);
             registration_ = [name,component](R &r) {
                 r.registerLocalOnOrderFacility(name, component);
@@ -92,7 +92,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A, class B, class C>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) : registration_() {
             auto component = R::AppType::template onOrderFacilityWithExternalEffects<A,B,C>(facility);
             registration_ = [name,component](R &r) {
                 r.registerOnOrderFacilityWithExternalEffects(name, component);
@@ -101,7 +101,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A, class B, class C, class D>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) : registration_() {
             auto component = R::AppType::template vieOnOrderFacility<A,B,C,D>(facility);
             registration_ = [name,component](R &r) {
                 r.registerVIEOnOrderFacility(name, component);
@@ -111,14 +111,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A>
-        OneAutoConnectionItem(std::string const &name, VacuousImporterItem<A> &&) {
+        OneAutoConnectionItem(std::string const &name, VacuousImporterItem<A> &&) : registration_() {
             auto component = R::AppType::template vacuousImporter<A>();
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
         }
         template <class A>
-        OneAutoConnectionItem(std::string const &name, TrivialExporterItem<A> &&) {
+        OneAutoConnectionItem(std::string const &name, TrivialExporterItem<A> &&) : registration_() {
             auto component = R::AppType::template trivialExporter<A>();
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
+        }
+        template <class A>
+        OneAutoConnectionItem(typename R::template Source<A> &&s) : registration_() {
+            registration_ = [s=std::move(s)](R &r) {
+                r.connectSourceToAllSinks(s.clone());
+            };
+        }
+        OneAutoConnectionItem(typename R::template Sink<A> const &s) : registration_() {
+            registration_ = [s](R &r) {
+                r.connectTypedSinkToAllNodes(s);
+            };
         }
         void doRegistration(R &r) const {
             registration_(r);
