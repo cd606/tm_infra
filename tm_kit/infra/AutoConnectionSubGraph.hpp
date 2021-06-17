@@ -45,7 +45,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         class RegistrationResolver<std::shared_ptr<T>> {
         public:
-            static std::function<void(R &, std::string const &)> resolve(std::string const &name, std::shared_ptr<T> const &x) {
+            static std::function<void(R &)> resolve(std::string const &name, std::shared_ptr<T> const &x) {
                 if constexpr (R::AppType::template IsImporter<T>::Value) {
                     return [name,x](R &r) {
                         r.registerImporter(name, x);
