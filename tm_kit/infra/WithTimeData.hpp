@@ -921,6 +921,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void addNamedSource(std::string const &name, Source<A> &&s) {
             if constexpr (withtime_utils::IsVariant<A>::Value) {
                 addNamedSource_multi<std::variant_size_v<A>, 0, A>(name, s.clone());
+                namedSources_[name][0].theSource_ = {std::any {s.clone()}};
             } else {
                 addNamedSource_single<A>(name, std::optional<Source<A>> {s.clone()}, sourceAsSourceoid<A>(s.clone()));
             }
@@ -3314,7 +3315,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class A>
-        std::optional<Source<A>> sourceByName(std::string const &sourceName, std::size_t sourceIdx) {
+        std::optional<Source<A>> sourceByName(std::string const &sourceName, std::size_t sourceIdx=0) {
             auto sourceIter = namedSources_.find(sourceName);
             if (sourceIter == namedSources_.end()) {
                 throw AppRunnerException(
@@ -3338,7 +3339,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class A>
-        Sourceoid<A> sourceoidByName(std::string const &sourceName, std::size_t sourceIdx) {
+        Sourceoid<A> sourceoidByName(std::string const &sourceName, std::size_t sourceIdx=0) {
             auto sourceIter = namedSources_.find(sourceName);
             if (sourceIter == namedSources_.end()) {
                 throw AppRunnerException(
@@ -3356,7 +3357,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A>
-        Sink<A> sinkByName(std::string const &sinkName, std::size_t sinkIdx) {
+        Sink<A> sinkByName(std::string const &sinkName, std::size_t sinkIdx=0) {
             auto sinkIter = namedSinks_.find(sinkName);
             if (sinkIter == namedSinks_.end()) {
                 throw AppRunnerException(
