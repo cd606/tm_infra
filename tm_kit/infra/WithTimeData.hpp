@@ -1107,7 +1107,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (restrictFacilityOutputConnectionByDefault_) {
                 setMaxOutputConnectivity_(name, 1);
             }
-            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedFacility<A,B>(name, facilityConnector<A,B>(f));
         }
         template <class A, class B, class C>
         void registerLocalOnOrderFacility_(LocalOnOrderFacilityPtr<A,B,C> const &f, std::string const &name) {
@@ -1143,7 +1143,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKeyedData<C>::value) {
                 addTypedKeyedDataSink(localFacilityAsSink(f), typedKeyedDataSinks_);
             }
-            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedFacility<A,B>(name, localFacilityConnector<A,B,C>(f));
             addNamedSink<C>(name, localFacilityAsSink(f));
         }
         template <class A, class B, class C>
@@ -1184,7 +1184,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKey<C>::value) {
                 addTypedKeySource(facilityWithExternalEffectsAsSource(f), typedKeySources_);
             }
-            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedFacility<A,B>(name, facilityWithExternalEffectsConnector<A,B,C>(f));
             addNamedSource<C>(name, facilityWithExternalEffectsAsSource(f));
         }
         template <class A, class B, class C, class D>
@@ -1228,7 +1228,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKeyedData<C>::value) {
                 addTypedKeyedDataSink(vieFacilityAsSink(f), typedKeyedDataSinks_);
             }
-            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedFacility<A,B>(name, vieFacilityConnector<A,B,C,D>(f));
             addNamedSource<D>(name, vieFacilityAsSource(f));
             addNamedSink<C>(name, vieFacilityAsSink(f));
         }
