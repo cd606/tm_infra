@@ -132,6 +132,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.connectTypedSinkToAllNodes(s);
             };
         }
+        template <class A, class B>
+        OneAutoConnectionItem(typename R::template FacilitioidConnector<A,B> const &f) : registration_() {
+            registration_ = [f](R &r) {
+                r.connnectFacilioidToAllPossiblePlaces(f);
+            };
+        }
         void doRegistration(R &r) const {
             registration_(r);
         }
