@@ -704,7 +704,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         StateT *env_;
         
         struct NamedSourceRep {
-            std::any theSource_;
+            std::optional<std::any> theSource_;
             std::function<void(std::any const &)> theSourceoid_;
         };
 
@@ -907,7 +907,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void addNamedSource_multi(std::string const &name, Source<A> &&s);
         template <class A>
         void addNamedSource_single(std::string const &name, std::optional<Source<A>> &&s1, Sourceoid<A> const &s2) {
-            namedSources_[name].push_back({std::any {std::move(s1)}, [this,name,s2](std::any const &sink) {
+            namedSources_[name].push_back({(s1?(std::any {std::move(*s1)}):std::nullopt), [this,name,s2](std::any const &sink) {
                 try {
                     s2(*this, std::any_cast<Sink<A> const &>(sink));
                 } catch (std::bad_any_cast const &) {
@@ -931,9 +931,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B>
         void addNamedFacility(std::string const &name, FacilitioidConnector<A,B> const &s) {
-            namedFacilities_[name] = [this,name,s](std::any const &source, std::any const &sink) {
+            namedFacilities_[name] = [this,name,s](std::any const &source, std::optional<std::any> const &sink) {
                 try {
-                    s(*this, std::any_cast<Source<Key<A,StateT>> const &>(source).clone(), std::any_cast<Sink<KeyedData<A,B,StateT>> const &>(sink));
+                    if (sink) {
+                        s(*this, std::any_cast<Source<Key<A,StateT>> const &>(source).clone(), std::any_cast<Sink<KeyedData<A,B,StateT>> const &>(*sink));
+                    } else {
+                        s(*this, std::any_cast<Source<Key<A,StateT>> const &>(source).clone(), std::nullopt);
+                    }
                 } catch (std::bad_any_cast const &) {
                     throw AppRunnerException(
                         name+" is being connected to wrong-typed source and/or sink through dynamic connection"
@@ -1037,6 +1041,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKey<A>::value) {
                 addTypedKeySource(importItem(f), typedKeySources_);
             }
+            addNamedSource<A>(name, importItem(f));
         }
         template <class A>
         void registerExporter_(ExporterPtr<A> const &f, std::string const &name) {
@@ -1069,6 +1074,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKeyedData<A>::value) {
                 addTypedKeyedDataSink(exporterAsSink(f), typedKeyedDataSinks_);
             }
+            addNamedSink<A>(name, exporterAsSink(f));
         }
         template <class A, class B>
         void registerOnOrderFacility_(OnOrderFacilityPtr<A,B> const &f, std::string const &name) {
@@ -1100,6 +1106,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (restrictFacilityOutputConnectionByDefault_) {
                 setMaxOutputConnectivity_(name, 1);
             }
+            addNamedFacility<A,B>(name, facilityConnector(f));
         }
         template <class A, class B, class C>
         void registerLocalOnOrderFacility_(LocalOnOrderFacilityPtr<A,B,C> const &f, std::string const &name) {
@@ -1135,6 +1142,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKeyedData<C>::value) {
                 addTypedKeyedDataSink(localFacilityAsSink(f), typedKeyedDataSinks_);
             }
+            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedSink<C>(name, localFacilityAsSink(f));
         }
         template <class A, class B, class C>
         void registerOnOrderFacilityWithExternalEffects_(OnOrderFacilityWithExternalEffectsPtr<A,B,C> const &f, std::string const &name) {
@@ -1174,6 +1183,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKey<C>::value) {
                 addTypedKeySource(facilityWithExternalEffectsAsSource(f), typedKeySources_);
             }
+            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedSource<C>(name, facilityWithExternalEffectsAsSource(f));
         }
         template <class A, class B, class C, class D>
         void registerVIEOnOrderFacility_(VIEOnOrderFacilityPtr<A,B,C,D> const &f, std::string const &name) {
@@ -1216,6 +1227,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (IsKeyedData<C>::value) {
                 addTypedKeyedDataSink(vieFacilityAsSink(f), typedKeyedDataSinks_);
             }
+            addNamedFacility<A,B>(name, facilityConnector(f));
+            addNamedSource<D>(name, vieFacilityAsSource(f));
+            addNamedSink<C>(name, vieFacilityAsSink(f));
         }
         std::string checkName_(void *p) {
             auto iter = nameMap_.find(p);
@@ -1348,7 +1362,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         std::unordered_map<std::string, std::vector<NamedSourceRep>> namedSources_;
         std::unordered_map<std::string, std::vector<std::any>> namedSinks_;
-        std::unordered_map<std::string, std::function<void(std::any const &, std::any const &)>> namedFacilities_;
+        std::unordered_map<std::string, std::function<void(std::any const &, std::optional<std::any> const &)>> namedFacilities_;
 
     public:
         class AppRunnerException : public std::runtime_error {
@@ -3235,6 +3249,149 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 ret.insert({item.first, std::move(innerRet)});
             }
             return ret;
+        }
+
+        void dynamicConnect(std::string const &sourceName, std::size_t sourceIdx, std::string const &sinkName, std::size_t sinkIdx) {
+            auto sourceIter = namedSources_.find(sourceName);
+            if (sourceIter == namedSources_.end()) {
+                throw AppRunnerException(
+                    std::string("dynamicConnect error: source '")+sourceName+"' not found"
+                );
+            }
+            if (sourceIter->second.size() <= sourceIdx) {
+                throw AppRunnerException(
+                    std::string("dynamicConnect error: source '")+sourceName+"' does not have branch "+std::to_string(sourceIdx)
+                );
+            }
+            auto sinkIter = namedSinks_.find(sinkName);
+            if (sinkIter == namedSinks_.end()) {
+                throw AppRunnerException(
+                    std::string("dynamicConnect error: sink '")+sinkName+"' not found"
+                );
+            }
+            if (sinkIter->second.size() <= sinkIdx) {
+                throw AppRunnerException(
+                    std::string("dynamicConnect error: sink '")+sinkName+"' does not have branch "+std::to_string(sinkIdx)
+                );
+            }
+            sourceIter->second[sourceIdx].theSourceoid_(sinkIter->second[sinkIdx]);
+        }
+        void dynamicPlaceOrder(std::string const &sourceName, std::size_t sourceIdx, std::string const &facilityName, std::string const &sinkName, std::size_t sinkIdx) {
+            auto sourceIter = namedSources_.find(sourceName);
+            if (sourceIter == namedSources_.end()) {
+                throw AppRunnerException(
+                    std::string("dynamicPlaceOrder error: source '")+sourceName+"' not found"
+                );
+            }
+            if (sourceIter->second.size() <= sourceIdx) {
+                throw AppRunnerException(
+                    std::string("dynamicPlaceOrder error: source '")+sourceName+"' does not have branch "+std::to_string(sourceIdx)
+                );
+            }
+            if (!sourceIter->second[sourceIdx].theSource_) {
+                throw AppRunnerException(
+                    std::string("dynamicPlaceOrder error: source '")+sourceName+"' does not have placeable source at branch "+std::to_string(sourceIdx)
+                );
+            }
+            auto sinkIter = namedSinks_.find(sinkName);
+            if (sinkIter == namedSinks_.end()) {
+                throw AppRunnerException(
+                    std::string("dynamicPlaceOrder error: sink '")+sinkName+"' not found"
+                );
+            }
+            if (sinkIter->second.size() <= sinkIdx) {
+                throw AppRunnerException(
+                    std::string("dynamicPlaceOrder error: sink '")+sinkName+"' does not have branch "+std::to_string(sinkIdx)
+                );
+            }
+            auto facilityIter = namedFacilities_.find(facilityName);
+            if (facilityIter == namedFacilities_.end()) {
+                throw AppRunnerException(
+                    std::string("dynamicPlaceOrder error: facility '")+facilityName+"' not found"
+                );
+            }
+            (facilityIter->second)(*(sourceIter->second[sourceIdx].theSource_), {sinkIter->second[sinkIdx]});
+        }
+
+        template <class A>
+        std::optional<Source<A>> sourceByName(std::string const &sourceName, std::size_t sourceIdx) {
+            auto sourceIter = namedSources_.find(sourceName);
+            if (sourceIter == namedSources_.end()) {
+                throw AppRunnerException(
+                    std::string("sourceByName error: source '")+sourceName+"' not found"
+                );
+            }
+            if (sourceIter->second.size() <= sourceIdx) {
+                throw AppRunnerException(
+                    std::string("sourceByName error: source '")+sourceName+"' does not have branch "+std::to_string(sourceIdx)
+                );
+            }
+            if (!sourceIter->second[sourceIdx].theSource_) {
+                return std::nullopt;
+            }
+            try {
+                return { std::any_cast<Source<A> const &>(*(sourceIter->second[sourceIdx].theSource_)).clone() };
+            } catch (std::bad_any_cast const &) {
+                throw AppRunnerException(
+                    std::string("sourceByName error: source '")+sourceName+"' does not have valid source at branch "+std::to_string(sourceIdx)
+                );
+            }
+        }
+        template <class A>
+        Sourceoid<A> sourceoidByName(std::string const &sourceName, std::size_t sourceIdx) {
+            auto sourceIter = namedSources_.find(sourceName);
+            if (sourceIter == namedSources_.end()) {
+                throw AppRunnerException(
+                    std::string("sourceoidByName error: source '")+sourceName+"' not found"
+                );
+            }
+            if (sourceIter->second.size() <= sourceIdx) {
+                throw AppRunnerException(
+                    std::string("sourceoidByName error: source '")+sourceName+"' does not have branch "+std::to_string(sourceIdx)
+                );
+            }
+            auto f = sourceIter->second[sourceIdx].theSourceoid_;
+            return [f](AppRunner &r, Sink<A> const &sink) {
+                f(std::any {sink});
+            };
+        }
+        template <class A>
+        Sink<A> sinkByName(std::string const &sinkName, std::size_t sinkIdx) {
+            auto sinkIter = namedSinks_.find(sinkName);
+            if (sinkIter == namedSinks_.end()) {
+                throw AppRunnerException(
+                    std::string("sinkByName error: sink '")+sinkName+"' not found"
+                );
+            }
+            if (sinkIter->second.size() <= sinkIdx) {
+                throw AppRunnerException(
+                    std::string("sinkByName error: sink '")+sinkName+"' does not have branch "+std::to_string(sinkIdx)
+                );
+            }
+            try {
+                return std::any_cast<Sink<A> const &>(sinkIter->second);
+            } catch (std::bad_any_cast const &) {
+                throw AppRunnerException(
+                    std::string("sinkByName error: sink '")+sinkName+"' does not have valid sink at branch "+std::to_string(sinkIdx)
+                );
+            }
+        }
+        template <class A, class B>
+        FacilitioidConnector<A,B> facilitioidByName(std::string const &facilityName) {
+            auto facilityIter = namedFacilities_.find(facilityName);
+            if (facilityIter == namedFacilities_.end()) {
+                throw AppRunnerException(
+                    std::string("facilitioidByName error: facility '")+facilityName+"' not found"
+                );
+            }
+            auto f = facilityIter->second;
+            return [f](AppRunner &, Source<Key<A,StateT>> &&source, std::optional<Sink<KeyedData<A,B,StateT>>> const &sink) {
+                if (sink) {
+                    f(std::any {source.clone()}, {std::any {*sink}});
+                } else {
+                    f(std::any {source.clone()}, std::nullopt);
+                }
+            };
         }
     };
 
