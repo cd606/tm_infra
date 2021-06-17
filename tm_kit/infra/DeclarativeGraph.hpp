@@ -28,39 +28,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class X>
         class RegistrationResolver {};
 
-        template <class A>
-        class RegistrationResolver<typename R::ImporterPtr<A>> {
+        template <class T>
+        class RegistrationResolver<std::shared_ptr<T>> {
         public:
-            static std::function<void(R &, std::string const &)> resolve(std::string const &name, typename R::ImporterPtr<A> const &importer) {
-                return [name,importer](R &r, std::string const &prefix) {
-                    r.registerImporter((prefix==""?name:(prefix+"/"+name)), importer);
-                };
-            }
-        };
-
-        template <class A>
-        class RegistrationResolver<typename R::ExporterPtr<A>> {
-        public:
-            static std::function<void(R &, std::string const &)> resolve(std::string const &name, typename R::ExporterPtr<A> const &exporter) {
-                return [name,exporter](R &r, std::string const &prefix) {
-                    r.registerExporter((prefix==""?name:(prefix+"/"+name)), exporter);
-                };
-            }
-        };
-
-        template <class A, class B>
-        class RegistrationResolver<typename R::ActionPtr<A,B>> {
-        public:
-            static std::function<void(R &, std::string const &)> resolve(std::string const &name, typename R::ActionPtr<A,B> const &action) {
-                return [name,action](R &r, std::string const &prefix) {
-                    r.registerAction((prefix==""?name:(prefix+"/"+name)), action);
-                };
+            static std::function<void(R &, std::string const &)> resolve(std::string const &name, std::shared_ptr<T> const &x) {
+                if constexpr (R::AppType::template IsImporter<T>::Value) {
+                    return [name,x](R &r, std::string const &prefix) {
+                        r.registerImporter((prefix==""?name:(prefix+"/"+name)), x);
+                    };
+                } else if constexpr (R::AppType::template IsExporter<T>::Value) {
+                    return [name,x](R &r, std::string const &prefix) {
+                        r.registerExporter((prefix==""?name:(prefix+"/"+name)), x);
+                    };
+                } else if constexpr (R::AppType::template IsAction<T>::Value) {
+                    return [name,x](R &r, std::string const &prefix) {
+                        r.registerAction((prefix==""?name:(prefix+"/"+name)), x);
+                    };
+                } else {
+                    throw std::runtime_error("Bad registration resolution");
+                }
             }
         };
     public:
         template <class F, typename=std::enable_if_t<
-            !std::is_pointer_v<std::decay_t<F>>
-            && !std::is_convertible_v<std::decay_t<F>, std::string>
+            !std::is_convertible_v<std::decay_t<F>, std::string>
         >>
         OneDeclarativeGraphItem(std::string const &name, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
             auto component = GenericLift<typename R::AppType>::lift(std::move(f), liftParam);
@@ -72,28 +63,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
         template <class A, class B>
-        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::AbstractOnOrderFacility<A,B> *facility) : registration_() {
+        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::template AbstractOnOrderFacility<A,B> *facility) : registration_() {
             auto component = R::AppType::template fromAbstractOnOrderFacility<A,B>(facility);
             registration_ = [name,component](R &r, std::string const &prefix) {
                 r.registerOnOrderFacility((prefix==""?name:(prefix+"/"+name)), component);
             };
         }
         template <class A, class B, class C>
-        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) : registration_() {
+        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::template AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) : registration_() {
             auto component = R::AppType::template localOnOrderFacility<A,B,C>(facility);
             registration_ = [name,component](R &r, std::string const &prefix) {
                 r.registerLocalOnOrderFacility((prefix==""?name:(prefix+"/"+name)), component);
             };
         }
         template <class A, class B, class C>
-        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) : registration_() {
+        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::template AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) : registration_() {
             auto component = R::AppType::template onOrderFacilityWithExternalEffects<A,B,C>(facility);
             registration_ = [name,component](R &r, std::string const &prefix) {
                 r.registerOnOrderFacilityWithExternalEffects((prefix==""?name:(prefix+"/"+name)), component);
             };
         }
         template <class A, class B, class C, class D>
-        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) : registration_() {
+        OneDeclarativeGraphItem(std::string const &name, typename R::AppType::template AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) : registration_() {
             auto component = R::AppType::template vieOnOrderFacility<A,B,C,D>(facility);
             registration_ = [name,component](R &r, std::string const &prefix) {
                 r.registerVIEOnOrderFacility((prefix==""?name:(prefix+"/"+name)), component);

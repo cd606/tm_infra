@@ -96,7 +96,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B>
-        class GenericLiftImpl<typename M::InnerData<A>, typename M::Data<B>> {
+        class GenericLiftImpl<typename M::template InnerData<A>, typename M::template Data<B>> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -112,7 +112,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A>
-        class GenericLiftImpl<typename M::InnerData<A>, void> {
+        class GenericLiftImpl<typename M::template InnerData<A>, void> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -147,7 +147,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B>
-        class GenericLiftMultiImpl<typename M::InnerData<A>, typename M::Data<std::vector<B>>> {
+        class GenericLiftMultiImpl<typename M::template InnerData<A>, typename M::template Data<std::vector<B>>> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {

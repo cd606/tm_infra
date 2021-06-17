@@ -2954,6 +2954,68 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = typename X::ExtraInputType;
             using ExtraOutputType = typename X::ExtraOutputType;
         };
+    private:
+        template <class T>
+        static auto hasDataType(int) -> single_pass_iteration_app_utils::TrueType<typename T::DataType>;
+        template <class T>
+        static auto hasDataType(long) -> std::false_type;
+
+        template <class X>
+        struct IsOneWayHolder {
+            static constexpr bool Value = decltype(hasDataType<X>(0))::value;
+        };
+        template <class X, bool B>
+        struct IsImporterImpl {
+        };
+        template <class X>
+        struct IsImporterImpl<X, true> {
+            static constexpr bool Value = std::is_same_v<
+                X, Importer<typename X::DataType>
+            >;
+        };
+        template <class X>
+        struct IsImporterImpl<X, false> {
+            static constexpr bool Value = false;
+        };
+        template <class X, bool B>
+        struct IsExporterImpl {
+        };
+        template <class X>
+        struct IsExporterImpl<X, true> {
+            static constexpr bool Value = std::is_same_v<
+                X, Exporter<typename X::DataType>
+            >;
+        };
+        template <class X>
+        struct IsExporterImpl<X, false> {
+            static constexpr bool Value = false;
+        };
+        template <class X, bool B>
+        struct IsActionImpl {
+        };
+        template <class X>
+        struct IsActionImpl<X, true> {
+            static constexpr bool Value = std::is_same_v<
+                X, Action<typename X::InputType, typename X::OutputType>
+            >;
+        };
+        template <class X>
+        struct IsActionImpl<X, false> {
+            static constexpr bool Value = false;
+        };
+    public:
+        template <class X>
+        struct IsImporter {
+            static constexpr bool Value = IsImporterImpl<X, IsOneWayHolder<X>::Value>::Value;
+        };
+        template <class X>
+        struct IsExporter {
+            static constexpr bool Value = IsExporterImpl<X, IsOneWayHolder<X>::Value>::Value;
+        };
+        template <class X>
+        struct IsAction {
+            static constexpr bool Value = IsActionImpl<X, !IsOneWayHolder<X>::Value>::Value;
+        };
     };
 
     template <class T>

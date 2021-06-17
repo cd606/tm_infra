@@ -15,43 +15,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         std::function<void(R &)> registration_;
 
-        template <class X>
-        class RegistrationResolver {};
-
-        template <class A>
-        class RegistrationResolver<typename R::ImporterPtr<A>> {
-        public:
-            static std::function<void(R &)> resolve(std::string const &name, typename R::ImporterPtr<A> const &importer) {
-                return [name,importer](R &r) {
-                    r.registerImporter(name, importer);
-                    r.connectSourceToAllSinks(r.importItem(importer));
-                };
-            }
-        };
-
-        template <class A>
-        class RegistrationResolver<typename R::ExporterPtr<A>> {
-        public:
-            static std::function<void(R &)> resolve(std::string const &name, typename R::ExporterPtr<A> const &exporter) {
-                return [name,exporter](R &r) {
-                    r.registerExporter(name, exporter);
-                    r.connectTypedSinkToAllNodes(r.exporterAsSink(exporter));
-                };
-            }
-        };
-
         template <class A, class B>
-        class RegistrationResolver<typename R::ActionPtr<A,B>> {
+        class RegistrationResolverActionHelper {
         private:
             template <size_t N, size_t K>
-            static void connectSink_internal_(R &r, typename R::ActionPtr<A,B> const &action) {
+            static void connectSink_internal_(R &r, typename R::template ActionPtr<A,B> const &action) {
                 if constexpr (K < N) {
                     r.connectTypedSinkToAllNodes(AppRunnerHelper::ActionAsSink<N,K>::template call<R,A,B>(r, action));
                     connectSink_internal_<N,K+1>(r, action);
                 }
             }
         public:
-            static std::function<void(R &)> resolve(std::string const &name, typename R::ActionPtr<A,B> const &action) {
+            static std::function<void(R &)> resolve(std::string const &name, typename R::template ActionPtr<A,B> const &action) {
                 return [name,action](R &r) {
                     r.registerAction(name, action);
                     r.connectSourceToAllSinks(r.actionAsSource(action));
@@ -63,6 +38,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 };
             }
         };
+
+        template <class X>
+        class RegistrationResolver {};
+
+        template <class T>
+        class RegistrationResolver<std::shared_ptr<T>> {
+        public:
+            static std::function<void(R &, std::string const &)> resolve(std::string const &name, std::shared_ptr<T> const &x) {
+                if constexpr (R::AppType::template IsImporter<T>::Value) {
+                    return [name,x](R &r) {
+                        r.registerImporter(name, x);
+                        r.connectSourceToAllSinks(r.importItem(x));
+                    };
+                } else if constexpr (R::AppType::template IsExporter<T>::Value) {
+                    return [name,x](R &r) {
+                        r.registerExporter(name, x);
+                        r.connectTypedSinkToAllNodes(r.exporterAsSink(x));
+                    };
+                } else if constexpr (R::AppType::template IsAction<T>::Value) {
+                    return RegistrationResolverActionHelper<
+                            typename T::InputType 
+                            , typename T::OutputType
+                        >::resolve(name, x);
+                } else {
+                    throw std::runtime_error("Bad registration resolution");
+                }
+            }
+        };
+
     public:
         template <class F>
         OneAutoConnectionItem(std::string const &name, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
@@ -75,7 +79,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
         template <class A, class B>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractOnOrderFacility<A,B> *facility) : registration_() {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractOnOrderFacility<A,B> *facility) : registration_() {
             auto component = R::AppType::template fromAbstractOnOrderFacility<A,B>(facility);
             registration_ = [name,component](R &r) {
                 r.registerOnOrderFacility(name, component);
@@ -83,7 +87,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A, class B, class C>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) : registration_() {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) : registration_() {
             auto component = R::AppType::template localOnOrderFacility<A,B,C>(facility);
             registration_ = [name,component](R &r) {
                 r.registerLocalOnOrderFacility(name, component);
@@ -92,7 +96,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A, class B, class C>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) : registration_() {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) : registration_() {
             auto component = R::AppType::template onOrderFacilityWithExternalEffects<A,B,C>(facility);
             registration_ = [name,component](R &r) {
                 r.registerOnOrderFacilityWithExternalEffects(name, component);
@@ -101,7 +105,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class A, class B, class C, class D>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) : registration_() {
+        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) : registration_() {
             auto component = R::AppType::template vieOnOrderFacility<A,B,C,D>(facility);
             registration_ = [name,component](R &r) {
                 r.registerVIEOnOrderFacility(name, component);
