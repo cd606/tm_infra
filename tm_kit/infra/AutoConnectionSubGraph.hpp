@@ -126,6 +126,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.connectSourceToAllSinks(s.clone());
             };
         }
+        template <class A>
         OneAutoConnectionItem(typename R::template Sink<A> const &s) : registration_() {
             registration_ = [s](R &r) {
                 r.connectTypedSinkToAllNodes(s);
