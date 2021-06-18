@@ -49,9 +49,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
+        template <class X>
+        struct IsSharedPtr {
+            static constexpr bool Value = false;
+        };
+        template <class T>
+        struct IsSharedPtr<std::shared_ptr<T>> {
+            static constexpr bool Value = true;
+        };
     public:
         template <class F, typename=std::enable_if_t<
             !std::is_convertible_v<std::decay_t<F>, std::string>
+            && !IsSharedPtr<std::decay_t<F>>::Value
         >>
         OneDeclarativeGraphItem(std::string const &name, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
             auto component = GenericLift<typename R::AppType>::lift(std::move(f), liftParam);
@@ -61,6 +70,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         OneDeclarativeGraphItem(std::string const &name, LiftAsMulti &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
             auto component = GenericLift<typename R::AppType>::liftMulti(std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        }
+        template <class T>
+        OneDeclarativeGraphItem(std::string const &name, std::shared_ptr<T> const &t) {
+            registration_ = RegistrationResolver<std::shared_ptr<T>>::resolve(name, t);
         }
         template <class A, class B>
         OneDeclarativeGraphItem(std::string const &name, typename R::AppType::template AbstractOnOrderFacility<A,B> *facility) : registration_() {
