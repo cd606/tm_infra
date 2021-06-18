@@ -2,6 +2,7 @@
 #define TM_KIT_INFRA_AUTO_CONNECTION_SUB_GRAPH_HPP_
 
 #include <tm_kit/infra/GenericLift.hpp>
+#include <tm_kit/infra/NodeClassifier.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -46,29 +47,62 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class RegistrationResolver<std::shared_ptr<T>> {
         public:
             static std::function<void(R &)> resolve(std::string const &name, std::shared_ptr<T> const &x) {
-                if constexpr (R::AppType::template IsImporter<T>::Value) {
+                if constexpr (NodeClassifier<typename R::AppType>::template IsImporter<T>::Value) {
                     return [name,x](R &r) {
                         r.registerImporter(name, x);
                         r.connectSourceToAllSinks(r.importItem(x));
                     };
-                } else if constexpr (R::AppType::template IsExporter<T>::Value) {
+                } else if constexpr (NodeClassifier<typename R::AppType>::template IsExporter<T>::Value) {
                     return [name,x](R &r) {
                         r.registerExporter(name, x);
                         r.connectTypedSinkToAllNodes(r.exporterAsSink(x));
                     };
-                } else if constexpr (R::AppType::template IsAction<T>::Value) {
+                } else if constexpr (NodeClassifier<typename R::AppType>::template IsAction<T>::Value) {
                     return RegistrationResolverActionHelper<
                             typename T::InputType 
                             , typename T::OutputType
                         >::resolve(name, x);
+                } else if constexpr (NodeClassifier<typename R::AppType>::template IsOnOrderFacility<T>::Value) {
+                    return [name,x](R &r) {
+                        r.registerOnOrderFacility(name, x);
+                        r.connnectFacilioidToAllPossiblePlaces(r.template facilityConnector<typename T::InputType, typename T::OutputType>(x));
+                    };
+                } else if constexpr (NodeClassifier<typename R::AppType>::template IsLocalOnOrderFacility<T>::Value) {
+                    return [name,x](R &r) {
+                        r.registerLocalOnOrderFacility(name, x);
+                        r.connnectFacilioidToAllPossiblePlaces(r.template localFacilityConnector<typename T::InputType, typename T::OutputType, typename T::DataType>(x));
+                        r.connectTypedSinkToAllNodes(r.localFacilityAsSink(x));
+                    };
+                } else if constexpr (NodeClassifier<typename R::AppType>::template IsOnOrderFacilityWithExternalEffects<T>::Value) {
+                    return [name,x](R &r) {
+                        r.registerLocalOnOrderFacility(name, x);
+                        r.connnectFacilioidToAllPossiblePlaces(r.template facilityWithLocalEffectsConnector<typename T::InputType, typename T::OutputType, typename T::DataType>(x));
+                        r.connectSourceToAllSinks(r.facilityWithExternalEffectsAsSource(x));
+                    };
+                } else if constexpr (NodeClassifier<typename R::AppType>::template IsVIEOnOrderFacility<T>::Value) {
+                    return [name,x](R &r) {
+                        r.registerLocalOnOrderFacility(name, x);
+                        r.connnectFacilioidToAllPossiblePlaces(r.template vieFacilityConnector<typename T::InputType, typename T::OutputType, typename T::ExtraInputType, typename T::ExtraOutputType>(x));
+                        r.connectTypedSinkToAllNodes(r.vieFacilityAsSink(x));
+                        r.connectSourceToAllSinks(r.vieFacilityAsSource(x));
+                    };
                 } else {
                     throw std::runtime_error("Bad registration resolution");
                 }
             }
         };
-
+        template <class X>
+        struct IsSharedPtr {
+            static constexpr bool Value = false;
+        };
+        template <class T>
+        struct IsSharedPtr<std::shared_ptr<T>> {
+            static constexpr bool Value = true;
+        };
     public:
-        template <class F>
+        template <class F, typename=std::enable_if_t<
+            !IsSharedPtr<std::decay_t<F>>::Value
+        >>
         OneAutoConnectionItem(std::string const &name, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
             auto component = GenericLift<typename R::AppType>::lift(std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
@@ -78,41 +112,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto component = GenericLift<typename R::AppType>::liftMulti(std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
-        template <class A, class B>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractOnOrderFacility<A,B> *facility) : registration_() {
-            auto component = R::AppType::template fromAbstractOnOrderFacility<A,B>(facility);
-            registration_ = [name,component](R &r) {
-                r.registerOnOrderFacility(name, component);
-                r.connnectFacilioidToAllPossiblePlaces(r.facilityConnector(component));
-            };
-        }
-        template <class A, class B, class C>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractIntegratedLocalOnOrderFacility<A,B,C> *facility) : registration_() {
-            auto component = R::AppType::template localOnOrderFacility<A,B,C>(facility);
-            registration_ = [name,component](R &r) {
-                r.registerLocalOnOrderFacility(name, component);
-                r.connnectFacilioidToAllPossiblePlaces(r.facilityConnector(component));
-                r.connectTypedSinkToAllNodes(r.localFacilityAsSink(component));
-            };
-        }
-        template <class A, class B, class C>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractIntegratedOnOrderFacilityWithExternalEffects<A,B,C> *facility) : registration_() {
-            auto component = R::AppType::template onOrderFacilityWithExternalEffects<A,B,C>(facility);
-            registration_ = [name,component](R &r) {
-                r.registerOnOrderFacilityWithExternalEffects(name, component);
-                r.connnectFacilioidToAllPossiblePlaces(r.facilityConnector(component));
-                r.connectSourceToAllSinks(r.facilityWithExternalEffectsAsSource(component));
-            };
-        }
-        template <class A, class B, class C, class D>
-        OneAutoConnectionItem(std::string const &name, typename R::AppType::template AbstractIntegratedVIEOnOrderFacility<A,B,C,D> *facility) : registration_() {
-            auto component = R::AppType::template vieOnOrderFacility<A,B,C,D>(facility);
-            registration_ = [name,component](R &r) {
-                r.registerVIEOnOrderFacility(name, component);
-                r.connnectFacilioidToAllPossiblePlaces(r.facilityConnector(component));
-                r.connectTypedSinkToAllNodes(r.vieFacilityAsSink(component));
-                r.connectSourceToAllSinks(r.vieFacilityAsSource(component));
-            };
+        template <class T>
+        OneDeclarativeGraphItem(std::string const &name, std::shared_ptr<T> const &t) {
+            registration_ = RegistrationResolver<std::shared_ptr<T>>::resolve(name, t);
         }
         template <class A>
         OneAutoConnectionItem(std::string const &name, VacuousImporterItem<A> &&) : registration_() {

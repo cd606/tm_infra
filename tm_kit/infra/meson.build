@@ -71,6 +71,7 @@ tm_infra_headers = [
     , 'GenericLift.hpp'
     , 'AutoConnectionSubGraph.hpp'
     , 'DeclarativeGraph.hpp'
+    , 'NodeClassifier.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
