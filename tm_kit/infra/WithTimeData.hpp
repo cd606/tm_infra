@@ -3315,7 +3315,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class A>
-        std::optional<Source<A>> sourceByName(std::string const &sourceName, std::size_t sourceIdx=0) {
+        Source<A> sourceByName(std::string const &sourceName, std::size_t sourceIdx=0) {
             auto sourceIter = namedSources_.find(sourceName);
             if (sourceIter == namedSources_.end()) {
                 throw AppRunnerException(
@@ -3328,10 +3328,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             if (!sourceIter->second[sourceIdx].theSource_) {
-                return std::nullopt;
+                throw AppRunnerException(
+                    std::string("sourceByName error: source '")+sourceName+"' does not have source at branch "+std::to_string(sourceIdx)
+                );
             }
             try {
-                return { std::any_cast<Source<A> const &>(*(sourceIter->second[sourceIdx].theSource_)).clone() };
+                return std::any_cast<Source<A> const &>(*(sourceIter->second[sourceIdx].theSource_)).clone();
             } catch (std::bad_any_cast const &) {
                 throw AppRunnerException(
                     std::string("sourceByName error: source '")+sourceName+"' does not have valid source at branch "+std::to_string(sourceIdx)
@@ -3370,7 +3372,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             try {
-                return std::any_cast<Sink<A> const &>(sinkIter->second);
+                return std::any_cast<Sink<A> const &>(sinkIter->second[sinkIdx]);
             } catch (std::bad_any_cast const &) {
                 throw AppRunnerException(
                     std::string("sinkByName error: sink '")+sinkName+"' does not have valid sink at branch "+std::to_string(sinkIdx)

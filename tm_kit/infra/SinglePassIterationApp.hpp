@@ -2965,16 +2965,40 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr bool Value = decltype(hasDataType<X>(0))::value;
         };
         template <class X, bool B>
-        struct IsImporterImpl {
+        struct IsImporterImpl2 {
         };
         template <class X>
-        struct IsImporterImpl<X, true> {
+        struct IsImporterImpl2<X, true> {
             static constexpr bool Value = std::is_same_v<
                 X, Importer<typename X::DataType>
             >;
         };
         template <class X>
+        struct IsImporterImpl2<X, false> {
+            static constexpr bool Value = false;
+        };
+        template <class X, bool B>
+        struct IsImporterImpl {
+        };
+        template <class X>
+        struct IsImporterImpl<X, true> {
+            static constexpr bool Value = IsImporterImpl2<X, !is_keyed_data_v<typename X::DataType>>::Value;
+        };
+        template <class X>
         struct IsImporterImpl<X, false> {
+            static constexpr bool Value = false;
+        };
+        template <class X, bool B>
+        struct IsExporterImpl2 {
+        };
+        template <class X>
+        struct IsExporterImpl2<X, true> {
+            static constexpr bool Value = std::is_same_v<
+                X, Exporter<typename X::DataType>
+            >;
+        };
+        template <class X>
+        struct IsExporterImpl2<X, false> {
             static constexpr bool Value = false;
         };
         template <class X, bool B>
@@ -2982,9 +3006,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         template <class X>
         struct IsExporterImpl<X, true> {
-            static constexpr bool Value = std::is_same_v<
-                X, Exporter<typename X::DataType>
-            >;
+            static constexpr bool Value = IsExporterImpl2<X, !withtime_utils::IsVariant<typename X::DataType>::Value>::Value;
         };
         template <class X>
         struct IsExporterImpl<X, false> {
