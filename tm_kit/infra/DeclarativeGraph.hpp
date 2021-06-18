@@ -197,6 +197,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             };
         }
+        OneDeclarativeGraphItem(std::string const &source, std::string const &facility, std::monostate const &) {
+            registration_ = [source,facility](R &r, std::string const &prefix) {
+                r.dynamicPlaceOrder(
+                    (prefix=="")?source:(prefix+"/"+source)
+                    , 0
+                    , facility
+                    , std::nullopt
+                    , 0
+                );
+            };
+        }
+        OneDeclarativeGraphItem(std::string const &sourceName, std::size_t sourceIdx, std::string const &facility, std::monostate const &) {
+            registration_ = [sourceName,sourceIdx,facility](R &r, std::string const &prefix) {
+                r.dynamicPlaceOrder(
+                    (prefix=="")?sourceName:(prefix+"/"+sourceName)
+                    , sourceIdx
+                    , facility
+                    , std::nullopt
+                    , 0
+                );
+            };
+        }
         OneDeclarativeGraphItem(DeclarativeGraph<R> &&graph) : registration_() {
             registration_ = [graph=std::move(graph)](R &r, std::string const &prefix) {
                 graph(r, prefix);

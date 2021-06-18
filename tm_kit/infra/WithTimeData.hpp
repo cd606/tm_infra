@@ -3277,7 +3277,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             sourceIter->second[sourceIdx].theSourceoid_(sinkIter->second[sinkIdx]);
         }
-        void dynamicPlaceOrder(std::string const &sourceName, std::size_t sourceIdx, std::string const &facilityName, std::string const &sinkName, std::size_t sinkIdx) {
+        void dynamicPlaceOrder(std::string const &sourceName, std::size_t sourceIdx, std::string const &facilityName, std::optional<std::string> const &sinkName, std::size_t sinkIdx) {
             auto sourceIter = namedSources_.find(sourceName);
             if (sourceIter == namedSources_.end()) {
                 throw AppRunnerException(
@@ -3294,24 +3294,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     std::string("dynamicPlaceOrder error: source '")+sourceName+"' does not have placeable source at branch "+std::to_string(sourceIdx)
                 );
             }
-            auto sinkIter = namedSinks_.find(sinkName);
-            if (sinkIter == namedSinks_.end()) {
-                throw AppRunnerException(
-                    std::string("dynamicPlaceOrder error: sink '")+sinkName+"' not found"
-                );
-            }
-            if (sinkIter->second.size() <= sinkIdx) {
-                throw AppRunnerException(
-                    std::string("dynamicPlaceOrder error: sink '")+sinkName+"' does not have branch "+std::to_string(sinkIdx)
-                );
-            }
             auto facilityIter = namedFacilities_.find(facilityName);
             if (facilityIter == namedFacilities_.end()) {
                 throw AppRunnerException(
                     std::string("dynamicPlaceOrder error: facility '")+facilityName+"' not found"
                 );
             }
-            (facilityIter->second)(*(sourceIter->second[sourceIdx].theSource_), {sinkIter->second[sinkIdx]});
+            if (sinkName) {
+                auto sinkIter = namedSinks_.find(*sinkName);
+                if (sinkIter == namedSinks_.end()) {
+                    throw AppRunnerException(
+                        std::string("dynamicPlaceOrder error: sink '")+(*sinkName)+"' not found"
+                    );
+                }
+                if (sinkIter->second.size() <= sinkIdx) {
+                    throw AppRunnerException(
+                        std::string("dynamicPlaceOrder error: sink '")+(*sinkName)+"' does not have branch "+std::to_string(sinkIdx)
+                    );
+                }
+                (facilityIter->second)(*(sourceIter->second[sourceIdx].theSource_), {sinkIter->second[sinkIdx]});
+            } else {
+                (facilityIter->second)(*(sourceIter->second[sourceIdx].theSource_), std::nullopt);
+            }       
         }
 
         template <class A>
