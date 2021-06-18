@@ -243,29 +243,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     private:
         template <class X, bool B>
-        struct IsOnOrderFacilityImpl2 {
-        };
-        template <class X>
-        struct IsOnOrderFacilityImpl2<X, true> {
-            static constexpr bool Value = std::is_same_v<
-                X, typename M::template OnOrderFacility<typename X::InputType, typename X::OutputType>
-            >;
-        };
-        template <class X>
-        struct IsOnOrderFacilityImpl2<X, false> {
-            static constexpr bool Value = false;
-        };
-        template <class X, bool B>
         struct IsOnOrderFacilityImpl {
         };
         template <class X>
         struct IsOnOrderFacilityImpl<X, true> {
-            static constexpr bool Value = IsOnOrderFacilityImpl2<
-                X, 
-                (
-                    is_key_v<typename X::InputType> && is_keyed_data_v<typename X::OutputType>
-                )
-            >::Value;
+            static constexpr bool Value = std::is_same_v<
+                X, typename M::template OnOrderFacility<typename X::InputType, typename X::OutputType>
+            >;
         };
         template <class X>
         struct IsOnOrderFacilityImpl<X, false> {
@@ -297,10 +281,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct IsLocalOnOrderFacilityImpl<X, true> {
             static constexpr bool Value = IsLocalOnOrderFacilityImpl2<
                 X, 
-                (
-                    is_key_v<typename X::InputType> && is_keyed_data_v<typename X::OutputType>
-                    && !withtime_utils::IsVariant<typename X::DataType>::Value
-                )
+                !withtime_utils::IsVariant<typename X::DataType>::Value
             >::Value;
         };
         template <class X>
@@ -333,10 +314,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct IsOnOrderFacilityWithExternalEffectsImpl<X, true> {
             static constexpr bool Value = IsOnOrderFacilityWithExternalEffectsImpl2<
                 X, 
-                (
-                    is_key_v<typename X::InputType> && is_keyed_data_v<typename X::OutputType>
-                    && !is_keyed_data_v<typename X::DataType>
-                )
+                !is_keyed_data_v<typename X::DataType>
             >::Value;
         };
         template <class X>
@@ -370,8 +348,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr bool Value = IsVIEOnOrderFacilityImpl2<
                 X, 
                 (
-                    is_key_v<typename X::InputType> && is_keyed_data_v<typename X::OutputType>
-                    && !withtime_utils::IsVariant<typename X::ExtraInputType>::Value
+                    !withtime_utils::IsVariant<typename X::ExtraInputType>::Value
                     && !is_keyed_data_v<typename X::ExtraOutputType>
                 )
             >::Value;

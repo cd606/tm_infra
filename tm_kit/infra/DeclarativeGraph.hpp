@@ -62,7 +62,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         r.registerVIEOnOrderFacility((prefix==""?name:(prefix+"/"+name)), x);
                     };
                 } else {
-                    throw std::runtime_error("Bad registration resolution");
+                    throw std::runtime_error(std::string("Bad registration resolution for '")+name+"'");
                 }
             }
         };

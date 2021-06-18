@@ -87,7 +87,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         r.connectSourceToAllSinks(r.vieFacilityAsSource(x));
                     };
                 } else {
-                    throw std::runtime_error("Bad registration resolution");
+                    throw std::runtime_error(std::string("Bad registration resolution for '")+name+"'");
                 }
             }
         };
@@ -113,7 +113,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
         template <class T>
-        OneDeclarativeGraphItem(std::string const &name, std::shared_ptr<T> const &t) {
+        OneAutoConnectionItem(std::string const &name, std::shared_ptr<T> const &t) {
             registration_ = RegistrationResolver<std::shared_ptr<T>>::resolve(name, t);
         }
         template <class A>

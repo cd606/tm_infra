@@ -71,8 +71,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using InputType = std::decay_t<B>;
             using OutputType = std::decay_t<A>;
         };
+        template <class X>
+        struct IsInnerData {
+            static constexpr bool Value = false;
+        };
+        template <class T>
+        struct IsInnerData<typename M::template InnerData<T>> {
+            static constexpr bool Value = true;
+        };
+        
+        template <class A, class B, bool IsID=IsInnerData<A>::Value>
+        class GenericLiftImpl {};
+
         template <class A, class B>
-        class GenericLiftImpl {
+        class GenericLiftImpl<A, B, false> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -80,7 +92,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B>
-        class GenericLiftImpl<A, std::optional<B>> {
+        class GenericLiftImpl<A, std::optional<B>, false> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -88,7 +100,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B>
-        class GenericLiftImpl<std::tuple<typename M::TimePoint, A>, std::optional<B>> {
+        class GenericLiftImpl<std::tuple<typename M::TimePoint, A>, std::optional<B>, false> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -96,7 +108,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B>
-        class GenericLiftImpl<typename M::template InnerData<A>, typename M::template Data<B>> {
+        class GenericLiftImpl<typename M::template InnerData<A>, typename M::template Data<B>, true> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -104,7 +116,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A>
-        class GenericLiftImpl<A, void> {
+        class GenericLiftImpl<A, void, false> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -112,7 +124,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A>
-        class GenericLiftImpl<typename M::template InnerData<A>, void> {
+        class GenericLiftImpl<typename M::template InnerData<A>, void, true> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
@@ -120,7 +132,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A>
-        class GenericLiftImpl<typename M::EnvironmentType *, std::tuple<bool, typename M::template Data<A>>> {
+        class GenericLiftImpl<typename M::EnvironmentType *, std::tuple<bool, typename M::template Data<A>>, false> {
         public:
             template <class F>
             static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
