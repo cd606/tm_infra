@@ -4,7 +4,15 @@
 #if defined(_MSC_VER)
     #define TM_KIT_INFRA_NODE_CLASSIFIER_SIMPLIFIED 0
 #elif defined(__llvm__)
-    #define TM_KIT_INFRA_NODE_CLASSIFIER_SIMPLIFIED 0
+    #if defined(__clang_major__)
+        #if __clang_major__ >= 12
+            #define TM_KIT_INFRA_NODE_CLASSIFIER_SIMPLIFIED 1
+        #else
+            #define TM_KIT_INFRA_NODE_CLASSIFIER_SIMPLIFIED 0
+        #endif
+    #else
+        #define TM_KIT_INFRA_NODE_CLASSIFIER_SIMPLIFIED 0
+    #endif
 #elif defined(__GNUC__)
     #if __GNUC__ >= 11
         #define TM_KIT_INFRA_NODE_CLASSIFIER_SIMPLIFIED 1
