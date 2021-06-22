@@ -112,6 +112,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto component = GenericLift<typename R::AppType>::liftMulti(std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
+        template <class F>
+        OneAutoConnectionItem(std::string const &name, LiftAsFacility &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
+            auto component = GenericLift<typename R::AppType>::liftFacility(std::move(f), liftParam);
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        }
         template <class T>
         OneAutoConnectionItem(std::string const &name, std::shared_ptr<T> const &t) {
             registration_ = RegistrationResolver<std::shared_ptr<T>>::resolve(name, t);

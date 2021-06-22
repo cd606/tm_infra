@@ -21,6 +21,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     };
 
+    struct DeclarativeGraphChain {
+    private:
+        std::vector<std::string> nodes_;
+    public:
+        DeclarativeGraphChain(std::vector<std::string> const &nodes) : nodes_(nodes) {}
+        template <class R>
+        void connect(R &r, std::string const &prefix) const {
+            if (nodes_.size() >= 2) {
+                for (int ii=1; ii<nodes_.size(); ++ii) {
+                    r.dynamicConnect(
+                        (prefix=="")?nodes_[ii-1]:(prefix+"/"+nodes_[ii-1])
+                        , 0
+                        , (prefix=="")?nodes_[ii]:(prefix+"/"+nodes_[ii])
+                        , 0
+                    );
+                }
+            }
+        }
+    };
+
     template <class R>
     class OneDeclarativeGraphItem {
     private:
@@ -88,6 +108,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto component = GenericLift<typename R::AppType>::liftMulti(std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
+        template <class F>
+        OneDeclarativeGraphItem(std::string const &name, LiftAsFacility &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
+            auto component = GenericLift<typename R::AppType>::liftFacility(std::move(f), liftParam);
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        }
         template <class T>
         OneDeclarativeGraphItem(std::string const &name, std::shared_ptr<T> const &t) {
             registration_ = RegistrationResolver<std::shared_ptr<T>>::resolve(name, t);
@@ -101,6 +126,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         OneDeclarativeGraphItem(std::string const &name, TrivialExporterItem<A> &&) : registration_() {
             auto component = R::AppType::template trivialExporter<A>();
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
+        }
+        OneDeclarativeGraphItem(DeclarativeGraphChain &&chain) {
+            registration_ = [chain=std::move(chain)](R &r, std::string const &prefix) {
+                chain.template connect<R>(r, prefix);
+            };
         }
         OneDeclarativeGraphItem(std::string const &source, std::string const &sink) {
             registration_ = [source,sink](R &r, std::string const &prefix) {
