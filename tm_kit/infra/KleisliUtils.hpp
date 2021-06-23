@@ -52,6 +52,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             KleisliFromPure(F &&f) : f_(std::move(f)) {}
 
+            using InputType = A;
             using B = decltype(f_(A()));
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 return M::template pureInnerDataLift<A>(f_, std::move(x));
@@ -64,6 +65,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             KleisliFromMaybe(F &&f) : f_(std::move(f)) {}
             
+            using InputType = A;
             using B = typename decltype(f_(A()))::value_type;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 auto res = f_(std::move(x.timedData.value));
@@ -80,7 +82,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             F f_;
         public:
             KleisliFromEnhancedMaybe(F &&f) : f_(std::move(f)) {}
- 
+
+            using InputType = A;
             using B = typename decltype(f_(std::tuple<typename M::TimePoint, A>()))::value_type;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 auto res = f_(std::tuple<typename M::TimePoint,A> {x.timedData.timePoint, std::move(x.timedData.value)});
@@ -98,6 +101,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             KleisliMultiFromPure(F &&f) : f_(std::move(f)) {}
  
+            using InputType = A;
             using B = typename decltype(f_(A()))::value_type;
             typename M::template Data<std::vector<B>> operator()(typename M::template InnerData<A> &&x) {
                 auto res = f_(std::move(x.timedData.value));
@@ -111,6 +115,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             KleisliMultiFromEnhancedMulti(F &&f) : f_(std::move(f)) {}
  
+            using InputType = A;
             using B = typename decltype(f_(std::tuple<typename M::TimePoint, A>()))::value_type;
             typename M::template Data<std::vector<B>> operator()(typename M::template InnerData<A> &&x) {
                 auto res = f_(std::tuple<typename M::TimePoint,A> {x.timedData.timePoint, std::move(x.timedData.value)});
@@ -124,6 +129,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             KleisliHolder(F &&f) : f_(std::move(f)) {}
 
+            using InputType = A;
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 return f_(std::move(x));
@@ -136,6 +142,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             KleisliMultiHolder(F &&f) : f_(std::move(f)) {}
 
+            using InputType = A;
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 return f_(std::move(x));
@@ -149,6 +156,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             ComposedKleisli(F &&f, G &&g) : f_(std::move(f)), g_(std::move(g)) {}
 
+            using InputType = A;
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             using C = typename decltype(g_(std::move(* (typename M::template InnerData<B> *) nullptr)))::value_type::ValueType;
             typename M::template Data<C> operator()(typename M::template InnerData<A> &&x) {
@@ -168,6 +176,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             ComposedKleisliExporter(F &&f, G &&g) : f_(std::move(f)), g_(std::move(g)) {}
 
+            using InputType = A;
             using B = typename decltype(f(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             void operator()(typename M::template InnerData<A> &&x) {
                 typename M::template Data<B> y = f_(std::move(x));

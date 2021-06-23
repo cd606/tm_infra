@@ -4,6 +4,7 @@
 #include <functional>
 #include <type_traits>
 #include <tm_kit/infra/WithTimeData.hpp>
+#include <tm_kit/infra/KleisliUtils.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     class LiftAsMulti {};
@@ -251,6 +252,45 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return M::template kleisliOnOrderFacility<A>(std::move(f), liftParam);
             }
         };
+        template <class A, class B, bool IsID=IsInnerData<A>::Value>
+        class GenericLiftKUImpl {};
+
+        template <class A, class B>
+        class GenericLiftKUImpl<A, B, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template liftPure<A>(std::move(f));
+            }
+        };
+        template <class A, class B>
+        class GenericLiftKUImpl<A, std::optional<B>, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template liftMaybe<A>(std::move(f));
+            }
+        };
+        template <class A, class B>
+        class GenericLiftKUImpl<std::tuple<typename M::TimePoint, A>, std::optional<B>, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template enhancedMaybe<A>(std::move(f));
+            }
+        };
+        template <class A, class B>
+    #if _MSC_VER
+        class GenericLiftKUImpl<TimedDataWithEnvironment<A, typename M::StateType, typename M::TimePoint>, std::optional<TimedDataWithEnvironment<B, typename M::StateType, typename M::TimePoint>>, true> {
+    #else
+        class GenericLiftKUImpl<typename M::template InnerData<A>, typename M::template Data<B>, true> {
+    #endif
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template kleisli<A>(std::move(f));
+            }
+        };
     public:
         template <class F>
         static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
@@ -293,6 +333,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     typename GenericLiftTypeFinder<F>::InputType
                     , typename GenericLiftTypeFinder<F>::OutputType
                 >::template lift<F>(std::move(f), liftParam);
+#ifdef _MSC_VER
+            }
+#endif
+        }
+        template <class F>
+        static auto liftKU(F &&f) {
+#ifdef _MSC_VER            
+            if constexpr (GenericLiftTypeFinder<F>::IsBareFunction) {
+                return liftKU<F*>(&f);
+            } else {
+#endif
+                return GenericLiftKUImpl<
+                    typename GenericLiftTypeFinder<F>::InputType
+                    , typename GenericLiftTypeFinder<F>::OutputType
+                >::template lift<F>(std::move(f));
 #ifdef _MSC_VER
             }
 #endif
