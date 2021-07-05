@@ -16,6 +16,7 @@ private:
             }
         }
         MaybeT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT2(MaybeT2 &&) = default;
         ~MaybeT2() {}
     };
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
@@ -47,6 +48,7 @@ private:
             }
         }
         MaybeT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT3(MaybeT3 &&) = default;
         ~MaybeT3() {}
     };
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
@@ -78,6 +80,7 @@ private:
             }
         }
         MaybeT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT4(MaybeT4 &&) = default;
         ~MaybeT4() {}
     };
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
@@ -109,6 +112,7 @@ private:
             }
         }
         MaybeT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT5(MaybeT5 &&) = default;
         ~MaybeT5() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
@@ -140,6 +144,7 @@ private:
             }
         }
         MaybeT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT6(MaybeT6 &&) = default;
         ~MaybeT6() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
@@ -171,6 +176,7 @@ private:
             }
         }
         MaybeT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT7(MaybeT7 &&) = default;
         ~MaybeT7() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
@@ -202,6 +208,7 @@ private:
             }
         }
         MaybeT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT8(MaybeT8 &&) = default;
         ~MaybeT8() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
@@ -233,6 +240,7 @@ private:
             }
         }
         MaybeT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT9(MaybeT9 &&) = default;
         ~MaybeT9() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
@@ -264,6 +272,7 @@ private:
             }
         }
         MaybeT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        MaybeT10(MaybeT10 &&) = default;
         ~MaybeT10() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>

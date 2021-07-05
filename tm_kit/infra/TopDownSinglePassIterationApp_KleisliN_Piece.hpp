@@ -18,6 +18,7 @@ private:
             }
         }
         KleisliT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT2(KleisliT2 &&) = default;
         ~KleisliT2() {}
     };
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
@@ -51,6 +52,7 @@ private:
             }
         }
         KleisliT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT3(KleisliT3 &&) = default;
         ~KleisliT3() {}
     };
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
@@ -84,6 +86,7 @@ private:
             }
         }
         KleisliT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT4(KleisliT4 &&) = default;
         ~KleisliT4() {}
     };
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
@@ -117,6 +120,7 @@ private:
             }
         }
         KleisliT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT5(KleisliT5 &&) = default;
         ~KleisliT5() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
@@ -150,6 +154,7 @@ private:
             }
         }
         KleisliT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT6(KleisliT6 &&) = default;
         ~KleisliT6() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
@@ -183,6 +188,7 @@ private:
             }
         }
         KleisliT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT7(KleisliT7 &&) = default;
         ~KleisliT7() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
@@ -216,6 +222,7 @@ private:
             }
         }
         KleisliT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT8(KleisliT8 &&) = default;
         ~KleisliT8() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
@@ -249,6 +256,7 @@ private:
             }
         }
         KleisliT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT9(KleisliT9 &&) = default;
         ~KleisliT9() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
@@ -282,6 +290,7 @@ private:
             }
         }
         KleisliT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        KleisliT10(KleisliT10 &&) = default;
         ~KleisliT10() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>

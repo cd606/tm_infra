@@ -16,6 +16,7 @@ private:
             }
         }
         EnhancedMultiT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT2(EnhancedMultiT2 &&) = default;
         ~EnhancedMultiT2() {}
     };
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
@@ -47,6 +48,7 @@ private:
             }
         }
         EnhancedMultiT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT3(EnhancedMultiT3 &&) = default;
         ~EnhancedMultiT3() {}
     };
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
@@ -78,6 +80,7 @@ private:
             }
         }
         EnhancedMultiT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT4(EnhancedMultiT4 &&) = default;
         ~EnhancedMultiT4() {}
     };
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
@@ -109,6 +112,7 @@ private:
             }
         }
         EnhancedMultiT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT5(EnhancedMultiT5 &&) = default;
         ~EnhancedMultiT5() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
@@ -140,6 +144,7 @@ private:
             }
         }
         EnhancedMultiT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT6(EnhancedMultiT6 &&) = default;
         ~EnhancedMultiT6() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
@@ -171,6 +176,7 @@ private:
             }
         }
         EnhancedMultiT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT7(EnhancedMultiT7 &&) = default;
         ~EnhancedMultiT7() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
@@ -202,6 +208,7 @@ private:
             }
         }
         EnhancedMultiT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT8(EnhancedMultiT8 &&) = default;
         ~EnhancedMultiT8() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
@@ -233,6 +240,7 @@ private:
             }
         }
         EnhancedMultiT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT9(EnhancedMultiT9 &&) = default;
         ~EnhancedMultiT9() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
@@ -264,6 +272,7 @@ private:
             }
         }
         EnhancedMultiT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        EnhancedMultiT10(EnhancedMultiT10 &&) = default;
         ~EnhancedMultiT10() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>

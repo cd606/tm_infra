@@ -10,6 +10,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT2(PureT2 &&) = default;
         ~PureT2() {}
     };
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
@@ -35,6 +36,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT3(PureT3 &&) = default;
         ~PureT3() {}
     };
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
@@ -60,6 +62,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT4(PureT4 &&) = default;
         ~PureT4() {}
     };
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
@@ -85,6 +88,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT5(PureT5 &&) = default;
         ~PureT5() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
@@ -110,6 +114,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT6(PureT6 &&) = default;
         ~PureT6() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
@@ -135,6 +140,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT7(PureT7 &&) = default;
         ~PureT7() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
@@ -160,6 +166,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT8(PureT8 &&) = default;
         ~PureT8() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
@@ -185,6 +192,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT9(PureT9 &&) = default;
         ~PureT9() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
@@ -210,6 +218,7 @@ private:
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
         PureT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        PureT10(PureT10 &&) = default;
         ~PureT10() {}
     };
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
