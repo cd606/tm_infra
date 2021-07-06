@@ -107,7 +107,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return f_(std::move(x));
             }
         };
-        template <class A, class F, class G>
+        template <class F, class G>
         class ComposedKleisli {
         private:
             F f_;
@@ -115,7 +115,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             ComposedKleisli(F &&f, G &&g) : f_(std::move(f)), g_(std::move(g)) {}
 
-            using InputType = A;
+            using InputType = typename F::InputType;
+            using A = InputType;
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             using C = typename decltype(g_(std::move(* (typename M::template InnerData<B> *) nullptr)))::value_type::ValueType;
             typename M::template Data<C> operator()(typename M::template InnerData<A> &&x) {
@@ -127,7 +128,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
-        template <class A, class F, class G>
+        template <class F, class G>
         class ComposedKleisliExporter {
         private:
             F f_;
@@ -135,7 +136,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             ComposedKleisliExporter(F &&f, G &&g) : f_(std::move(f)), g_(std::move(g)) {}
 
-            using InputType = A;
+            using InputType = typename F::InputType;
+            using A = InputType;
             using B = typename decltype(f(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             void operator()(typename M::template InnerData<A> &&x) {
                 typename M::template Data<B> y = f_(std::move(x));
@@ -161,13 +163,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static KleisliHolder<A, F> kleisli(F &&f) {
             return KleisliHolder<A, F>(std::move(f));
         }
-        template <class A, class F, class G>
-        static ComposedKleisli<A, F, G> compose(F &&f, G &&g) {
-            return ComposedKleisli<A, F, G>(std::move(f), std::move(g));
+        template <class F, class G>
+        static ComposedKleisli<F, G> compose(F &&f, G &&g) {
+            return ComposedKleisli<F, G>(std::move(f), std::move(g));
         }
-        template <class A, class F, class G>
-        static ComposedKleisliExporter<A, F, G> composeExporter(F &&f, G &&g) {
-            return ComposedKleisliExporter<A, F, G>(std::move(f), std::move(g));
+        template <class F, class G>
+        static ComposedKleisliExporter<F, G> composeExporter(F &&f, G &&g) {
+            return ComposedKleisliExporter<F, G>(std::move(f), std::move(g));
         }
         
         template <class A, class B>
@@ -190,9 +192,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto action(KleisliHolder<A,F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
             return M::template kleisli<A>(std::move(f), liftParam);
         }
-        template <class A, class F, class G>
-        static auto action(ComposedKleisli<A,F,G> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
-            return M::template kleisli<A>(std::move(f), liftParam);
+        template <class F, class G>
+        static auto action(ComposedKleisli<F,G> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
+            return M::template kleisli<typename F::InputType>(std::move(f), liftParam);
         }
         template <class F>
         static auto action(F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
