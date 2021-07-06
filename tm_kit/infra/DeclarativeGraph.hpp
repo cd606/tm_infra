@@ -42,9 +42,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     };
 
     template <class R>
+    class GenericComponentLiftAndRegistration {
+    private:
+        R *p_;
+        std::string prefix_;
+    public:
+        GenericComponentLiftAndRegistration(R &r, std::string const &prefix="") : p_(&r), prefix_(prefix) {}  
+        template <class F>
+        auto operator()(std::string const &name, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) ->
+            decltype(
+                GenericLift<typename R::AppType>::lift(std::move(f), liftParam)
+            );
+    };
+
+    template <class R>
     class OneDeclarativeGraphItem {
     private:
         std::function<void(R &, std::string const &)> registration_;
+        friend class GenericComponentLiftAndRegistration<R>;
 
         template <class X>
         class RegistrationResolver {};
@@ -256,6 +271,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
     };
+
+    template <class R>
+    template <class F>
+    auto GenericComponentLiftAndRegistration<R>::operator()(std::string const &name, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam) ->
+        decltype(
+            GenericLift<typename R::AppType>::lift(std::move(f), liftParam)
+        )
+    {
+        auto component = GenericLift<typename R::AppType>::lift(std::move(f), liftParam);
+        auto registration = OneDeclarativeGraphItem<R>::template RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        registration(*p_, prefix_);
+        return component;
+    }
 
 } } } }
 
