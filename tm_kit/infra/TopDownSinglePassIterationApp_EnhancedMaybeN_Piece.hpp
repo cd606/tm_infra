@@ -1,11 +1,11 @@
 private:
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT2 {
+    class EnhancedMaybe2 final : public ActionCore<std::variant<A0,A1>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -15,12 +15,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT2(EnhancedMaybeT2 &&) = default;
-        ~EnhancedMaybeT2() {}
+    public:
+        EnhancedMaybe2(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe2() {}
     };
-    template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe2 = ActionCore<std::variant<A0,A1>, B, FireOnceOnly, EnhancedMaybeT2<A0,A1, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto enhancedMaybe2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1>> *) nullptr))))::value_type>> {
@@ -32,12 +30,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT3 {
+    class EnhancedMaybe3 final : public ActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -47,12 +45,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT3(EnhancedMaybeT3 &&) = default;
-        ~EnhancedMaybeT3() {}
+    public:
+        EnhancedMaybe3(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe3() {}
     };
-    template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe3 = ActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly, EnhancedMaybeT3<A0,A1,A2, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto enhancedMaybe3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2>> *) nullptr))))::value_type>> {
@@ -64,12 +60,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT4 {
+    class EnhancedMaybe4 final : public ActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -79,12 +75,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT4(EnhancedMaybeT4 &&) = default;
-        ~EnhancedMaybeT4() {}
+    public:
+        EnhancedMaybe4(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe4() {}
     };
-    template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe4 = ActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly, EnhancedMaybeT4<A0,A1,A2,A3, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto enhancedMaybe4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type>> {
@@ -96,12 +90,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT5 {
+    class EnhancedMaybe5 final : public ActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -111,12 +105,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT5(EnhancedMaybeT5 &&) = default;
-        ~EnhancedMaybeT5() {}
+    public:
+        EnhancedMaybe5(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe5() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe5 = ActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly, EnhancedMaybeT5<A0,A1,A2,A3,A4, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto enhancedMaybe5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type>> {
@@ -128,12 +120,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT6 {
+    class EnhancedMaybe6 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -143,12 +135,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT6(EnhancedMaybeT6 &&) = default;
-        ~EnhancedMaybeT6() {}
+    public:
+        EnhancedMaybe6(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe6() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe6 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly, EnhancedMaybeT6<A0,A1,A2,A3,A4,A5, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto enhancedMaybe6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type>> {
@@ -160,12 +150,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT7 {
+    class EnhancedMaybe7 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -175,12 +165,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT7(EnhancedMaybeT7 &&) = default;
-        ~EnhancedMaybeT7() {}
+    public:
+        EnhancedMaybe7(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe7() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe7 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly, EnhancedMaybeT7<A0,A1,A2,A3,A4,A5,A6, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto enhancedMaybe7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type>> {
@@ -192,12 +180,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT8 {
+    class EnhancedMaybe8 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -207,12 +195,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT8(EnhancedMaybeT8 &&) = default;
-        ~EnhancedMaybeT8() {}
+    public:
+        EnhancedMaybe8(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe8() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe8 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly, EnhancedMaybeT8<A0,A1,A2,A3,A4,A5,A6,A7, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto enhancedMaybe8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type>> {
@@ -224,12 +210,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT9 {
+    class EnhancedMaybe9 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -239,12 +225,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT9(EnhancedMaybeT9 &&) = default;
-        ~EnhancedMaybeT9() {}
+    public:
+        EnhancedMaybe9(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe9() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe9 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly, EnhancedMaybeT9<A0,A1,A2,A3,A4,A5,A6,A7,A8, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto enhancedMaybe9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type>> {
@@ -256,12 +240,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    class EnhancedMaybeT10 {
+    class EnhancedMaybe10 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
@@ -271,12 +255,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMaybeT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMaybeT10(EnhancedMaybeT10 &&) = default;
-        ~EnhancedMaybeT10() {}
+    public:
+        EnhancedMaybe10(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMaybe10() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    using EnhancedMaybe10 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly, EnhancedMaybeT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto enhancedMaybe10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type>> {

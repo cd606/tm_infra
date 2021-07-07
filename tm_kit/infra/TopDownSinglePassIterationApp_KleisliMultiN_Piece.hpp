@@ -1,11 +1,11 @@
 private:
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT2 {
+    class KleisliMulti2 final : public MultiActionCore<std::variant<A0,A1>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -17,12 +17,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT2(KleisliMultiT2 &&) = default;
-        ~KleisliMultiT2() {}
+    public:
+        KleisliMulti2(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti2() {}
     };
-    template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    using KleisliMulti2 = MultiActionCore<std::variant<A0,A1>, B, FireOnceOnly, KleisliMultiT2<A0,A1, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto kleisliMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -34,12 +32,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT3 {
+    class KleisliMulti3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -51,12 +49,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT3(KleisliMultiT3 &&) = default;
-        ~KleisliMultiT3() {}
+    public:
+        KleisliMulti3(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti3() {}
     };
-    template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    using KleisliMulti3 = MultiActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly, KleisliMultiT3<A0,A1,A2, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto kleisliMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -68,12 +64,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT4 {
+    class KleisliMulti4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -85,12 +81,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT4(KleisliMultiT4 &&) = default;
-        ~KleisliMultiT4() {}
+    public:
+        KleisliMulti4(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti4() {}
     };
-    template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    using KleisliMulti4 = MultiActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly, KleisliMultiT4<A0,A1,A2,A3, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto kleisliMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -102,12 +96,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT5 {
+    class KleisliMulti5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -119,12 +113,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT5(KleisliMultiT5 &&) = default;
-        ~KleisliMultiT5() {}
+    public:
+        KleisliMulti5(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti5() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    using KleisliMulti5 = MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly, KleisliMultiT5<A0,A1,A2,A3,A4, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto kleisliMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -136,12 +128,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT6 {
+    class KleisliMulti6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -153,12 +145,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT6(KleisliMultiT6 &&) = default;
-        ~KleisliMultiT6() {}
+    public:
+        KleisliMulti6(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti6() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    using KleisliMulti6 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly, KleisliMultiT6<A0,A1,A2,A3,A4,A5, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto kleisliMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -170,12 +160,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT7 {
+    class KleisliMulti7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -187,12 +177,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT7(KleisliMultiT7 &&) = default;
-        ~KleisliMultiT7() {}
+    public:
+        KleisliMulti7(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti7() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    using KleisliMulti7 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly, KleisliMultiT7<A0,A1,A2,A3,A4,A5,A6, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto kleisliMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -204,12 +192,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT8 {
+    class KleisliMulti8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -221,12 +209,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT8(KleisliMultiT8 &&) = default;
-        ~KleisliMultiT8() {}
+    public:
+        KleisliMulti8(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti8() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    using KleisliMulti8 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly, KleisliMultiT8<A0,A1,A2,A3,A4,A5,A6,A7, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto kleisliMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -238,12 +224,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT9 {
+    class KleisliMulti9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -255,12 +241,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT9(KleisliMultiT9 &&) = default;
-        ~KleisliMultiT9() {}
+    public:
+        KleisliMulti9(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti9() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    using KleisliMulti9 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly, KleisliMultiT9<A0,A1,A2,A3,A4,A5,A6,A7,A8, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto kleisliMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType::value_type>> {
@@ -272,12 +256,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    class KleisliMultiT10 {
+    class KleisliMulti10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             if (delaySimulator_) {
                 auto index = data.timedData.value.index();
                 auto ret = f_(std::move(data));
@@ -289,12 +273,10 @@ private:
                 return f_(std::move(data));
             }
         }
-        KleisliMultiT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        KleisliMultiT10(KleisliMultiT10 &&) = default;
-        ~KleisliMultiT10() {}
+    public:
+        KleisliMulti10(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~KleisliMulti10() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    using KleisliMulti10 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly, KleisliMultiT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto kleisliMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType::value_type>> {

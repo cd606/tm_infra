@@ -1,11 +1,11 @@
 private:
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT2 {
+    class EnhancedMulti2 final : public MultiActionCore<std::variant<A0,A1>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -15,12 +15,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT2(EnhancedMultiT2 &&) = default;
-        ~EnhancedMultiT2() {}
+    public:
+        EnhancedMulti2(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti2() {}
     };
-    template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti2 = MultiActionCore<std::variant<A0,A1>, B, FireOnceOnly, EnhancedMultiT2<A0,A1, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto enhancedMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1>> *) nullptr))))::value_type>> {
@@ -32,12 +30,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT3 {
+    class EnhancedMulti3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -47,12 +45,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT3(EnhancedMultiT3 &&) = default;
-        ~EnhancedMultiT3() {}
+    public:
+        EnhancedMulti3(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti3() {}
     };
-    template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti3 = MultiActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly, EnhancedMultiT3<A0,A1,A2, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto enhancedMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2>> *) nullptr))))::value_type>> {
@@ -64,12 +60,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT4 {
+    class EnhancedMulti4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -79,12 +75,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT4(EnhancedMultiT4 &&) = default;
-        ~EnhancedMultiT4() {}
+    public:
+        EnhancedMulti4(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti4() {}
     };
-    template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti4 = MultiActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly, EnhancedMultiT4<A0,A1,A2,A3, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto enhancedMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type>> {
@@ -96,12 +90,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT5 {
+    class EnhancedMulti5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -111,12 +105,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT5(EnhancedMultiT5 &&) = default;
-        ~EnhancedMultiT5() {}
+    public:
+        EnhancedMulti5(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti5() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti5 = MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly, EnhancedMultiT5<A0,A1,A2,A3,A4, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto enhancedMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type>> {
@@ -128,12 +120,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT6 {
+    class EnhancedMulti6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -143,12 +135,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT6(EnhancedMultiT6 &&) = default;
-        ~EnhancedMultiT6() {}
+    public:
+        EnhancedMulti6(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti6() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti6 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly, EnhancedMultiT6<A0,A1,A2,A3,A4,A5, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto enhancedMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type>> {
@@ -160,12 +150,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT7 {
+    class EnhancedMulti7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -175,12 +165,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT7(EnhancedMultiT7 &&) = default;
-        ~EnhancedMultiT7() {}
+    public:
+        EnhancedMulti7(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti7() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti7 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly, EnhancedMultiT7<A0,A1,A2,A3,A4,A5,A6, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto enhancedMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type>> {
@@ -192,12 +180,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT8 {
+    class EnhancedMulti8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -207,12 +195,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT8(EnhancedMultiT8 &&) = default;
-        ~EnhancedMultiT8() {}
+    public:
+        EnhancedMulti8(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti8() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti8 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly, EnhancedMultiT8<A0,A1,A2,A3,A4,A5,A6,A7, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto enhancedMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type>> {
@@ -224,12 +210,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT9 {
+    class EnhancedMulti9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -239,12 +225,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT9(EnhancedMultiT9 &&) = default;
-        ~EnhancedMultiT9() {}
+    public:
+        EnhancedMulti9(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti9() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti9 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly, EnhancedMultiT9<A0,A1,A2,A3,A4,A5,A6,A7,A8, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto enhancedMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type>> {
@@ -256,12 +240,12 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    class EnhancedMultiT10 {
+    class EnhancedMulti10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
+    protected:
+        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             auto index = data.timedData.value.index();
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (!ret.empty()) {
@@ -271,12 +255,10 @@ private:
                 return std::nullopt;
             }
         }
-        EnhancedMultiT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        EnhancedMultiT10(EnhancedMultiT10 &&) = default;
-        ~EnhancedMultiT10() {}
+    public:
+        EnhancedMulti10(F &&f, DelaySimulator const &delaySimulator) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~EnhancedMulti10() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    using EnhancedMulti10 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly, EnhancedMultiT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto enhancedMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type>> {

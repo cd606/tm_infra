@@ -510,18 +510,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         protected:
             static constexpr AbstractOnOrderFacility *nullptrToInheritedFacility() {return nullptr;}
         };
+        
+        template <class A, class B>
+        class OneLevelDownKleisli {
+        protected:
+            virtual ~OneLevelDownKleisli() {}
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A, typename StateT::TimePointType> &&data) = 0;
+        };
     
     private:
         using DelaySimulator = typename LiftParameters<TimePoint>::DelaySimulatorType;
 
     public:
         template <class A, class B, class F, bool ForceFinal>
-        class PureOneLevelDownKleisli {
+        class PureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A,B> {
         private:
             F f_;
             DelaySimulator delaySimulator_;
-        public:
-            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
+
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 if constexpr (ForceFinal) {
                     auto ret = withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                     ret.timedData.finalFlag = true;
@@ -534,21 +541,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                 }               
             }
+        public:
             PureOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
             PureOneLevelDownKleisli(PureOneLevelDownKleisli const &) = delete;
             PureOneLevelDownKleisli &operator=(PureOneLevelDownKleisli const &) = delete;
             PureOneLevelDownKleisli(PureOneLevelDownKleisli &&) = default;
             PureOneLevelDownKleisli &operator=(PureOneLevelDownKleisli &&) = default;
+            virtual ~PureOneLevelDownKleisli() {}
         };
         //This is only used for multi action. For regular action
         //, if the "enhanced" input data is needed, just use EnhancedMaybe
         template <class A, class B, class F, bool ForceFinal>
-        class EnhancedPureOneLevelDownKleisli {
+        class EnhancedPureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
             DelaySimulator delaySimulator_;
-        public:
-            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
                 return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
                     (
@@ -560,19 +568,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     (ForceFinal?true:data.finalFlag)
                 });
             }
+        public:
             EnhancedPureOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
             EnhancedPureOneLevelDownKleisli(EnhancedPureOneLevelDownKleisli const &) = delete;
             EnhancedPureOneLevelDownKleisli &operator=(EnhancedPureOneLevelDownKleisli const &) = delete;
             EnhancedPureOneLevelDownKleisli(EnhancedPureOneLevelDownKleisli &&) = default;
             EnhancedPureOneLevelDownKleisli &operator=(EnhancedPureOneLevelDownKleisli &&) = default;
+            virtual ~EnhancedPureOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
-        class MaybeOneLevelDownKleisli {
+        class MaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
             DelaySimulator delaySimulator_;
-        public:
-            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 auto b = f_(std::move(data.value));
                 if (b) {
                     return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
@@ -588,19 +597,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
             }
+        public:
             MaybeOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
             MaybeOneLevelDownKleisli(MaybeOneLevelDownKleisli const &) = delete;
             MaybeOneLevelDownKleisli &operator=(MaybeOneLevelDownKleisli const &) = delete;
             MaybeOneLevelDownKleisli(MaybeOneLevelDownKleisli &&) = default;
             MaybeOneLevelDownKleisli &operator=(MaybeOneLevelDownKleisli &&) = default;
+            virtual ~MaybeOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
-        class EnhancedMaybeOneLevelDownKleisli {
+        class EnhancedMaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
             DelaySimulator delaySimulator_;
-        public:
-            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
                 if (b) {
                     return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
@@ -616,19 +626,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
             }
+        public:
             EnhancedMaybeOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
             EnhancedMaybeOneLevelDownKleisli(EnhancedMaybeOneLevelDownKleisli const &) = delete;
             EnhancedMaybeOneLevelDownKleisli &operator=(EnhancedMaybeOneLevelDownKleisli const &) = delete;
             EnhancedMaybeOneLevelDownKleisli(EnhancedMaybeOneLevelDownKleisli &&) = default;
             EnhancedMaybeOneLevelDownKleisli &operator=(EnhancedMaybeOneLevelDownKleisli &&) = default;
+            virtual ~EnhancedMaybeOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
-        class DirectOneLevelDownKleisli {
+        class DirectOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
         private:
             F f_;
             DelaySimulator delaySimulator_;
-        public:
-            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
+            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
                 if (ForceFinal) {
                     auto ret = f_(TimedDataWithEnvironment<A, StateT, typename StateT::TimePointType> {
                         env
@@ -656,13 +667,57 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::move(ret);
                 }               
             }
+        public:
             DirectOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
             DirectOneLevelDownKleisli(DirectOneLevelDownKleisli const &) = delete;
             DirectOneLevelDownKleisli &operator=(DirectOneLevelDownKleisli const &) = delete;
             DirectOneLevelDownKleisli(DirectOneLevelDownKleisli &&) = default;
             DirectOneLevelDownKleisli &operator=(DirectOneLevelDownKleisli &&) = default;
+            virtual ~DirectOneLevelDownKleisli() {}
         };
-        
+
+        template <class A, class B, class F, class KleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,B>,KleisliImpl>,int> = 0>
+        class OneLevelDownKleisliMixin : public virtual KleisliImpl, public Main {
+        public:
+            template <typename... Args>
+            OneLevelDownKleisliMixin(F &&f, DelaySimulator const &delaySimulator, Args&&... args) 
+                : KleisliImpl(std::move(f), delaySimulator), Main(std::forward<Args>(args)...) {}
+            virtual ~OneLevelDownKleisliMixin() {}
+            OneLevelDownKleisliMixin(OneLevelDownKleisliMixin const &) = delete;
+            OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin const &) = delete;
+            OneLevelDownKleisliMixin(OneLevelDownKleisliMixin &&) = default;
+            OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin &&) = default;
+        };
+        template <class A, class B, class F, class StartF, class KleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,B>,KleisliImpl>,int> = 0>
+        class OneLevelDownKleisliMixinWithStart : public virtual IExternalComponent, public virtual KleisliImpl, public Main {
+        private:
+            StartF startF_;
+        public:
+            template <typename... Args>
+            OneLevelDownKleisliMixinWithStart(F &&f, DelaySimulator const &delaySimulator, StartF &&startF, Args&&... args) 
+                : IExternalComponent(), KleisliImpl(std::move(f), delaySimulator), Main(std::forward<Args>(args)...), startF_(std::move(startF)) {}
+            virtual ~OneLevelDownKleisliMixinWithStart() {}
+            OneLevelDownKleisliMixinWithStart(OneLevelDownKleisliMixinWithStart const &) = delete;
+            OneLevelDownKleisliMixinWithStart &operator=(OneLevelDownKleisliMixinWithStart const &) = delete;
+            OneLevelDownKleisliMixinWithStart(OneLevelDownKleisliMixinWithStart &&) = default;
+            OneLevelDownKleisliMixinWithStart &operator=(OneLevelDownKleisliMixinWithStart &&) = default;
+            virtual void start(StateT *environment) override final {
+                startF_(environment);
+            }
+        };
+        template <class A, class B, class F, class MultiKleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,std::vector<B>>,MultiKleisliImpl>,int> = 0>
+        class OneLevelDownMultiKleisliMixin : public virtual MultiKleisliImpl, public Main {
+        public:
+            template <typename... Args>
+            OneLevelDownMultiKleisliMixin(F &&f, DelaySimulator const &delaySimulator, Args&&... args) 
+                : MultiKleisliImpl(std::move(f), delaySimulator), Main(std::forward<Args>(args)...) {}
+            virtual ~OneLevelDownMultiKleisliMixin() {}
+            OneLevelDownMultiKleisliMixin(OneLevelDownMultiKleisliMixin const &) = delete;
+            OneLevelDownMultiKleisliMixin &operator=(OneLevelDownMultiKleisliMixin const &) = delete;
+            OneLevelDownMultiKleisliMixin(OneLevelDownMultiKleisliMixin &&) = default;
+            OneLevelDownMultiKleisliMixin &operator=(OneLevelDownMultiKleisliMixin &&) = default;
+        };
+
      private:
         template <class T, class Input, class Output>
         class TwoWayHolder {
@@ -914,17 +969,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     
     public:
-        template <class A, class B, bool FireOnceOnly, class T>
-        class ActionCore final : public AbstractAction<A,B> {
+        template <class A, class B, bool FireOnceOnly>
+        class ActionCore : public virtual OneLevelDownKleisli<A,B>, public AbstractAction<A,B> {
         private:
             TimeChecker<A> timeChecker_;
             bool done_;
-            T t_;
         public:
-            ActionCore(T &&t) : AbstractAction<A,B>(), timeChecker_(), done_(false), t_(std::move(t)) {
+            ActionCore() : AbstractAction<A,B>(), timeChecker_(), done_(false) {
             }
-            template <class F>
-            ActionCore(F &&f, DelaySimulator const &delaySimulator) : AbstractAction<A,B>(), timeChecker_(), done_(false), t_(std::move(f), delaySimulator) {}
             virtual ~ActionCore() {
             }
             virtual void handle(InnerData<A> &&data) override final {
@@ -938,7 +990,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         data.environment 
                         , this
                     );
-                    auto res = t_.action(data.environment, std::move(data.timedData));
+                    auto res = this->action(data.environment, std::move(data.timedData));
                     if (res) {
                         if constexpr (FireOnceOnly) {
                             res->timedData.finalFlag = true;
@@ -954,15 +1006,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return FireOnceOnly;
             }
         };
-
+        //PureActionCore will be specialized so it is not defined with mixin
         template <class A, class B, class F, bool FireOnceOnly>
-        using PureActionCore = ActionCore<A,B,FireOnceOnly,PureOneLevelDownKleisli<A,B,F,false>>;
+        class PureActionCore final : public virtual PureOneLevelDownKleisli<A,B,F,false>, public ActionCore<A,B,FireOnceOnly> {
+        public:
+            PureActionCore(F &&f, DelaySimulator const &delaySimulator) : PureOneLevelDownKleisli<A,B,F,false>(std::move(f),delaySimulator), ActionCore<A,B,FireOnceOnly>() {}
+            PureActionCore(PureActionCore const &) = delete;
+            PureActionCore &operator=(PureActionCore const &) = delete;
+            PureActionCore(PureActionCore &&) = default;
+            PureActionCore &operator=(PureActionCore &&) = default;
+            virtual ~PureActionCore() {}
+        };
         template <class A, class B, class F, bool FireOnceOnly>
-        using MaybeActionCore = ActionCore<A,B,FireOnceOnly,MaybeOneLevelDownKleisli<A,B,F,false>>;
+        using MaybeActionCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                MaybeOneLevelDownKleisli<A,B,F,false>,
+                                ActionCore<A,B,FireOnceOnly>
+                                >;
         template <class A, class B, class F, bool FireOnceOnly>
-        using EnhancedMaybeActionCore = ActionCore<A,B,FireOnceOnly,EnhancedMaybeOneLevelDownKleisli<A,B,F,false>>;
+        using EnhancedMaybeActionCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                EnhancedMaybeOneLevelDownKleisli<A,B,F,false>,
+                                ActionCore<A,B,FireOnceOnly>
+                                >;
         template <class A, class B, class F, bool FireOnceOnly>
-        using KleisliActionCore = ActionCore<A,B,FireOnceOnly,DirectOneLevelDownKleisli<A,B,F,false>>;
+        using KleisliActionCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                DirectOneLevelDownKleisli<A,B,F,false>,
+                                ActionCore<A,B,FireOnceOnly>
+                                >;
 
         #include <tm_kit/infra/TopDownSinglePassIterationApp_ActionCore_Piece.hpp>
 
@@ -1017,18 +1089,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
     private:
-        template <class A, class B, bool FireOnceOnly, class T>
-        class MultiActionCore : public AbstractAction<A,B> {
+        template <class A, class B, bool FireOnceOnly>
+        class MultiActionCore : public virtual OneLevelDownKleisli<A,std::vector<B>>, public AbstractAction<A,B> {
         private:
             TimeChecker<A> timeChecker_;
             bool fireOnceOnly_;
             bool done_;
-            T t_;
         public:
-            MultiActionCore(T &&t) : AbstractAction<A,B>(), timeChecker_(), done_(false), t_(std::move(t)) {
+            MultiActionCore() : AbstractAction<A,B>(), timeChecker_(), done_(false) {
             }
-            template <class F>
-            MultiActionCore(F &&f, DelaySimulator const &delaySimulator) : AbstractAction<A,B>(), timeChecker_(), done_(false), t_(std::move(f), delaySimulator) {}
             virtual ~MultiActionCore() {
             }
             virtual void handle(InnerData<A> &&data) override final {
@@ -1038,7 +1107,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
-                    auto res = t_.action(data.environment, std::move(data.timedData));
+                    auto res = this->action(data.environment, std::move(data.timedData));
                     if (res && !res->timedData.value.empty()) {
                         if constexpr (FireOnceOnly) {
                             Producer<B>::publish(InnerData<B> {
@@ -1073,11 +1142,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B, class F, bool FireOnceOnly>
-        using SimpleMultiActionCore = MultiActionCore<A,B,FireOnceOnly,PureOneLevelDownKleisli<A,std::vector<B>,F,false>>;
+        using SimpleMultiActionCore = OneLevelDownMultiKleisliMixin<
+                                A, B, F,
+                                PureOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                MultiActionCore<A,B,FireOnceOnly>
+                                >;
         template <class A, class B, class F, bool FireOnceOnly>
-        using EnhancedMultiActionCore = MultiActionCore<A,B,FireOnceOnly,EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>>;
+        using EnhancedMultiActionCore = OneLevelDownMultiKleisliMixin<
+                                A, B, F,
+                                EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                MultiActionCore<A,B,FireOnceOnly>
+                                >;
         template <class A, class B, class F, bool FireOnceOnly>
-        using KleisliMultiActionCore = MultiActionCore<A,B,FireOnceOnly,DirectOneLevelDownKleisli<A,std::vector<B>,F,false>>;
+        using KleisliMultiActionCore = OneLevelDownMultiKleisliMixin<
+                                A, B, F,
+                                DirectOneLevelDownKleisli<A,std::vector<B>,F,false>,
+                                MultiActionCore<A,B,FireOnceOnly>
+                                >;
         
         #include <tm_kit/infra/TopDownSinglePassIterationApp_MultiActionCore_Piece.hpp>
 
@@ -1161,16 +1242,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
     public:
-        template <class A, class B, class T>
-        class OnOrderFacilityCore final : public AbstractOnOrderFacility<A,B> {
+        template <class A, class B>
+        class OnOrderFacilityCore : public virtual OneLevelDownKleisli<A,B>, public virtual AbstractOnOrderFacility<A,B> {
         private:
             TimeChecker<Key<A>> timeChecker_;
-            T t_;
         public:
-            OnOrderFacilityCore(T &&t) : AbstractOnOrderFacility<A,B>(), timeChecker_(), t_(std::move(t)) {
-            }
-            template <class F>
-            OnOrderFacilityCore(F &&f, DelaySimulator const &delaySimulator) : AbstractOnOrderFacility<A,B>(), timeChecker_(), t_(std::move(f), delaySimulator) {
+            OnOrderFacilityCore() : OneLevelDownKleisli<A,B>(), AbstractOnOrderFacility<A,B>(), timeChecker_() {
             }
             virtual ~OnOrderFacilityCore() {
             }
@@ -1179,40 +1256,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     TM_INFRA_FACILITY_TRACER(data.environment);
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
-                    auto res = t_.action(data.environment, std::move(a));
-                    if (res) {
-                        OnOrderFacilityProducer<KeyedData<A,B>>::publish(
-                            pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
-                                return {std::move(id), std::move(b)};
-                            }, std::move(*res))
-                        );
-                    }
-                }
-            }
-        };
-        template <class A, class B, class T, class StartF>
-        class OnOrderFacilityCoreWithStart final : public virtual IExternalComponent, public AbstractOnOrderFacility<A,B> {
-        private:
-            TimeChecker<Key<A>> timeChecker_;
-            T t_;
-            StartF startF_;
-        public:
-            OnOrderFacilityCoreWithStart(T &&t, StartF &&startF) : AbstractOnOrderFacility<A,B>(), timeChecker_(), t_(std::move(t)), startF_(std::move(startF)) {
-            }
-            template <class F>
-            OnOrderFacilityCoreWithStart(F &&f, DelaySimulator const &delaySimulator, StartF &&startF) : AbstractOnOrderFacility<A,B>(), timeChecker_(), t_(std::move(f), delaySimulator), startF_(std::move(startF)) {
-            }
-            virtual ~OnOrderFacilityCoreWithStart() {
-            }
-            virtual void start(StateT *environment) override final {
-                startF_(environment);
-            }
-            virtual void handle(InnerData<Key<A>> &&data) override final {
-                if (timeChecker_(data)) {
-                    TM_INFRA_FACILITY_TRACER(data.environment);
-                    auto id = data.timedData.value.id();
-                    WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
-                    auto res = t_.action(data.environment, std::move(a));
+                    auto res = this->action(data.environment, std::move(a));
                     if (res) {
                         OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                             pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
@@ -1224,23 +1268,58 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B, class F>
-        using PureOnOrderFacilityCore = OnOrderFacilityCore<A,B,PureOneLevelDownKleisli<A,B,F,true>>;
+        using PureOnOrderFacilityCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                PureOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                                >;
         template <class A, class B, class F>
-        using MaybeOnOrderFacilityCore = OnOrderFacilityCore<A,B,MaybeOneLevelDownKleisli<A,B,F,true>>;
+        using MaybeOnOrderFacilityCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                MaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                                >;
         template <class A, class B, class F>
-        using EnhancedMaybeOnOrderFacilityCore = OnOrderFacilityCore<A,B,EnhancedMaybeOneLevelDownKleisli<A,B,F,true>>;
+        using EnhancedMaybeOnOrderFacilityCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                                >;
         template <class A, class B, class F>
-        using KleisliOnOrderFacilityCore = OnOrderFacilityCore<A,B,DirectOneLevelDownKleisli<A,B,F,true>>;
-        
-        template <class A, class B, class F, class StartF>
-        using PureOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,PureOneLevelDownKleisli<A,B,F,true>,StartF>;
-        template <class A, class B, class F, class StartF>
-        using MaybeOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,MaybeOneLevelDownKleisli<A,B,F,true>,StartF>;
-        template <class A, class B, class F, class StartF>
-        using EnhancedMaybeOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,StartF>;
-        template <class A, class B, class F, class StartF>
-        using KleisliOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,DirectOneLevelDownKleisli<A,B,F,true>,StartF>;
+        using KleisliOnOrderFacilityCore = OneLevelDownKleisliMixin<
+                                A, B, F,
+                                DirectOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                                >;
 
+        template <class A, class B, class F, class StartF>
+        using PureOnOrderFacilityCoreWithStart = 
+                        OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                PureOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                        >;
+        template <class A, class B, class F, class StartF>
+        using MaybeOnOrderFacilityCoreWithStart = 
+                        OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                MaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                        >;
+        template <class A, class B, class F, class StartF>
+        using EnhancedMaybeOnOrderFacilityCoreWithStart = 
+                        OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                        >;
+        template <class A, class B, class F, class StartF>
+        using KleisliOnOrderFacilityCoreWithStart = 
+                        OneLevelDownKleisliMixinWithStart<
+                                A, B, F, StartF,
+                                DirectOneLevelDownKleisli<A,B,F,true>,
+                                OnOrderFacilityCore<A,B>
+                        >;
     public:
         template <class A, class B>
         using OnOrderFacility = TwoWayHolder<AbstractOnOrderFacility<A,B>,A,B>;

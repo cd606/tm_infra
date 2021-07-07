@@ -1,20 +1,18 @@
 private:
     template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    class PureT2 {
+    class Pure2 final : public ActionCore<std::variant<A0,A1>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT2(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT2(PureT2 &&) = default;
-        ~PureT2() {}
+    public:
+        Pure2(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure2() {}
     };
-    template <class A0, class A1, class B, class F, bool FireOnceOnly>
-    using Pure2 = ActionCore<std::variant<A0,A1>, B, FireOnceOnly, PureT2<A0,A1, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto liftPure2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,decltype(f(std::move(*((std::variant<A0,A1> *) nullptr))))>> {
@@ -26,21 +24,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    class PureT3 {
+    class Pure3 final : public ActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT3(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT3(PureT3 &&) = default;
-        ~PureT3() {}
+    public:
+        Pure3(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure3() {}
     };
-    template <class A0, class A1, class A2, class B, class F, bool FireOnceOnly>
-    using Pure3 = ActionCore<std::variant<A0,A1,A2>, B, FireOnceOnly, PureT3<A0,A1,A2, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto liftPure3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,decltype(f(std::move(*((std::variant<A0,A1,A2> *) nullptr))))>> {
@@ -52,21 +48,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    class PureT4 {
+    class Pure4 final : public ActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT4(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT4(PureT4 &&) = default;
-        ~PureT4() {}
+    public:
+        Pure4(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure4() {}
     };
-    template <class A0, class A1, class A2, class A3, class B, class F, bool FireOnceOnly>
-    using Pure4 = ActionCore<std::variant<A0,A1,A2,A3>, B, FireOnceOnly, PureT4<A0,A1,A2,A3, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto liftPure4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3> *) nullptr))))>> {
@@ -78,21 +72,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    class PureT5 {
+    class Pure5 final : public ActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT5(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT5(PureT5 &&) = default;
-        ~PureT5() {}
+    public:
+        Pure5(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure5() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool FireOnceOnly>
-    using Pure5 = ActionCore<std::variant<A0,A1,A2,A3,A4>, B, FireOnceOnly, PureT5<A0,A1,A2,A3,A4, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto liftPure5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4> *) nullptr))))>> {
@@ -104,21 +96,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    class PureT6 {
+    class Pure6 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT6(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT6(PureT6 &&) = default;
-        ~PureT6() {}
+    public:
+        Pure6(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure6() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool FireOnceOnly>
-    using Pure6 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, FireOnceOnly, PureT6<A0,A1,A2,A3,A4,A5, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto liftPure6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5> *) nullptr))))>> {
@@ -130,21 +120,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    class PureT7 {
+    class Pure7 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT7(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT7(PureT7 &&) = default;
-        ~PureT7() {}
+    public:
+        Pure7(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure7() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool FireOnceOnly>
-    using Pure7 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, FireOnceOnly, PureT7<A0,A1,A2,A3,A4,A5,A6, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto liftPure7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6> *) nullptr))))>> {
@@ -156,21 +144,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    class PureT8 {
+    class Pure8 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT8(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT8(PureT8 &&) = default;
-        ~PureT8() {}
+    public:
+        Pure8(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure8() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool FireOnceOnly>
-    using Pure8 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, FireOnceOnly, PureT8<A0,A1,A2,A3,A4,A5,A6,A7, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto liftPure8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6,A7> *) nullptr))))>> {
@@ -182,21 +168,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    class PureT9 {
+    class Pure9 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT9(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT9(PureT9 &&) = default;
-        ~PureT9() {}
+    public:
+        Pure9(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure9() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool FireOnceOnly>
-    using Pure9 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, FireOnceOnly, PureT9<A0,A1,A2,A3,A4,A5,A6,A7,A8, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto liftPure9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> *) nullptr))))>> {
@@ -208,21 +192,19 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    class PureT10 {
+    class Pure10 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly> {
     private:
         F f_;
         DelaySimulator delaySimulator_;
-    public:
-        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
+    protected:
+        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
             auto tp = (delaySimulator_?(data.timedData.timePoint+(*delaySimulator_)(data.timedData.value.index(), data.timedData.timePoint)):std::move(data.timedData.timePoint));
             return pureInnerData(data.environment, WithTime<B,TimePoint> {tp, f_(std::move(data.timedData.value)), data.timedData.finalFlag});
         }
-        PureT10(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
-        PureT10(PureT10 &&) = default;
-        ~PureT10() {}
+    public:
+        Pure10(F &&f, DelaySimulator const &delaySimulator) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,FireOnceOnly>(), f_(std::move(f)), delaySimulator_(delaySimulator) {}
+        virtual ~Pure10() {}
     };
-    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool FireOnceOnly>
-    using Pure10 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, FireOnceOnly, PureT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9, B, F, FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto liftPure10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> *) nullptr))))>> {
