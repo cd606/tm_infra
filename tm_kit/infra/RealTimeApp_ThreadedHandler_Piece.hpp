@@ -1,7 +1,7 @@
-template <class A0, class A1>
-class ThreadedHandler<std::variant<A0,A1>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public ThreadedHandlerBase<std::variant<A0,A1>> {
+template <class A0, class A1, class W>
+class ThreadedHandler<std::variant<A0,A1>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public ThreadedHandlerBase<std::variant<A0,A1>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -20,10 +20,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA1, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2>
-class ThreadedHandler<std::variant<A0,A1,A2>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public ThreadedHandlerBase<std::variant<A0,A1,A2>> {
+template <class A0, class A1, class A2, class W>
+class ThreadedHandler<std::variant<A0,A1,A2>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public ThreadedHandlerBase<std::variant<A0,A1,A2>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -48,10 +48,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA2, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3>
-class ThreadedHandler<std::variant<A0,A1,A2,A3>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3>> {
+template <class A0, class A1, class A2, class A3, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -82,10 +82,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA3, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4>
-class ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4>> {
+template <class A0, class A1, class A2, class A3, class A4, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3,A4>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -122,10 +122,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA4, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5>
-class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -168,10 +168,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA5, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6>
-class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -220,10 +220,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA6, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7>
-class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public virtual IHandler<A7>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public virtual IHandler<A7>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -278,10 +278,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA7, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8>
-class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public virtual IHandler<A7>, public virtual IHandler<A8>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public virtual IHandler<A7>, public virtual IHandler<A8>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, W>() {
     }
     virtual ~ThreadedHandler() {
     }
@@ -342,10 +342,10 @@ public:
         this->putData(withtime_utils::pureTimedDataWithEnvironmentLift(fromA8, std::move(data), true));
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9>
-class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public virtual IHandler<A7>, public virtual IHandler<A8>, public virtual IHandler<A9>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class W>
+class ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, W> : public virtual IHandler<A0>, public virtual IHandler<A1>, public virtual IHandler<A2>, public virtual IHandler<A3>, public virtual IHandler<A4>, public virtual IHandler<A5>, public virtual IHandler<A6>, public virtual IHandler<A7>, public virtual IHandler<A8>, public virtual IHandler<A9>, public ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, W> {
 public:
-    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>() {
+    ThreadedHandler() : ThreadedHandlerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, W>() {
     }
     virtual ~ThreadedHandler() {
     }

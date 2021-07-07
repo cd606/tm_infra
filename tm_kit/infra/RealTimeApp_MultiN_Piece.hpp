@@ -1,10 +1,10 @@
 private:
     template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi2 final : public MultiActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly> {
+    class MultiT2 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -12,13 +12,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi2(F &&f) : MultiActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi2() {}
+        MultiT2(F &&f) : f_(std::move(f)) {}
+        ~MultiT2() {}
     };
+    template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi2 = MultiActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly,MultiT2<A0,A1,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto liftMulti2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((std::variant<A0,A1> *) nullptr))))::value_type>> {
@@ -38,11 +40,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi3 final : public MultiActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly> {
+    class MultiT3 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -50,13 +52,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi3(F &&f) : MultiActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi3() {}
+        MultiT3(F &&f) : f_(std::move(f)) {}
+        ~MultiT3() {}
     };
+    template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi3 = MultiActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly,MultiT3<A0,A1,A2,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto liftMulti3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((std::variant<A0,A1,A2> *) nullptr))))::value_type>> {
@@ -76,11 +80,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi4 final : public MultiActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly> {
+    class MultiT4 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -88,13 +92,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi4(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi4() {}
+        MultiT4(F &&f) : f_(std::move(f)) {}
+        ~MultiT4() {}
     };
+    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi4 = MultiActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly,MultiT4<A0,A1,A2,A3,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto liftMulti4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3> *) nullptr))))::value_type>> {
@@ -114,11 +120,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi5 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly> {
+    class MultiT5 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -126,13 +132,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi5(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi5() {}
+        MultiT5(F &&f) : f_(std::move(f)) {}
+        ~MultiT5() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi5 = MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly,MultiT5<A0,A1,A2,A3,A4,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto liftMulti5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4> *) nullptr))))::value_type>> {
@@ -152,11 +160,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi6 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly> {
+    class MultiT6 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -164,13 +172,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi6(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi6() {}
+        MultiT6(F &&f) : f_(std::move(f)) {}
+        ~MultiT6() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi6 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly,MultiT6<A0,A1,A2,A3,A4,A5,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto liftMulti6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5> *) nullptr))))::value_type>> {
@@ -190,11 +200,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi7 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly> {
+    class MultiT7 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -202,13 +212,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi7(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi7() {}
+        MultiT7(F &&f) : f_(std::move(f)) {}
+        ~MultiT7() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi7 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly,MultiT7<A0,A1,A2,A3,A4,A5,A6,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto liftMulti7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6> *) nullptr))))::value_type>> {
@@ -228,11 +240,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi8 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly> {
+    class MultiT8 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -240,13 +252,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi8(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi8() {}
+        MultiT8(F &&f) : f_(std::move(f)) {}
+        ~MultiT8() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi8 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly,MultiT8<A0,A1,A2,A3,A4,A5,A6,A7,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto liftMulti8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6,A7> *) nullptr))))::value_type>> {
@@ -266,11 +280,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi9 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly> {
+    class MultiT9 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -278,13 +292,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi9(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi9() {}
+        MultiT9(F &&f) : f_(std::move(f)) {}
+        ~MultiT9() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi9 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly,MultiT9<A0,A1,A2,A3,A4,A5,A6,A7,A8,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto liftMulti9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8> *) nullptr))))::value_type>> {
@@ -304,11 +320,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Multi10 final : public MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly> {
+    class MultiT10 {
     private:
         F f_;
-    protected:
-        virtual MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+    public:
+        MultiData<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
             auto ret = f_(std::move(data.timedData.value));
             if (!ret.empty()) {
                 return pureInnerData(data.environment, WithTime<std::vector<B>,TimePoint> {std::move(data.timedData.timePoint), std::move(ret), data.timedData.finalFlag});
@@ -316,13 +332,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Multi10(F &&f) : MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Multi10() {}
+        MultiT10(F &&f) : f_(std::move(f)) {}
+        ~MultiT10() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Multi10 = MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly,MultiT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto liftMulti10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9> *) nullptr))))::value_type>> {

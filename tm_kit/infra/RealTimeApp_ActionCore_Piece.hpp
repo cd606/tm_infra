@@ -1,13 +1,13 @@
-template <class A0, class A1, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>> {
+template <class A0, class A1, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>, ActionCore<std::variant<A0,A1>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -21,7 +21,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -34,7 +34,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>,ActionCore<std::variant<A0,A1>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -48,21 +49,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
+template <class A0, class A1, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -75,7 +76,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -95,7 +96,8 @@ private:
         return std::variant<A0,A1>(std::in_place_index<1>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -114,16 +116,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>> {
+template <class A0, class A1, class A2, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>, ActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -137,7 +139,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -150,7 +152,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>,ActionCore<std::variant<A0,A1,A2>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -164,21 +167,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
+template <class A0, class A1, class A2, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -191,7 +194,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -214,7 +217,8 @@ private:
         return std::variant<A0,A1,A2>(std::in_place_index<2>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -236,16 +240,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>> {
+template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>, ActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -259,7 +263,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -272,7 +276,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>,ActionCore<std::variant<A0,A1,A2,A3>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -286,21 +291,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
+template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -313,7 +318,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -339,7 +344,8 @@ private:
         return std::variant<A0,A1,A2,A3>(std::in_place_index<3>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -364,16 +370,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>> {
+template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>, ActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -387,7 +393,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -400,7 +406,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>,ActionCore<std::variant<A0,A1,A2,A3,A4>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -414,21 +421,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -441,7 +448,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -470,7 +477,8 @@ private:
         return std::variant<A0,A1,A2,A3,A4>(std::in_place_index<4>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -498,16 +506,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>, ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -521,7 +529,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -534,7 +542,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -548,21 +557,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -575,7 +584,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -607,7 +616,8 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5>(std::in_place_index<5>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -638,16 +648,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>, ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -661,7 +671,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -674,7 +684,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -688,21 +699,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -715,7 +726,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -750,7 +761,8 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6>(std::in_place_index<6>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -784,16 +796,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -807,7 +819,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -820,7 +832,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -834,21 +847,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -861,7 +874,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -899,7 +912,8 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7>(std::in_place_index<7>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -936,16 +950,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -959,7 +973,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -972,7 +986,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -986,21 +1001,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -1013,7 +1028,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -1054,7 +1069,8 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>(std::in_place_index<8>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -1094,16 +1110,16 @@ public:
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly, T>> {
 private:
     bool done_;
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
-    virtual void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
+    void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -1117,7 +1133,7 @@ protected:
             , this
         );
         data.timedData.finalFlag = this->timeChecker().isFinalUpdate();
-        auto res = action(std::move(data));
+        auto res = t_.action(std::move(data));
         if (res) {
             if constexpr (FireOnceOnly) {
                 res->timedData.finalFlag = true;
@@ -1130,7 +1146,8 @@ protected:
         }
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }
@@ -1144,21 +1161,21 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         idleWorker_ = worker;
     }
-    virtual void idleWork() override final {
+    void idleWork() {
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
-            idleWorker_(this->getIdleHandlerParam());
+            idleWorker_(t_.getIdleHandlerParam());
         }
     }
 };
-template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly>
-class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
+template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly, class T>
+class ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, false, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> {
 private:
     typename RealTimeAppComponents<StateT>::template TimeChecker<true, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> timeChecker_;
     std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
-protected:
-    virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) = 0;
-    virtual void *getIdleHandlerParam() {return nullptr;}
+    T t_;
+public:
+    void *getIdleHandlerParam() {return nullptr;}
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
@@ -1171,7 +1188,7 @@ protected:
                 , this
             );
             data.timedData.finalFlag = timeChecker_.isFinalUpdate();
-            auto res = action(std::move(data));
+            auto res = t_.action(std::move(data));
             if (res) {
                 if constexpr (FireOnceOnly) {
                     res->timedData.finalFlag = true;
@@ -1215,7 +1232,8 @@ private:
         return std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>(std::in_place_index<9>, std::move(x));
     }
 public:
-    ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), timeChecker_(), done_(false) {
+    template <class F>
+    ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
     }
     virtual ~ActionCore() {
     }

@@ -1,19 +1,21 @@
 private:
     template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli2 final : public ActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly> {
+    class KleisliT2 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli2(F &&f) : ActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli2() {}
+        KleisliT2(F &&f) : f_(std::move(f)) {}
+        ~KleisliT2() {}
     };
+    template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli2 = ActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly,KleisliT2<A0,A1,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto kleisli2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1>> *) nullptr))))::value_type::ValueType>> {
@@ -33,20 +35,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli3 final : public ActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly> {
+    class KleisliT3 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli3(F &&f) : ActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli3() {}
+        KleisliT3(F &&f) : f_(std::move(f)) {}
+        ~KleisliT3() {}
     };
+    template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli3 = ActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly,KleisliT3<A0,A1,A2,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto kleisli3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2>> *) nullptr))))::value_type::ValueType>> {
@@ -66,20 +70,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli4 final : public ActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly> {
+    class KleisliT4 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli4(F &&f) : ActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli4() {}
+        KleisliT4(F &&f) : f_(std::move(f)) {}
+        ~KleisliT4() {}
     };
+    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli4 = ActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly,KleisliT4<A0,A1,A2,A3,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto kleisli4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type::ValueType>> {
@@ -99,20 +105,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli5 final : public ActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly> {
+    class KleisliT5 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli5(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli5() {}
+        KleisliT5(F &&f) : f_(std::move(f)) {}
+        ~KleisliT5() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli5 = ActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly,KleisliT5<A0,A1,A2,A3,A4,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto kleisli5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type::ValueType>> {
@@ -132,20 +140,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli6 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly> {
+    class KleisliT6 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli6(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli6() {}
+        KleisliT6(F &&f) : f_(std::move(f)) {}
+        ~KleisliT6() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli6 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly,KleisliT6<A0,A1,A2,A3,A4,A5,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto kleisli6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type::ValueType>> {
@@ -165,20 +175,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli7 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly> {
+    class KleisliT7 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli7(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli7() {}
+        KleisliT7(F &&f) : f_(std::move(f)) {}
+        ~KleisliT7() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli7 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly,KleisliT7<A0,A1,A2,A3,A4,A5,A6,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto kleisli7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type::ValueType>> {
@@ -198,20 +210,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli8 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly> {
+    class KleisliT8 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli8(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli8() {}
+        KleisliT8(F &&f) : f_(std::move(f)) {}
+        ~KleisliT8() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli8 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly,KleisliT8<A0,A1,A2,A3,A4,A5,A6,A7,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto kleisli8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type::ValueType>> {
@@ -231,20 +245,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli9 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly> {
+    class KleisliT9 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli9(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli9() {}
+        KleisliT9(F &&f) : f_(std::move(f)) {}
+        ~KleisliT9() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli9 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly,KleisliT9<A0,A1,A2,A3,A4,A5,A6,A7,A8,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto kleisli9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type::ValueType>> {
@@ -264,20 +280,22 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
-    class Kleisli10 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly> {
+    class KleisliT10 {
     private:
         F f_;
     protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
             return f_(std::move(data));
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        Kleisli10(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~Kleisli10() {}
+        KleisliT10(F &&f) : f_(std::move(f)) {}
+        ~KleisliT10() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
+    using Kleisli10 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly,KleisliT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto kleisli10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type::ValueType>> {

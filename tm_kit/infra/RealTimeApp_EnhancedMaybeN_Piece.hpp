@@ -1,10 +1,10 @@
 private:
     template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe2 final : public ActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT2 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -12,13 +12,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe2(F &&f) : ActionCore<std::variant<A0,A1>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe2() {}
+        EnhancedMaybeT2(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT2() {}
     };
+    template <class A0, class A1, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe2 = ActionCore<std::variant<A0,A1>, B, Threaded, FireOnceOnly,EnhancedMaybeT2<A0,A1,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class F>
     static auto enhancedMaybe2(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1>> *) nullptr))))::value_type>> {
@@ -38,11 +40,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe3 final : public ActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT3 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -50,13 +52,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe3(F &&f) : ActionCore<std::variant<A0,A1,A2>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe3() {}
+        EnhancedMaybeT3(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT3() {}
     };
+    template <class A0, class A1, class A2, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe3 = ActionCore<std::variant<A0,A1,A2>, B, Threaded, FireOnceOnly,EnhancedMaybeT3<A0,A1,A2,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class F>
     static auto enhancedMaybe3(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2>> *) nullptr))))::value_type>> {
@@ -76,11 +80,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe4 final : public ActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT4 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -88,13 +92,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe4(F &&f) : ActionCore<std::variant<A0,A1,A2,A3>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe4() {}
+        EnhancedMaybeT4(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT4() {}
     };
+    template <class A0, class A1, class A2, class A3, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe4 = ActionCore<std::variant<A0,A1,A2,A3>, B, Threaded, FireOnceOnly,EnhancedMaybeT4<A0,A1,A2,A3,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class F>
     static auto enhancedMaybe4(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3>> *) nullptr))))::value_type>> {
@@ -114,11 +120,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe5 final : public ActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT5 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -126,13 +132,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe5(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe5() {}
+        EnhancedMaybeT5(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT5() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe5 = ActionCore<std::variant<A0,A1,A2,A3,A4>, B, Threaded, FireOnceOnly,EnhancedMaybeT5<A0,A1,A2,A3,A4,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class F>
     static auto enhancedMaybe5(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4>> *) nullptr))))::value_type>> {
@@ -152,11 +160,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe6 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT6 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -164,13 +172,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe6(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe6() {}
+        EnhancedMaybeT6(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT6() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe6 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, Threaded, FireOnceOnly,EnhancedMaybeT6<A0,A1,A2,A3,A4,A5,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class F>
     static auto enhancedMaybe6(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5>> *) nullptr))))::value_type>> {
@@ -190,11 +200,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe7 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT7 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -202,13 +212,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe7(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe7() {}
+        EnhancedMaybeT7(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT7() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe7 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, Threaded, FireOnceOnly,EnhancedMaybeT7<A0,A1,A2,A3,A4,A5,A6,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class F>
     static auto enhancedMaybe7(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6>> *) nullptr))))::value_type>> {
@@ -228,11 +240,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe8 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT8 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -240,13 +252,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe8(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe8() {}
+        EnhancedMaybeT8(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT8() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe8 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, Threaded, FireOnceOnly,EnhancedMaybeT8<A0,A1,A2,A3,A4,A5,A6,A7,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class F>
     static auto enhancedMaybe8(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> *) nullptr))))::value_type>> {
@@ -266,11 +280,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe9 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT9 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -278,13 +292,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe9(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe9() {}
+        EnhancedMaybeT9(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT9() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe9 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, Threaded, FireOnceOnly,EnhancedMaybeT9<A0,A1,A2,A3,A4,A5,A6,A7,A8,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class F>
     static auto enhancedMaybe9(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> *) nullptr))))::value_type>> {
@@ -304,11 +320,11 @@ public:
     }
 private:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
-    class EnhancedMaybe10 final : public ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly> {
+    class EnhancedMaybeT10 {
     private:
         F f_;
-    protected:
-        virtual Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) override final {
+    public:
+        Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
             auto ret = f_(std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {data.timedData.timePoint, std::move(data.timedData.value)});
             if (ret) {
                 return pureInnerData(data.environment, WithTime<B,TimePoint> {std::move(data.timedData.timePoint), std::move(*ret), data.timedData.finalFlag});
@@ -316,13 +332,15 @@ private:
                 return std::nullopt;
             }
         }
-        virtual void *getIdleHandlerParam() override final {
+        void *getIdleHandlerParam() {
             return (void *) &f_;
         }
     public:
-        EnhancedMaybe10(F &&f) : ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,Threaded,FireOnceOnly>(), f_(std::move(f)) {}
-        virtual ~EnhancedMaybe10() {}
+        EnhancedMaybeT10(F &&f) : f_(std::move(f)) {}
+        ~EnhancedMaybeT10() {}
     };
+    template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, class F, bool Threaded, bool FireOnceOnly>
+    using EnhancedMaybe10 = ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, Threaded, FireOnceOnly,EnhancedMaybeT10<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,B,F,Threaded,FireOnceOnly>>;
 public:
     template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class F>
     static auto enhancedMaybe10(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,typename decltype(f(std::move(*((std::tuple<TimePoint, std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> *) nullptr))))::value_type>> {

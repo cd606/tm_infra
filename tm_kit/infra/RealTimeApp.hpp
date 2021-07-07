@@ -107,7 +107,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/RealTimeApp_TimeChecker_Piece.hpp>
 
     private:
-        template <class T>
+        template <class T, class W>
         class ThreadedHandlerBase : public IRealTimeAppPossiblyThreadedNode {
         private:
             TimeChecker<false, T> timeChecker_;
@@ -131,7 +131,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                         if (incoming_.empty()) {
                             lock.unlock();
-                            this->idleWork();
+                            static_cast<W *>(this)->idleWork();
                             continue;
                         }
                         processing_.splice(processing_.end(), incoming_);
@@ -144,7 +144,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     while (!processing_.empty()) {
                         auto &data = processing_.front();
-                        actuallyHandle(std::move(data));
+                        static_cast<W *>(this)->actuallyHandle(std::move(data));
                         processing_.pop_front();
                     }
                 }  
@@ -156,8 +156,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
                 return timeChecker_(std::move(data));
             }
-            virtual void idleWork() {}
-            virtual void actuallyHandle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
         public:
             ThreadedHandlerBase() : timeChecker_(), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_() {
                 running_ = true;
@@ -189,15 +187,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     public:
-        template <class T>
-        class ThreadedHandler : public virtual IHandler<T>, public ThreadedHandlerBase<T> {
+        template <class T, class W>
+        class ThreadedHandler : public virtual IHandler<T>, public ThreadedHandlerBase<T,W> {
         public:
-            ThreadedHandler() : ThreadedHandlerBase<T>() {
+            ThreadedHandler() : ThreadedHandlerBase<T,W>() {
             }
             virtual ~ThreadedHandler() {
             }
             virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) override final {
-                ThreadedHandlerBase<T>::putData(std::move(data));                
+                ThreadedHandlerBase<T,W>::putData(std::move(data));                
             }
         };
 
@@ -205,7 +203,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     private:
         //busy loop can only be used to handle one kind of input
-        template <class T>
+        template <class T, class W>
         class BusyLoopThreadedHandlerBase : public IRealTimeAppPossiblyThreadedNode {
         private:
             bool noYield_;
@@ -220,7 +218,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             void runThread() {
                 while (running_) {
-                    idleWork();
+                    static_cast<W *>(this)->idleWork();
                     {
                         std::lock_guard<std::mutex> _(mutex_);
                         if (!incoming_.empty()) {
@@ -236,7 +234,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                     while (!processing_.empty()) {
                         auto &data = processing_.front();
-                        actuallyHandle(std::move(data));
+                        static_cast<W *>(this)->actuallyHandle(std::move(data));
                         processing_.pop_front();
                     }
                     if (!noYield_) {
@@ -251,8 +249,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool timeCheckGood(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) {
                 return timeChecker_(std::move(data));
             }
-            virtual void idleWork() {}
-            virtual void actuallyHandle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
         public:
             BusyLoopThreadedHandlerBase(bool noYield=false) : noYield_(noYield), timeChecker_(), mutex_(), th_(), running_(false), incoming_(), processing_() {
                 running_ = true;
@@ -281,15 +277,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     public:
-        template <class T>
-        class BusyLoopThreadedHandler : public virtual IHandler<T>, public BusyLoopThreadedHandlerBase<T> {
+        template <class T, class W>
+        class BusyLoopThreadedHandler : public virtual IHandler<T>, public BusyLoopThreadedHandlerBase<T,W> {
         public:
-            BusyLoopThreadedHandler(bool noYield=false) : BusyLoopThreadedHandlerBase<T>(noYield) {
+            BusyLoopThreadedHandler(bool noYield=false) : BusyLoopThreadedHandlerBase<T,W>(noYield) {
             }
             virtual ~BusyLoopThreadedHandler() {
             }
             virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) override final {
-                BusyLoopThreadedHandlerBase<T>::putData(std::move(data));                
+                BusyLoopThreadedHandlerBase<T,W>::putData(std::move(data));                
             }
         };
 
@@ -454,6 +450,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return this->producerStoppedStatus();
             }
         };
+        template <class A, class B>
+        class SingleEntryAbstractAction : public AbstractAction<A,B> {};
 
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
 
@@ -478,19 +476,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr AbstractOnOrderFacility *nullptrToInheritedFacility() {return nullptr;}
         };
         
-        template <class A, class B>
-        class OneLevelDownKleisli {
-        protected:
-            virtual ~OneLevelDownKleisli() {}
-            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A, typename StateT::TimePointType> &&data) = 0;
-            virtual void *getIdleHandlerParam() {return nullptr;}
-        };
-
         template <class A, class B, class F, bool ForceFinal>
-        class PureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A,B> {
+        class PureOneLevelDownKleisli {
         private:
             F f_;
-            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+        public:
+            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
                 if constexpr (ForceFinal) {
                     auto ret = withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                     ret.timedData.finalFlag = true;
@@ -499,7 +490,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                 }               
             }
-            virtual void *getIdleHandlerParam() override final {
+            void *getIdleHandlerParam() {
                 return (void *) &f_;
             }
         public:
@@ -513,10 +504,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //This is only used for multi action. For regular action
         //, if the "enhanced" input data is needed, just use EnhancedMaybe
         template <class A, class B, class F, bool ForceFinal>
-        class EnhancedPureOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
+        class EnhancedPureOneLevelDownKleisli {
         private:
             F f_;
-            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+        public:
+            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
                 auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
                 return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
                     data.timePoint,
@@ -524,7 +516,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     (ForceFinal?true:data.finalFlag)
                 });
             }
-            virtual void *getIdleHandlerParam() override final {
+            void *getIdleHandlerParam() {
                 return (void *) &f_;
             }
         public:
@@ -536,10 +528,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~EnhancedPureOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
-        class MaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
+        class MaybeOneLevelDownKleisli {
         private:
             F f_;
-            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+        public:
+            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
                 auto b = f_(std::move(data.value));
                 if (b) {
                     return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
@@ -551,7 +544,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
             }
-            virtual void *getIdleHandlerParam() override final {
+            void *getIdleHandlerParam() {
                 return (void *) &f_;
             }
         public:
@@ -563,10 +556,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~MaybeOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
-        class EnhancedMaybeOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
+        class EnhancedMaybeOneLevelDownKleisli {
         private:
             F f_;
-            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+        public:
+            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
                 auto b = f_(std::tuple<typename StateT::TimePointType, A> {data.timePoint, std::move(data.value)});
                 if (b) {
                     return withtime_utils::pureTimedDataWithEnvironment(env, WithTime<B, typename StateT::TimePointType> {
@@ -578,7 +572,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
             }
-            virtual void *getIdleHandlerParam() override final {
+            void *getIdleHandlerParam() {
                 return (void *) &f_;
             }
         public:
@@ -590,10 +584,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~EnhancedMaybeOneLevelDownKleisli() {}
         };
         template <class A, class B, class F, bool ForceFinal>
-        class DirectOneLevelDownKleisli : public virtual OneLevelDownKleisli<A, B> {
+        class DirectOneLevelDownKleisli {
         private:
             F f_;
-            virtual TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) override final {
+        public:
+            TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
                 if (ForceFinal) {
                     auto ret = f_(TimedDataWithEnvironment<A, StateT, typename StateT::TimePointType> {
                         env
@@ -612,7 +607,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     });
                 }               
             }
-            virtual void *getIdleHandlerParam() override final {
+            void *getIdleHandlerParam() {
                 return (void *) &f_;
             }
         public:
@@ -622,48 +617,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             DirectOneLevelDownKleisli(DirectOneLevelDownKleisli &&) = default;
             DirectOneLevelDownKleisli &operator=(DirectOneLevelDownKleisli &&) = default;
             virtual ~DirectOneLevelDownKleisli() {}
-        };
-
-        template <class A, class B, class F, class KleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,B>,KleisliImpl>,int> = 0>
-        class OneLevelDownKleisliMixin : public virtual KleisliImpl, public Main {
-        public:
-            template <typename... Args>
-            OneLevelDownKleisliMixin(F &&f, Args&&... args) 
-                : KleisliImpl(std::move(f)), Main(std::forward<Args>(args)...) {}
-            virtual ~OneLevelDownKleisliMixin() {}
-            OneLevelDownKleisliMixin(OneLevelDownKleisliMixin const &) = delete;
-            OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin const &) = delete;
-            OneLevelDownKleisliMixin(OneLevelDownKleisliMixin &&) = default;
-            OneLevelDownKleisliMixin &operator=(OneLevelDownKleisliMixin &&) = default;
-        };
-        template <class A, class B, class F, class StartF, class KleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,B>,KleisliImpl>,int> = 0>
-        class OneLevelDownKleisliMixinWithStart : public virtual IExternalComponent, public virtual KleisliImpl, public Main {
-        private:
-            StartF startF_;
-        public:
-            template <typename... Args>
-            OneLevelDownKleisliMixinWithStart(F &&f, StartF &&startF, Args&&... args) 
-                : IExternalComponent(), KleisliImpl(std::move(f)), Main(std::forward<Args>(args)...), startF_(std::move(startF)) {}
-            virtual ~OneLevelDownKleisliMixinWithStart() {}
-            OneLevelDownKleisliMixinWithStart(OneLevelDownKleisliMixinWithStart const &) = delete;
-            OneLevelDownKleisliMixinWithStart &operator=(OneLevelDownKleisliMixinWithStart const &) = delete;
-            OneLevelDownKleisliMixinWithStart(OneLevelDownKleisliMixinWithStart &&) = default;
-            OneLevelDownKleisliMixinWithStart &operator=(OneLevelDownKleisliMixinWithStart &&) = default;
-            virtual void start(StateT *environment) override final {
-                startF_(environment);
-            }
-        };
-        template <class A, class B, class F, class MultiKleisliImpl, class Main, std::enable_if_t<std::is_base_of_v<OneLevelDownKleisli<A,std::vector<B>>,MultiKleisliImpl>,int> = 0>
-        class OneLevelDownMultiKleisliMixin : public virtual MultiKleisliImpl, public Main {
-        public:
-            template <typename... Args>
-            OneLevelDownMultiKleisliMixin(F &&f, Args&&... args) 
-                : MultiKleisliImpl(std::move(f)), Main(std::forward<Args>(args)...) {}
-            virtual ~OneLevelDownMultiKleisliMixin() {}
-            OneLevelDownMultiKleisliMixin(OneLevelDownMultiKleisliMixin const &) = delete;
-            OneLevelDownMultiKleisliMixin &operator=(OneLevelDownMultiKleisliMixin const &) = delete;
-            OneLevelDownMultiKleisliMixin(OneLevelDownMultiKleisliMixin &&) = default;
-            OneLevelDownMultiKleisliMixin &operator=(OneLevelDownMultiKleisliMixin &&) = default;
         };
     };
     
@@ -996,16 +949,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     
     public:
-        template <class A, class B, bool Threaded, bool FireOnceOnly>
+        template <class A, class B, bool Threaded, bool FireOnceOnly, class T>
         class ActionCore {};
-        template <class A, class B, bool FireOnceOnly>
-        class ActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
+        template <class A, class B, bool FireOnceOnly, class T>
+        class ActionCore<A,B,true,FireOnceOnly,T> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A,ActionCore<A,B,true,FireOnceOnly,T>> {
         private:
             bool done_;
             std::function<void(void *)> idleWorker_;
             std::mutex idleWorkerMutex_;
-        protected:
-            virtual void actuallyHandle(InnerData<A> &&data) override final {
+            T t_;
+        public:
+            void actuallyHandle(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
                     if (done_) {
                         return;
@@ -1018,7 +972,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     data.environment 
                     , this
                 );
-                auto res = this->action(data.environment, std::move(data.timedData));
+                auto res = t_.action(data.environment, std::move(data.timedData));
                 if (res) {
                     if constexpr (FireOnceOnly) {
                         res->timedData.finalFlag = true;
@@ -1031,7 +985,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+            template <class F>
+            ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
             }
             virtual ~ActionCore() {
             }
@@ -1045,20 +1000,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(idleWorkerMutex_);
                 idleWorker_ = worker;
             }
-            virtual void idleWork() override final {
+            void idleWork() {
                 std::lock_guard<std::mutex> _(idleWorkerMutex_);
                 if (idleWorker_) {
-                    idleWorker_(this->getIdleHandlerParam());
+                    idleWorker_(t_.getIdleHandlerParam());
                 }
             }
         };
-        template <class A, class B, bool FireOnceOnly>
-        class ActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
+        template <class A, class B, bool FireOnceOnly, class T>
+        class ActionCore<A,B,false,FireOnceOnly,T> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
         private:
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
             std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
+            T t_;
         public:
-            ActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), done_(false) {
+            template <class F>
+            ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
             }
             virtual ~ActionCore() {
             }
@@ -1073,7 +1030,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         data.environment 
                         , this
                     );
-                    auto res = this->action(data.environment, std::move(data.timedData));
+                    auto res = t_.action(data.environment, std::move(data.timedData));
                     if (res) {
                         if constexpr (FireOnceOnly) {
                             res->timedData.finalFlag = true;
@@ -1094,35 +1051,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void setIdleWorker(std::function<void(void *)> worker) override final {
             }
         };
-        //PureActionCore will be specialized so it is not defined with mixin
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        class PureActionCore final : public virtual RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>, public ActionCore<A,B,Threaded,FireOnceOnly> {
-        public:
-            PureActionCore(F &&f) : RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>(std::move(f)), ActionCore<A,B,Threaded,FireOnceOnly>() {}
-            PureActionCore(PureActionCore const &) = delete;
-            PureActionCore &operator=(PureActionCore const &) = delete;
-            PureActionCore(PureActionCore &&) = default;
-            PureActionCore &operator=(PureActionCore &&) = default;
-            virtual ~PureActionCore() {}
-        };
+        using PureActionCore = ActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>>;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using MaybeActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,false>,
-                                ActionCore<A,B,Threaded, FireOnceOnly>
-                                >;
+        using MaybeActionCore = ActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,false>>;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using EnhancedMaybeActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,false>,
-                                ActionCore<A,B,Threaded, FireOnceOnly>
-                                >;
+        using EnhancedMaybeActionCore = ActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,false>>;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using KleisliActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,false>,
-                                ActionCore<A,B,Threaded, FireOnceOnly>
-                                >;
+        using KleisliActionCore = ActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,false>>;
 
         #include <tm_kit/infra/RealTimeApp_ActionCore_Piece.hpp>
 
@@ -1132,6 +1068,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //Moreover, we allow manipulation of KeyedData
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
         using AbstractAction = typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>;
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
+        using SingleEntryAbstractAction = typename RealTimeAppComponents<StateT>::template SingleEntryAbstractAction<A,B>;
 
         template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
         using Action = TwoWayHolder<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>,A,B>;
@@ -1222,16 +1160,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
     private:
-        template <class A, class B, bool Threaded, bool FireOnceOnly>
+        template <class A, class B, bool Threaded, bool FireOnceOnly, class T>
         class MultiActionCore {};
-        template <class A, class B, bool FireOnceOnly>
-        class MultiActionCore<A,B,true,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
+        template <class A, class B, bool FireOnceOnly, class T>
+        class MultiActionCore<A,B,true,FireOnceOnly,T> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A,MultiActionCore<A,B,true,FireOnceOnly,T>> {
         private:
             bool done_;
             std::function<void(void *)> idleWorker_;
             std::mutex idleWorkerMutex_;
-        protected:
-            virtual void actuallyHandle(InnerData<A> &&data) override final {
+            T t_;
+        public:
+            void actuallyHandle(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
                     if (done_) {
                         return;
@@ -1240,7 +1179,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (!this->timeCheckGood(data)) {
                     return;
                 }
-                auto res = this->action(data.environment, std::move(data.timedData));
+                auto res = t_.action(data.environment, std::move(data.timedData));
                 if (res && !res->timedData.value.empty()) {
                     if constexpr (FireOnceOnly) {
                         Producer<B>::publish(InnerData<B> {
@@ -1271,7 +1210,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            MultiActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), done_(false), idleWorker_(), idleWorkerMutex_() {
+            template <class F>
+            MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,MultiActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
             }
             virtual ~MultiActionCore() {
             }
@@ -1285,21 +1225,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(idleWorkerMutex_);
                 idleWorker_ = worker;
             }
-            virtual void idleWork() override final {
+            void idleWork() {
                 std::lock_guard<std::mutex> _(idleWorkerMutex_);
                 if (idleWorker_) {
-                    idleWorker_(this->getIdleHandlerParam());
+                    idleWorker_(t_.getIdleHandlerParam());
                 }
             }
         };
-        template <class A, class B, bool FireOnceOnly>
-        class MultiActionCore<A,B,false,FireOnceOnly> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,std::vector<B>>, public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
+        template <class A, class B, bool FireOnceOnly, class T>
+        class MultiActionCore<A,B,false,FireOnceOnly,T> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
         private:
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, A> timeChecker_;
             bool fireOnceOnly_;
             std::conditional_t<FireOnceOnly,std::atomic<bool>,bool> done_;
+            T t_;
         public:
-            MultiActionCore() : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), done_(false) {
+            template <class F>
+            MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), timeChecker_(), done_(false), t_(std::move(f)) {
             }
             virtual ~MultiActionCore() {
             }
@@ -1310,7 +1252,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
-                    auto res = this->action(data.environment, std::move(data.timedData));
+                    auto res = t_.action(data.environment, std::move(data.timedData));
                     if (res && !res->timedData.value.empty()) {
                         if constexpr (FireOnceOnly) {
                             Producer<B>::publish(InnerData<B> {
@@ -1350,23 +1292,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using SimpleMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,std::vector<B>,F,false>,
-                                MultiActionCore<A,B,Threaded,FireOnceOnly>
-                                >;
+        using SimpleMultiActionCore = MultiActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,std::vector<B>,F,false>>;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using EnhancedMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>,
-                                MultiActionCore<A,B,Threaded,FireOnceOnly>
-                                >;
+        using EnhancedMultiActionCore = MultiActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template EnhancedPureOneLevelDownKleisli<A,std::vector<B>,F,false>>;
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
-        using KleisliMultiActionCore = typename RealTimeAppComponents<StateT>::template OneLevelDownMultiKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,std::vector<B>,F,false>,
-                                MultiActionCore<A,B,Threaded,FireOnceOnly>
-                                >;
+        using KleisliMultiActionCore = MultiActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,std::vector<B>,F,false>>;
         
         #include <tm_kit/infra/RealTimeApp_MultiActionCore_Piece.hpp>
     public:
@@ -1430,13 +1360,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class ContinuationStructure, bool Threaded, bool FireOnceOnly>
         class ContinuationActionCore {};
         template <class A, class B, class ContinuationStructure, bool FireOnceOnly>
-        class ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A> {
+        class ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<A,ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly>> {
         private:
             TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> cont_;
             ContinuationStructure state_;
             bool done_;
-        protected:
-            virtual void actuallyHandle(InnerData<A> &&data) override final {
+        public:
+            void actuallyHandle(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
                     if (done_) {
                         return;
@@ -1452,8 +1382,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     Producer<B>::publish(std::move(x));
                 });
             }
+            void idleWork() {}
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A>(), cont_(cont), state_(std::move(state)), done_(false) {
+            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly>>(), cont_(cont), state_(std::move(state)), done_(false) {
             }
             virtual ~ContinuationActionCore() {
             }
@@ -1524,19 +1455,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
     public:
-        template <class A, class B, bool Threaded>
+        template <class A, class B, bool Threaded, class T>
         class OnOrderFacilityCore {};
-        template <class A, class B>
-        class OnOrderFacilityCore<A,B,true> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>> {
-        protected:
-            virtual void actuallyHandle(InnerData<Key<A>> &&data) override final {  
+        template <class A, class B, class T>
+        class OnOrderFacilityCore<A,B,true,T> : public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCore<A,B,true,T>> {
+        private:
+            T t_;
+        public:
+            void actuallyHandle(InnerData<Key<A>> &&data) {  
                 if (!this->timeCheckGood(data)) {
                     return;
                 }    
                 TM_INFRA_FACILITY_TRACER(data.environment);
                 auto id = data.timedData.value.id();
                 WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
-                auto res = this->action(data.environment, std::move(a));
+                auto res = t_.action(data.environment, std::move(a));
                 if (res) {
                     RealTimeAppComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                         pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
@@ -1545,18 +1478,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     );
                 }
             }
+            void idleWork() {}
         public:
-            OnOrderFacilityCore() : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>>() {
+            template <class F>
+            OnOrderFacilityCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCore<A,B,true,T>>(), t_(std::move(f)) {
             }
             virtual ~OnOrderFacilityCore() {
             }
         };
-        template <class A, class B>
-        class OnOrderFacilityCore<A,B,false> : public virtual RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>, public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> {
+        template <class A, class B, class T>
+        class OnOrderFacilityCore<A,B,false,T> : public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> {
         private:
             typename RealTimeAppComponents<StateT>::template TimeChecker<true, Key<A>> timeChecker_;
+            T t_;
         public:
-            OnOrderFacilityCore() : RealTimeAppComponents<StateT>::template OneLevelDownKleisli<A,B>(), RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_() {
+            template <class F>
+            OnOrderFacilityCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_(), t_(std::move(f)) {
             }
             virtual ~OnOrderFacilityCore() {
             }
@@ -1565,7 +1502,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     TM_INFRA_FACILITY_TRACER(data.environment);
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
-                    auto res = this->action(data.environment, std::move(a));
+                    auto res = t_.action(data.environment, std::move(a));
                     if (res) {
                         RealTimeAppComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
                             pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
@@ -1576,59 +1513,91 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
+
+        template <class A, class B, bool Threaded, class T, class StartF>
+        class OnOrderFacilityCoreWithStart {};
+        template <class A, class B, class T, class StartF>
+        class OnOrderFacilityCoreWithStart<A,B,true,T,StartF> : public virtual RealTimeAppComponents<StateT>::IExternalComponent, public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCoreWithStart<A,B,true,T,StartF>> {
+        private:
+            T t_;
+            StartF startF_;
+        public:
+            void actuallyHandle(InnerData<Key<A>> &&data) {  
+                if (!this->timeCheckGood(data)) {
+                    return;
+                }    
+                TM_INFRA_FACILITY_TRACER(data.environment);
+                auto id = data.timedData.value.id();
+                WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
+                auto res = t_.action(data.environment, std::move(a));
+                if (res) {
+                    RealTimeAppComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
+                        pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
+                            return {std::move(id), std::move(b)};
+                        }, std::move(*res))
+                    );
+                }
+            }
+            void idleWork() {}
+            virtual void start(StateT *env) override final {
+                startF_(env);
+            }
+        public:
+            template <class F>
+            OnOrderFacilityCoreWithStart(F &&f, StartF &&startF) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCoreWithStart<A,B,true,T,StartF>>(), t_(std::move(f)), startF_(std::move(startF)) {
+            }
+            virtual ~OnOrderFacilityCoreWithStart() {
+            }
+        };
+        template <class A, class B, class T, class StartF>
+        class OnOrderFacilityCoreWithStart<A,B,false,T,StartF> : public virtual RealTimeAppComponents<StateT>::IExternalComponent, public virtual RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> {
+        private:
+            typename RealTimeAppComponents<StateT>::template TimeChecker<true, Key<A>> timeChecker_;
+            T t_;
+            StartF startF_;
+        public:
+            template <class F>
+            OnOrderFacilityCoreWithStart(F &&f, StartF &&startF) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), timeChecker_(), t_(std::move(f)), startF_(std::move(startF)) {
+            }
+            virtual ~OnOrderFacilityCoreWithStart() {
+            }
+            virtual void handle(InnerData<Key<A>> &&data) override final {
+                if (timeChecker_(data)) {
+                    TM_INFRA_FACILITY_TRACER(data.environment);
+                    auto id = data.timedData.value.id();
+                    WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
+                    auto res = t_.action(data.environment, std::move(a));
+                    if (res) {
+                        RealTimeAppComponents<StateT>::template OnOrderFacilityProducer<KeyedData<A,B>>::publish(
+                            pureInnerDataLift([id=std::move(id)](B &&b) -> Key<B> {
+                                return {std::move(id), std::move(b)};
+                            }, std::move(*res))
+                        );
+                    }
+                }
+            }
+            virtual void start(StateT *env) override final {
+                startF_(env);
+            }
+        };
+
         template <class A, class B, class F, bool Threaded>
-        using PureOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                                >;
+        using PureOnOrderFacilityCore = OnOrderFacilityCore<A,B,Threaded,typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>>;
         template <class A, class B, class F, bool Threaded>
-        using MaybeOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                                >;
+        using MaybeOnOrderFacilityCore = OnOrderFacilityCore<A,B,Threaded,typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>>;
         template <class A, class B, class F, bool Threaded>
-        using EnhancedMaybeOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                                >;
+        using EnhancedMaybeOnOrderFacilityCore = OnOrderFacilityCore<A,B,Threaded,typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>>;
         template <class A, class B, class F, bool Threaded>
-        using KleisliOnOrderFacilityCore = typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixin<
-                                A, B, F,
-                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                                >;
+        using KleisliOnOrderFacilityCore = OnOrderFacilityCore<A,B,Threaded,typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>>;
 
         template <class A, class B, class F, class StartF, bool Threaded>
-        using PureOnOrderFacilityCoreWithStart = 
-                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
-                                A, B, F, StartF,
-                                typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                        >;
+        using PureOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,Threaded,typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,true>,StartF>;
         template <class A, class B, class F, class StartF, bool Threaded>
-        using MaybeOnOrderFacilityCoreWithStart = 
-                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
-                                A, B, F, StartF,
-                                typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                        >;
+        using MaybeOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,Threaded,typename RealTimeAppComponents<StateT>::template MaybeOneLevelDownKleisli<A,B,F,true>,StartF>;
         template <class A, class B, class F, class StartF, bool Threaded>
-        using EnhancedMaybeOnOrderFacilityCoreWithStart = 
-                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
-                                A, B, F, StartF,
-                                typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                        >;
+        using EnhancedMaybeOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,Threaded,typename RealTimeAppComponents<StateT>::template EnhancedMaybeOneLevelDownKleisli<A,B,F,true>,StartF>;
         template <class A, class B, class F, class StartF, bool Threaded>
-        using KleisliOnOrderFacilityCoreWithStart = 
-                        typename RealTimeAppComponents<StateT>::template OneLevelDownKleisliMixinWithStart<
-                                A, B, F, StartF,
-                                typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,
-                                OnOrderFacilityCore<A,B,Threaded>
-                        >;
+        using KleisliOnOrderFacilityCoreWithStart = OnOrderFacilityCoreWithStart<A,B,Threaded,typename RealTimeAppComponents<StateT>::template DirectOneLevelDownKleisli<A,B,F,true>,StartF>;
     public:
         template <class A, class B>
         using AbstractOnOrderFacility = typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>;
@@ -2181,22 +2150,24 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, class F, bool Threaded>
         class SimpleExporter {};
         template <class T, class F>
-        class SimpleExporter<T,F,true> final : public virtual AbstractExporter<T>, public RealTimeAppComponents<StateT>::template ThreadedHandler<T> {
+        class SimpleExporter<T,F,true> final : public virtual AbstractExporter<T>, public RealTimeAppComponents<StateT>::template ThreadedHandler<T,SimpleExporter<T,F,true>> {
         private:
             F f_;  
             bool isTrivial_;
-            virtual void actuallyHandle(InnerData<T> &&d) override final {
+        public:
+            void actuallyHandle(InnerData<T> &&d) {
                 if (!this->timeCheckGood(d)) {
                     return;
                 }
                 TM_INFRA_EXPORTER_TRACER(d.environment);
                 f_(std::move(d));
-            }    
+            }   
+            void idleWork() {} 
         public:
         #ifdef _MSC_VER
             SimpleExporter(F &&f, bool isTrivial=false) : f_(std::move(f)), isTrivial_(isTrivial) {}
         #else
-            SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T>(), f_(std::move(f)), isTrivial_(isTrivial) {}
+            SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T,SimpleExporter<T,F,true>>(), f_(std::move(f)), isTrivial_(isTrivial) {}
         #endif            
             virtual ~SimpleExporter() {}
             virtual void start(StateT *) override final {}
