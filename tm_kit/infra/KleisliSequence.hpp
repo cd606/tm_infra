@@ -13,9 +13,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (sizeof...(Fs) == 0) {
                 return GenericLift<M>::liftKU(std::move(firstF));
             } else {
-                return KleisliUtils<M>::template compose<
-                    typename decltype(GenericLift<M>::liftKU(std::move(firstF)))::InputType
-                >(
+                return KleisliUtils<M>::compose(
                     GenericLift<M>::liftKU(std::move(firstF))
                     , seq<Fs...>(std::forward<Fs>(fs)...)
                 );
