@@ -3,7 +3,7 @@ private:
     class KleisliT2 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1>> &&data) {
             return f_(std::move(data));
         }
@@ -38,7 +38,7 @@ private:
     class KleisliT3 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2>> &&data) {
             return f_(std::move(data));
         }
@@ -73,7 +73,7 @@ private:
     class KleisliT4 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
             return f_(std::move(data));
         }
@@ -108,7 +108,7 @@ private:
     class KleisliT5 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
             return f_(std::move(data));
         }
@@ -143,7 +143,7 @@ private:
     class KleisliT6 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
             return f_(std::move(data));
         }
@@ -178,7 +178,7 @@ private:
     class KleisliT7 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
             return f_(std::move(data));
         }
@@ -213,7 +213,7 @@ private:
     class KleisliT8 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
             return f_(std::move(data));
         }
@@ -248,7 +248,7 @@ private:
     class KleisliT9 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
             return f_(std::move(data));
         }
@@ -283,7 +283,7 @@ private:
     class KleisliT10 {
     private:
         F f_;
-    protected:
+    public:
         Data<B> action(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
             return f_(std::move(data));
         }
