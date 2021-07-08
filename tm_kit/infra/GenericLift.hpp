@@ -291,6 +291,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return KleisliUtils<M>::template kleisli<A>(std::move(f));
             }
         };
+        template <class A>
+        class GenericLiftKUImpl<A, void, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template exporterFromPure<A>(std::move(f));
+            }
+        };
+        template <class A>
+    #ifdef _MSC_VER
+        class GenericLiftKUImpl<A, void, true> {
+    #else
+        class GenericLiftKUImpl<typename M::template InnerData<A>, void, true> {
+    #endif
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+    #ifdef _MSC_VER
+                return KleisliUtils<M>::template exporterHolder<typename A::ValueType>(std::move(f));
+    #else
+                return KleisliUtils<M>::template exporterHolder<A>(std::move(f)); 
+    #endif
+            }
+        };
     public:
         template <class F>
         static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {

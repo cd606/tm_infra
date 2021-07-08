@@ -54,6 +54,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             using InputType = A;
             using B = decltype(f_(A()));
+            using OutputType = B;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 return M::template pureInnerDataLift<A>(f_, std::move(x));
             }
@@ -67,6 +68,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             
             using InputType = A;
             using B = typename decltype(f_(A()))::value_type;
+            using OutputType = B;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 auto res = f_(std::move(x.timedData.value));
                 if (res) {
@@ -85,6 +87,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             using InputType = A;
             using B = typename decltype(f_(std::tuple<typename M::TimePoint, A>()))::value_type;
+            using OutputType = B;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 auto res = f_(std::tuple<typename M::TimePoint,A> {x.timedData.timePoint, std::move(x.timedData.value)});
                 if (res) {
@@ -103,8 +106,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             using InputType = A;
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
+            using OutputType = B;
             typename M::template Data<B> operator()(typename M::template InnerData<A> &&x) {
                 return f_(std::move(x));
+            }
+        };
+        template <class A, class F>
+        class KleisliExporterFromPure {
+        private:
+            F f_;
+        public:
+            KleisliExporterFromPure(F &&f) : f_(std::move(f)) {}
+
+            using InputType = A;
+            using OutputType = void;
+            void operator()(typename M::template InnerData<A> &&x) {
+                f_(std::move(x.timedData.value));
+            }
+        };
+        template <class A, class F>
+        class KleisliExporterHolder {
+        private:
+            F f_;
+        public:
+            KleisliExporterHolder(F &&f) : f_(std::move(f)) {}
+
+            using InputType = A;
+            using OutputType = void;
+            void operator()(typename M::template InnerData<A> &&x) {
+                f_(std::move(x));
             }
         };
         template <class F, class G>
@@ -119,6 +149,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using A = InputType;
             using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             using C = typename decltype(g_(std::move(* (typename M::template InnerData<B> *) nullptr)))::value_type::ValueType;
+            using OutputType = C;
             typename M::template Data<C> operator()(typename M::template InnerData<A> &&x) {
                 typename M::template Data<B> y = f_(std::move(x));
                 if (y) {
@@ -139,6 +170,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using InputType = typename F::InputType;
             using A = InputType;
             using B = typename decltype(f(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
+            using OutputType = void;
             void operator()(typename M::template InnerData<A> &&x) {
                 typename M::template Data<B> y = f_(std::move(x));
                 if (y) {
@@ -163,9 +195,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static KleisliHolder<A, F> kleisli(F &&f) {
             return KleisliHolder<A, F>(std::move(f));
         }
+        template <class A, class F>
+        static KleisliExporterFromPure<A, F> exporterFromPure(F &&f) {
+            return KleisliExporterFromPure<A, F>(std::move(f));
+        }
+        template <class A, class F>
+        static KleisliExporterHolder<A, F> exporterHolder(F &&f) {
+            return KleisliExporterHolder<A, F>(std::move(f));
+        }
         template <class F, class G>
-        static ComposedKleisli<F, G> compose(F &&f, G &&g) {
-            return ComposedKleisli<F, G>(std::move(f), std::move(g));
+        static auto compose(F &&f, G &&g) {
+            if constexpr (std::is_same_v<typename G::OutputType, void>) {
+                return ComposedKleisliExporter<F, G>(std::move(f), std::move(g));
+            } else {
+                return ComposedKleisli<F, G>(std::move(f), std::move(g));
+            }
         }
         template <class F, class G>
         static ComposedKleisliExporter<F, G> composeExporter(F &&f, G &&g) {
