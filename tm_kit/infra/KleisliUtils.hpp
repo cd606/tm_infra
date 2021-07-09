@@ -177,7 +177,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             using InputType = typename F::InputType;
             using A = InputType;
-            using B = typename decltype(f(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
+            using B = typename decltype(f_(std::move(* (typename M::template InnerData<A> *) nullptr)))::value_type::ValueType;
             using OutputType = void;
             void operator()(typename M::template InnerData<A> &&x) {
                 typename M::template Data<B> y = f_(std::move(x));
@@ -222,6 +222,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromPure<A,F> &&f, KleisliFromPure<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                //std::cerr << "P->P\n";
                 return g(f(std::move(a)));
             };
             return KleisliFromPure<A,decltype(h)>(std::move(h));
@@ -229,6 +230,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromPure<A,F> &&f, KleisliFromMaybe<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                //std::cerr << "P->M\n";
                 return g(f(std::move(a)));
             };
             return KleisliFromMaybe<A,decltype(h)>(std::move(h));
@@ -236,6 +238,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromPure<A,F> &&f, KleisliFromEnhancedMaybe<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](std::tuple<typename M::TimePoint, A> &&a) mutable {
+                //std::cerr << "P->EM\n";
                 return g(std::tuple<typename M::TimePoint, B> { std::get<0>(a), f(std::move(std::get<1>(a))) });
             };
             return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
@@ -243,13 +246,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromPure<A,F> &&f, KleisliHolder<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable {
+                //std::cerr << "P->K\n";
                 return g(M::template pureInnerDataLift<A>(f, std::move(a)));
             };
-            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+            return KleisliHolder<A,decltype(h)>(std::move(h));
         }
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromPure<A,F> &&f, KleisliExporterFromPure<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                //std::cerr << "P->E\n";
                 g(f(std::move(a)));
             };
             return KleisliExporterFromPure<A,decltype(h)>(std::move(h));
@@ -257,9 +262,155 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromPure<A,F> &&f, KleisliExporterHolder<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable {
+                //std::cerr << "P->KE\n";
                 g(M::template pureInnerDataLift<A>(f, std::move(a)));
             };
             return KleisliExporterHolder<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromMaybe<A,F> &&f, KleisliFromPure<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable 
+                -> std::optional<decltype(g.f_(std::move(*((B *) nullptr))))>
+            {
+                //std::cerr << "M->P\n";
+                auto b = f(std::move(a));
+                if (b) {
+                    return g(std::move(*b));
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliFromMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromMaybe<A,F> &&f, KleisliFromMaybe<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable 
+                -> decltype(g.f_(std::move(*((B *) nullptr))))
+            {
+                //std::cerr << "M->M\n";
+                auto b = f(std::move(a));
+                if (b) {
+                    return g(std::move(*b));
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliFromMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromMaybe<A,F> &&f, KleisliFromEnhancedMaybe<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](std::tuple<typename M::TimePoint, A> &&a) mutable 
+                -> decltype(g.f_(std::move(*((std::tuple<typename M::TimePoint, B> *) nullptr))))
+            {
+                //std::cerr << "M->EM\n";
+                auto b = f(std::move(std::get<1>(a)));
+                if (b) {
+                    return g(std::tuple<typename M::TimePoint, B> { std::get<0>(a), std::move(*b) });
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromMaybe<A,F> &&f, KleisliHolder<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable 
+                -> decltype(g.f_(std::move(*((typename M::InnerData<B> *) nullptr))))
+            {
+                //std::cerr << "M->K\n";
+                auto b = f(std::move(a.timedData.value));
+                if (b) {
+                    return g(typename M::template InnerData<B> { 
+                        a.environment 
+                        , {
+                            a.timedData.timePoint 
+                            , std::move(*b)
+                            , a.timedData.finalFlag
+                        }
+                    });
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliHolder<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromMaybe<A,F> &&f, KleisliExporterFromPure<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                //std::cerr << "M->E\n";
+                auto b = f(std::move(a));
+                if (b) {
+                    g(std::move(*b));
+                }
+            };
+            return KleisliExporterFromPure<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromEnhancedMaybe<A,F> &&f, KleisliFromPure<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](std::tuple<typename M::TimePoint, A> &&a) mutable 
+                -> std::optional<decltype(g.f_(std::move(*((B *) nullptr))))>
+            {
+                //std::cerr << "EM->P\n";
+                auto b = f(std::move(a));
+                if (b) {
+                    return g(std::move(*b));
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromEnhancedMaybe<A,F> &&f, KleisliFromMaybe<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](std::tuple<typename M::TimePoint, A> &&a) mutable 
+                -> decltype(g.f_(std::move(*((B *) nullptr))))
+            {
+                //std::cerr << "EM->M\n";
+                auto b = f(std::move(a));
+                if (b) {
+                    return g(std::move(*b));
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromEnhancedMaybe<A,F> &&f, KleisliFromEnhancedMaybe<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](std::tuple<typename M::TimePoint, A> &&a) mutable 
+                -> decltype(g.f_(std::move(*((std::tuple<typename M::TimePoint, B> *) nullptr))))
+            {
+                //std::cerr << "EM->EM\n";
+                auto b = f(std::tuple<typename M::TimePoint, A> { std::get<0>(a), std::move(std::get<1>(a)) });
+                if (b) {
+                    return g(std::tuple<typename M::TimePoint, B> { std::get<0>(a), std::move(*b) });
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromEnhancedMaybe<A,F> &&f, KleisliHolder<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable 
+                -> decltype(g.f_(std::move(*((typename M::InnerData<B> *) nullptr))))
+            {
+                //std::cerr << "EM->K\n";
+                auto b = f(std::tuple<typename M::TimePoint, A> {a.timedData.timePoint, std::move(a.timedData.value)});
+                if (b) {
+                    return g(typename M::template InnerData<B> { 
+                        a.environment 
+                        , {
+                            a.timedData.timePoint 
+                            , std::move(*b)
+                            , a.timedData.finalFlag
+                        }
+                    });
+                } else {
+                    return std::nullopt;
+                }
+            };
+            return KleisliHolder<A,decltype(h)>(std::move(h));
         }
         template <class F, class G>
         static ComposedKleisliExporter<F, G> composeExporter(F &&f, G &&g) {
