@@ -368,10 +368,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return liftKU<F*>(&f);
             } else {
 #endif
-                return GenericLiftKUImpl<
-                    typename GenericLiftTypeFinder<F>::InputType
-                    , typename GenericLiftTypeFinder<F>::OutputType
-                >::template lift<F>(std::move(f));
+                if constexpr (KleisliUtils<M>::template IsAlreadyWrapped<std::decay_t<F>>::value) {
+                    return std::move(f);
+                } else {
+                    return GenericLiftKUImpl<
+                        typename GenericLiftTypeFinder<F>::InputType
+                        , typename GenericLiftTypeFinder<F>::OutputType
+                    >::template lift<F>(std::move(f));
+                }
 #ifdef _MSC_VER
             }
 #endif

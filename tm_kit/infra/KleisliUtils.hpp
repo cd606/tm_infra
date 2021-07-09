@@ -445,6 +445,52 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto action(F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint>()) {
             return M::template kleisli<typename F::InputType>(std::move(f), liftParam);
         }
+
+        template <class T>
+        class IsAlreadyWrapped {
+        public:
+            static constexpr bool value = false;
+        };
+        template <class A, class F>
+        class IsAlreadyWrapped<KleisliFromPure<A,F>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class A, class F>
+        class IsAlreadyWrapped<KleisliFromMaybe<A,F>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class A, class F>
+        class IsAlreadyWrapped<KleisliFromEnhancedMaybe<A,F>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class A, class F>
+        class IsAlreadyWrapped<KleisliHolder<A,F>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class A, class F>
+        class IsAlreadyWrapped<KleisliExporterFromPure<A,F>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class A, class F>
+        class IsAlreadyWrapped<KleisliExporterHolder<A,F>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class F, class G>
+        class IsAlreadyWrapped<ComposedKleisli<F,G>> {
+        public:
+            static constexpr bool value = true;
+        };
+        template <class F, class G>
+        class IsAlreadyWrapped<ComposedKleisliExporter<F,G>> {
+        public:
+            static constexpr bool value = true;
+        };
     };
 } } } }
 
