@@ -49,6 +49,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliFromPure {
         private:
             F f_;
+            friend class KleisliUtils<M>;
         public:
             KleisliFromPure(F &&f) : f_(std::move(f)) {}
 
@@ -63,6 +64,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliFromMaybe {
         private:
             F f_;
+            friend class KleisliUtils<M>;
         public:
             KleisliFromMaybe(F &&f) : f_(std::move(f)) {}
             
@@ -82,6 +84,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliFromEnhancedMaybe {
         private:
             F f_;
+            friend class KleisliUtils<M>;
         public:
             KleisliFromEnhancedMaybe(F &&f) : f_(std::move(f)) {}
 
@@ -101,6 +104,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliHolder {
         private:
             F f_;
+            friend class KleisliUtils<M>;
         public:
             KleisliHolder(F &&f) : f_(std::move(f)) {}
 
@@ -115,6 +119,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliExporterFromPure {
         private:
             F f_;
+            friend class KleisliUtils<M>;
         public:
             KleisliExporterFromPure(F &&f) : f_(std::move(f)) {}
 
@@ -128,6 +133,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class KleisliExporterHolder {
         private:
             F f_;
+            friend class KleisliUtils<M>;
         public:
             KleisliExporterHolder(F &&f) : f_(std::move(f)) {}
 
@@ -142,6 +148,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             F f_;
             G g_;
+            friend class KleisliUtils<M>;
         public:
             ComposedKleisli(F &&f, G &&g) : f_(std::move(f)), g_(std::move(g)) {}
 
@@ -164,6 +171,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             F f_;
             G g_;
+            friend class KleisliUtils<M>;
         public:
             ComposedKleisliExporter(F &&f, G &&g) : f_(std::move(f)), g_(std::move(g)) {}
 
@@ -210,6 +218,48 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } else {
                 return ComposedKleisli<F, G>(std::move(f), std::move(g));
             }
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromPure<A,F> &&f, KleisliFromPure<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                return g(f(std::move(a)));
+            };
+            return KleisliFromPure<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromPure<A,F> &&f, KleisliFromMaybe<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                return g(f(std::move(a)));
+            };
+            return KleisliFromMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromPure<A,F> &&f, KleisliFromEnhancedMaybe<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](std::tuple<typename M::TimePoint, A> &&a) mutable {
+                return g(std::tuple<typename M::TimePoint, B> { std::get<0>(a), f(std::move(std::get<1>(a))) });
+            };
+            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromPure<A,F> &&f, KleisliHolder<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable {
+                return g(M::template pureInnerDataLift<A>(f, std::move(a)));
+            };
+            return KleisliFromEnhancedMaybe<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromPure<A,F> &&f, KleisliExporterFromPure<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](A &&a) mutable {
+                g(f(std::move(a)));
+            };
+            return KleisliExporterFromPure<A,decltype(h)>(std::move(h));
+        }
+        template <class A, class F, class B, class G>
+        static auto compose(KleisliFromPure<A,F> &&f, KleisliExporterHolder<B,G> &&g) {
+            auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable {
+                g(M::template pureInnerDataLift<A>(f, std::move(a)));
+            };
+            return KleisliExporterHolder<A,decltype(h)>(std::move(h));
         }
         template <class F, class G>
         static ComposedKleisliExporter<F, G> composeExporter(F &&f, G &&g) {
