@@ -315,7 +315,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromMaybe<A,F> &&f, KleisliHolder<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable 
-                -> decltype(g.f_(std::move(*((typename M::InnerData<B> *) nullptr))))
+                -> decltype(g.f_(std::move(*((typename M::template InnerData<B> *) nullptr))))
             {
                 //std::cerr << "M->K\n";
                 auto b = f(std::move(a.timedData.value));
@@ -393,7 +393,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F, class B, class G>
         static auto compose(KleisliFromEnhancedMaybe<A,F> &&f, KleisliHolder<B,G> &&g) {
             auto h = [f=std::move(f.f_),g=std::move(g.f_)](typename M::template InnerData<A> &&a) mutable 
-                -> decltype(g.f_(std::move(*((typename M::InnerData<B> *) nullptr))))
+                -> decltype(g.f_(std::move(*((typename M::template InnerData<B> *) nullptr))))
             {
                 //std::cerr << "EM->K\n";
                 auto b = f(std::tuple<typename M::TimePoint, A> {a.timedData.timePoint, std::move(a.timedData.value)});
