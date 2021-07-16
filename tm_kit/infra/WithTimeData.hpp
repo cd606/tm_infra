@@ -329,10 +329,47 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         };
-        template <class A, class B>
-        struct ValueCopier<std::tuple<A,B>> {
-            inline static std::tuple<A,B> copy(std::tuple<A,B> const &x) {
-                return std::tuple<A,B> {ValueCopier<A>::copy(std::get<0>(x)), ValueCopier<B>::copy(std::get<1>(x))};
+        template <class... As>
+        struct ValueCopier<std::tuple<As...>> {
+        private:
+            template <size_t N, size_t K, class T, class FirstA, class... RemainingAs>
+            inline static void copy_internal(T &output, T const &input) {
+                if constexpr (K < N) {
+                    std::get<K>(output) = ValueCopier<FirstA>::copy(std::get<K>(input));
+                    if constexpr (K < N-1) {
+                        copy_internal<N,K+1,T,RemainingAs...>(output, input);
+                    }
+                }
+            }
+        public:
+            inline static std::tuple<As...> copy(std::tuple<As...> const &x) {
+                std::tuple<As...> output;
+                copy_internal<sizeof...(As),0,std::tuple<As...>,As...>(output, x);
+                return std::move(output);
+            }
+        };
+        template <class... As>
+        struct ValueCopier<std::variant<As...>> {
+        private:
+            template <size_t N, size_t K, class T, class FirstA, class... RemainingAs>
+            inline static T copy_internal(T const &input) {
+                if constexpr (K < N) {
+                    if (K == input.index()) {
+                        return T {std::in_place_index<K>, ValueCopier<FirstA>::copy(std::get<K>(input))};
+                    } else {
+                        if constexpr (K < N-1) {
+                            return copy_internal<N,K+1,T,RemainingAs...>(input);
+                        } else {
+                            return T {};
+                        }
+                    }
+                } else {
+                    return T {};
+                }
+            }
+        public:
+            inline static std::variant<As...> copy(std::variant<As...> const &x) {
+                return copy_internal<sizeof...(As),0,std::variant<As...>,As...>(x);
             }
         };
         template <class A, class Env>
