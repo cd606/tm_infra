@@ -2283,6 +2283,65 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return std::make_shared<Exporter<T1>>(new LocalE(std::move(pre), std::move(orig)));
         }
+        template <class T1, class T2>
+        static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
+            class LocalA final : public AbstractAction<T1,T2> {
+            private:
+                Importer<T2> importer_;
+                class LocalH final : public RealTimeAppComponents<StateT>::template IHandler<T2> {
+                private:
+                    LocalA *parent_;
+                public:
+                    LocalH(LocalA *parent) : parent_(parent) {}
+                    virtual void handle(InnerData<T2> &&t2) override final {
+                        parent_->publish(std::move(t2));
+                    }
+                };
+                LocalH localH_;
+                std::atomic<bool> started_;
+            public:
+                LocalA(Importer<T2> &&importer)
+                    : importer_(std::move(importer)), localH_(this), started_(false)
+                {
+                    importer_.core_->addHandler(&localH_);
+                }
+                virtual ~LocalA() {}
+                virtual bool isThreaded() const override final {
+                    return true;
+                }
+                virtual bool isOneTimeOnly() const override final {
+                    return true;
+                }
+                virtual void handle(InnerData<T1> &&d) override final {
+                    if (!started_) {
+                        started_ = true;
+                        importer_.core_->start(d.environment);
+                    }
+                }
+                virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                }
+            };
+            return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
+        }
+        template <class T1, class T2>
+        static std::shared_ptr<Exporter<T1>> curtailedAction(Action<T1,T2> &&action) {
+            class LocalE final : public AbstractExporter<T1> {
+            private:
+                Action<T1,T2> action_;
+            public:
+                LocalE(Action<T1,T2> &&action)
+                    : action_(std::move(action))
+                {
+                }
+                virtual ~LocalE() {}
+                virtual void start(StateT *env) override final {
+                }
+                virtual void handle(InnerData<T1> &&d) override final {
+                    action_.core_->handle(std::move(d));
+                } 
+            };
+            return std::make_shared<Exporter<T1>>(new LocalE(std::move(action)));
+        }
 
     public:
         //The reason why LocalOnOrderFacility is defined as essentially 

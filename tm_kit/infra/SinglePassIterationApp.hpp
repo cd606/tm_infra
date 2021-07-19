@@ -2278,6 +2278,74 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return std::make_shared<Exporter<T1>>(new LocalE(std::move(pre), std::move(orig)));
         }
+        template <class T1, class T2>
+        static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
+            class LocalA final : public AbstractActionCore<T1,T2>, public Consumer<T1> {
+            private:
+                Importer<T2> importer_;
+                bool started_;
+            public:
+                LocalA(Importer<T2> &&importer) 
+                    : importer_(std::move(importer)), started_(false)
+                {
+                }
+                virtual bool isOneTimeOnly() const override final {
+                    return true;
+                }
+                virtual Certificate<T2> poll() override final {
+                    auto cert1 = this->source()->poll();
+                    if (cert1.check()) {
+                        auto data = this->source()->next(std::move(cert1));
+                        if (data) {
+                            if (!started_) {
+                                started_ = true;
+                                importer_.core_->start(data->environment);
+                            }
+                        }
+                    }
+                    if (!started_) {
+                        return Certificate<T2>(std::nullopt, this);
+                    } else {
+                        auto cert2 = importer_.core_->poll();
+                        return cert2.push(this);
+                    }
+                }
+                virtual Data<T2> next(Certificate<T2> &&cert) override final {
+                    cert.consume(this);
+                    auto *p = cert.topSigner();
+                    if (p) {
+                        return p->next(std::move(cert));
+                    } else {
+                        return std::nullopt;
+                    }
+                }
+            };
+            return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
+        }
+        template <class T1, class T2>
+        static std::shared_ptr<Exporter<T1>> curtailedAction(Action<T1,T2> &&action) {
+            class LocalE final : public AbstractExporterCore<T1> {
+            private:
+                Action<T1,T2> action_;
+                FillableProvider<T1> fillable_;
+            public:
+                LocalE(Action<T1,T2> &&action) 
+                    : action_(std::move(action)), fillable_()
+                {
+                    action_.core_->connectToSource(&fillable_);
+                }
+                virtual void start(StateT *environment) override final {
+                }
+                virtual void handle(InnerData<T1> &&data) override final {
+                    fillable_.fill(std::move(data));
+                    auto cert = action_.core_->poll();
+                    if (cert.check()) {
+                        action_.core_->next(std::move(cert));
+                    }
+                }
+            };
+            return std::make_shared<Exporter<T1>>(new LocalE(std::move(action)));
+        }
 
     private:
         template <class I0, class O0, class I1, class O1>

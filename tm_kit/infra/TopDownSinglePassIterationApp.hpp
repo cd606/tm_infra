@@ -269,6 +269,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TopDownSinglePassIterationApp *parent_ = nullptr;
             virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
             }
+            TopDownSinglePassIterationApp *parent() const {
+                return parent_;
+            }
         public:
             ProducerBase() : handlers_(), handlerSet_(), parent_(nullptr) {}
             ProducerBase(ProducerBase const &) = delete;
@@ -1791,6 +1794,67 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
             return std::make_shared<Exporter<T1>>(new LocalE(std::move(pre), std::move(orig)));
+        }
+        template <class T1, class T2>
+        static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
+            class LocalA final : public AbstractAction<T1,T2> {
+            private:
+                Importer<T2> importer_;
+                class LocalH final : public IHandler<T2> {
+                private:
+                    LocalA *parent_;
+                public:
+                    LocalH(LocalA *parent) : parent_(parent) {}
+                    virtual void handle(InnerData<T2> &&t2) override final {
+                        parent_->publish(std::move(t2));
+                    }
+                };
+                LocalH localH_;
+                bool started_;
+            public:
+                LocalA(Importer<T2> &&importer)
+                    : importer_(std::move(importer)), localH_(this), started_(false)
+                {
+                    importer_.core_->addHandler(&localH_);
+                }
+                virtual ~LocalA() {}
+                virtual void handle(InnerData<T1> &&d) override final {
+                    if (!started_) {
+                        started_ = true;
+                        importer_.core_->start(d.environment);
+                        this->parent()->registerImporter(importer_.core_.get());
+                    }
+                }
+                virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) override final {
+                    importer_.core_->setParentForProducer(parent);
+                }
+                virtual bool isOneTimeOnly() const override final {
+                    return true;
+                }
+            };
+            return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
+        }
+        template <class T1, class T2>
+        static std::shared_ptr<Exporter<T1>> curtailedAction(Action<T1,T2> &&action) {
+            class LocalE final : public AbstractExporter<T1> {
+            private:
+                Action<T1,T2> action_;
+            public:
+                LocalE(Action<T1,T2> &&action)
+                    : action_(std::move(action))
+                {
+                }
+                virtual ~LocalE() {}
+                virtual void start(StateT *env) override final {
+                }
+                virtual void handle(InnerData<T1> &&d) override final {
+                    action_.core_->handle(std::move(d));
+                } 
+                virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) override final {
+                    action_.core_->setParentForProducer(parent);
+                }
+            };
+            return std::make_shared<Exporter<T1>>(new LocalE(std::move(action)));
         }
 
     public:

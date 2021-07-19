@@ -63,6 +63,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             decltype(
                 GenericLift<typename R::AppType>::lift(LiftAsFacility {}, std::move(f), liftParam)
             );
+        template <class DelayTrigger, class F>
+        auto operator()(std::string const &name, DelayImporter<DelayTrigger> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) ->
+            decltype(
+                GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger> {}, std::move(f), liftParam)
+            );
+        template <class F>
+        auto operator()(std::string const &name, CurtailAction &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) ->
+            decltype(
+                GenericLift<typename R::AppType>::lift(CurtailAction {}, std::move(f), liftParam)
+            );
     };
 
     template <class R>
@@ -136,6 +146,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class F>
         OneDeclarativeGraphItem(std::string const &name, LiftAsFacility &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
             auto component = GenericLift<typename R::AppType>::liftFacility(std::move(f), liftParam);
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        }
+        template <class DelayTrigger, class F>
+        OneDeclarativeGraphItem(std::string const &name, DelayImporter<DelayTrigger> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
+            auto component = GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger> {}, std::move(f), liftParam);
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        }
+        template <class F>
+        OneDeclarativeGraphItem(std::string const &name, CurtailAction &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
+            auto component = GenericLift<typename R::AppType>::lift(CurtailAction{}, std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
         template <class T>
@@ -291,6 +311,51 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             };
         }
+        template <class T>
+        OneDeclarativeGraphItem(typename R::template Source<T> &&source, std::string const &sinkName) {
+            registration_ = [source=std::move(source),sinkName](R &r, std::string const &prefix) mutable {
+                r.connect(
+                    std::move(source)
+                    , r.template sinkByName<T>(sinkName)
+                );
+            };
+        }
+        template <class T>
+        OneDeclarativeGraphItem(std::string const &sourceName, typename R::template Sink<T> const &sink) {
+            registration_ = [sourceName,sink](R &r, std::string const &prefix) {
+                r.connect(
+                    r.template sourceByName<T>(sourceName)
+                    , sink
+                );
+            };
+        }
+        template <class T>
+        OneDeclarativeGraphItem(typename R::template Source<T> &&source, typename R::template Sink<T> const &sink) {
+            registration_ = [source=std::move(source),sink](R &r, std::string const &prefix) mutable {
+                r.connect(
+                    std::move(source)
+                    , sink
+                );
+            };
+        }
+        template <class T>
+        OneDeclarativeGraphItem(typename R::template Source<T> &&source, typename R::template Sinkoid<T> const &sinkoid) {
+            registration_ = [source=std::move(source),sinkoid](R &r, std::string const &prefix) mutable {
+                sinkoid(
+                    r
+                    , std::move(source)
+                );
+            };
+        }
+        template <class T>
+        OneDeclarativeGraphItem(typename R::template Sourceoid<T> const &sourceoid, typename R::template Sink<T> const &sink) {
+            registration_ = [sourceoid,sink](R &r, std::string const &prefix) mutable {
+                sourceoid(
+                    r
+                    , sink
+                );
+            };
+        }
         OneDeclarativeGraphItem(DeclarativeGraph<R> &&graph) : registration_() {
             registration_ = [graph=std::move(graph)](R &r, std::string const &prefix) {
                 graph(r, prefix);
@@ -342,6 +407,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         )
     {
         auto component = GenericLift<typename R::AppType>::lift(LiftAsFacility{}, std::move(f), liftParam);
+        auto registration = OneDeclarativeGraphItem<R>::template RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        registration(*p_, prefix_);
+        return component;
+    }
+    template <class R>
+    template <class DelayTrigger, class F>
+    auto GenericComponentLiftAndRegistration<R>::operator()(std::string const &name, DelayImporter<DelayTrigger> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam) ->
+        decltype(
+            GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger>{}, std::move(f), liftParam)
+        )
+    {
+        auto component = GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger>{}, std::move(f), liftParam);
+        auto registration = OneDeclarativeGraphItem<R>::template RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        registration(*p_, prefix_);
+        return component;
+    }
+    template <class R>
+    template <class F>
+    auto GenericComponentLiftAndRegistration<R>::operator()(std::string const &name, CurtailAction &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam) ->
+        decltype(
+            GenericLift<typename R::AppType>::lift(CurtailAction{}, std::move(f), liftParam)
+        )
+    {
+        auto component = GenericLift<typename R::AppType>::lift(CurtailAction{}, std::move(f), liftParam);
         auto registration = OneDeclarativeGraphItem<R>::template RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         registration(*p_, prefix_);
         return component;

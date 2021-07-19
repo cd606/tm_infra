@@ -380,6 +380,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Exporter<T1>> composeExporter(Action<T1,T2> &&pre, Exporter<T2> &&orig) {
             return std::make_shared<Exporter<T1>>();
         }
+        template <class T1, class T2>
+        static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
+            return std::make_shared<Action<T1,T2>>();
+        }
+        template <class T1, class T2>
+        static std::shared_ptr<Exporter<T1>> curtailedAction(Action<T1,T2> &&action) {
+            return std::make_shared<Exporter<T1>>();
+        }
 
         template <class I0, class O0, class I1, class O1>
         static std::shared_ptr<OnOrderFacility<I0,O0>> wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {

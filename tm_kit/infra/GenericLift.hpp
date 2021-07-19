@@ -9,6 +9,9 @@
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     class LiftAsMulti {};
     class LiftAsFacility {};
+    template <class TriggerType>
+    class DelayImporter {};
+    class CurtailAction {};
 
     template <class M>
     class GenericLift {
@@ -387,6 +390,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class F>
         static auto lift(LiftAsFacility &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
             return liftFacility<F>(std::move(f), liftParam);
+        }
+        template <class DelayTrigger, class F>
+        static auto lift(DelayImporter<DelayTrigger> &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
+            auto imp = lift<F>(std::move(f), liftParam);
+            return M::template delayedImporter<DelayTrigger, typename std::decay_t<decltype(*imp)>::DataType>(std::move(*imp));
+        }
+        template <class F>
+        static auto lift(CurtailAction &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
+            auto action = lift<F>(std::move(f), liftParam);
+            return M::template curtailedAction<typename std::decay_t<decltype(*action)>::InputType, typename std::decay_t<decltype(*action)>::OutputType>(std::move(*action));
         }
     };
 } } } }
