@@ -68,6 +68,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             decltype(
                 GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger> {}, std::move(f), liftParam)
             );
+        template <class LazyInput, class F>
+        auto operator()(std::string const &name, LazyImporter<LazyInput> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) ->
+            decltype(
+                GenericLift<typename R::AppType>::lift(LazyImporter<LazyInput> {}, std::move(f), liftParam)
+            );
         template <class F>
         auto operator()(std::string const &name, CurtailAction &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) ->
             decltype(
@@ -151,6 +156,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class DelayTrigger, class F>
         OneDeclarativeGraphItem(std::string const &name, DelayImporter<DelayTrigger> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
             auto component = GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger> {}, std::move(f), liftParam);
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        }
+        template <class LazyInput, class F>
+        OneDeclarativeGraphItem(std::string const &name, LazyImporter<LazyInput> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam = LiftParameters<typename R::AppType::TimePoint> {}) : registration_() {
+            auto component = GenericLift<typename R::AppType>::lift(LazyImporter<LazyInput> {}, std::move(f), liftParam);
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         }
         template <class F>
@@ -419,6 +429,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         )
     {
         auto component = GenericLift<typename R::AppType>::lift(DelayImporter<DelayTrigger>{}, std::move(f), liftParam);
+        auto registration = OneDeclarativeGraphItem<R>::template RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
+        registration(*p_, prefix_);
+        return component;
+    }
+    template <class R>
+    template <class LazyInput, class F>
+    auto GenericComponentLiftAndRegistration<R>::operator()(std::string const &name, LazyImporter<LazyInput> &&, F &&f, LiftParameters<typename R::AppType::TimePoint> const &liftParam) ->
+        decltype(
+            GenericLift<typename R::AppType>::lift(LazyImporter<LazyInput>{}, std::move(f), liftParam)
+        )
+    {
+        auto component = GenericLift<typename R::AppType>::lift(LazyImporter<LazyInput>{}, std::move(f), liftParam);
         auto registration = OneDeclarativeGraphItem<R>::template RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);
         registration(*p_, prefix_);
         return component;

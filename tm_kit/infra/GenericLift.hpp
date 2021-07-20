@@ -11,6 +11,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class LiftAsFacility {};
     template <class TriggerType>
     class DelayImporter {};
+    template <class InputType>
+    class LazyImporter {};
     class CurtailAction {};
 
     template <class M>
@@ -395,6 +397,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto lift(DelayImporter<DelayTrigger> &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
             auto imp = lift<F>(std::move(f), liftParam);
             return M::template delayedImporter<DelayTrigger, typename std::decay_t<decltype(*imp)>::DataType>(std::move(*imp));
+        }
+        template <class LazyInput, class F>
+        static auto lift(LazyImporter<LazyInput> &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
+            auto factory = [f=std::move(f),liftParam](LazyInput &&input) mutable {
+                return M::template uniformSimpleImporter<
+                    typename std::decay_t<decltype(
+                        std::get<1>((f(std::move(* ((LazyInput *) nullptr))))((typename M::EnvironmentType *) nullptr))
+                    )>::value_type::ValueType
+                >(f(std::move(input)), liftParam);
+            };
+            return M::template lazyImporter<LazyInput, typename std::decay_t<decltype(*factory(std::move(* ((LazyInput *) nullptr))))>::DataType>(factory);
         }
         template <class F>
         static auto lift(CurtailAction &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {

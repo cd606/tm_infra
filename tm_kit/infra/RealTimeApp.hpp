@@ -2324,6 +2324,48 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
         }
         template <class T1, class T2>
+        static std::shared_ptr<Action<T1,T2>> lazyImporter(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory) {
+            class LocalA final : public AbstractAction<T1,T2> {
+            private:
+                std::function<std::shared_ptr<Importer<T2>>(T1 &&)> importerFactory_;
+                std::shared_ptr<Importer<T2>> importer_;
+                class LocalH final : public RealTimeAppComponents<StateT>::template IHandler<T2> {
+                private:
+                    LocalA *parent_;
+                public:
+                    LocalH(LocalA *parent) : parent_(parent) {}
+                    virtual void handle(InnerData<T2> &&t2) override final {
+                        parent_->publish(std::move(t2));
+                    }
+                };
+                LocalH localH_;
+                std::atomic<bool> started_;
+            public:
+                LocalA(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory)
+                    : importerFactory_(importerFactory), importer_(), localH_(this), started_(false)
+                {
+                }
+                virtual ~LocalA() {}
+                virtual bool isThreaded() const override final {
+                    return true;
+                }
+                virtual bool isOneTimeOnly() const override final {
+                    return true;
+                }
+                virtual void handle(InnerData<T1> &&d) override final {
+                    if (!started_) {
+                        started_ = true;
+                        importer_ = importerFactory_(std::move(d.timedData.value));
+                        importer_->core_->addHandler(&localH_);
+                        importer_->core_->start(d.environment);
+                    }
+                }
+                virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                }
+            };
+            return std::make_shared<Action<T1,T2>>(new LocalA(importerFactory));
+        }
+        template <class T1, class T2>
         static std::shared_ptr<Exporter<T1>> curtailedAction(Action<T1,T2> &&action) {
             class LocalE final : public AbstractExporter<T1> {
             private:

@@ -385,6 +385,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Action<T1,T2>>();
         }
         template <class T1, class T2>
+        static std::shared_ptr<Action<T1,T2>> lazyImporter(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory) {
+            return std::make_shared<Action<T1,T2>>();
+        }
+        template <class T1, class T2>
         static std::shared_ptr<Exporter<T1>> curtailedAction(Action<T1,T2> &&action) {
             return std::make_shared<Exporter<T1>>();
         }
