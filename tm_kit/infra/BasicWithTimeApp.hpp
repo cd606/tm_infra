@@ -380,11 +380,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Exporter<T1>> composeExporter(Action<T1,T2> &&pre, Exporter<T2> &&orig) {
             return std::make_shared<Exporter<T1>>();
         }
-        template <class T1, class T2>
+        template <class T1, class T2, typename = std::enable_if_t<!withtime_utils::IsVariant<T2>::Value>>
         static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
             return std::make_shared<Action<T1,T2>>();
         }
-        template <class T1, class T2>
+        template <class T1, class T2, typename = std::enable_if_t<!withtime_utils::IsVariant<T2>::Value>>
         static std::shared_ptr<Action<T1,T2>> lazyImporter(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory) {
             return std::make_shared<Action<T1,T2>>();
         }

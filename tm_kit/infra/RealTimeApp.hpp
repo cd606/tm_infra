@@ -295,6 +295,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<IHandler<T> *> handlers_;
             std::unordered_set<IHandler<T> *> handlerSet_;
             std::mutex mutex_;
+        protected:
+            void copyHandlersTo(Producer<T> *p) const {
+                for (auto *x : handlers_) {
+                    p->addHandler(x);
+                }
+            }
         public:
             Producer() : handlers_(), handlerSet_(), mutex_() {}
             Producer(Producer const &) = delete;
@@ -2283,27 +2289,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return std::make_shared<Exporter<T1>>(new LocalE(std::move(pre), std::move(orig)));
         }
-        template <class T1, class T2>
+        template <class T1, class T2, typename = std::enable_if_t<!withtime_utils::IsVariant<T2>::Value>>
         static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
             class LocalA final : public AbstractAction<T1,T2> {
             private:
                 Importer<T2> importer_;
-                class LocalH final : public RealTimeAppComponents<StateT>::template IHandler<T2> {
-                private:
-                    LocalA *parent_;
-                public:
-                    LocalH(LocalA *parent) : parent_(parent) {}
-                    virtual void handle(InnerData<T2> &&t2) override final {
-                        parent_->publish(std::move(t2));
-                    }
-                };
-                LocalH localH_;
                 std::atomic<bool> started_;
             public:
                 LocalA(Importer<T2> &&importer)
-                    : importer_(std::move(importer)), localH_(this), started_(false)
+                    : importer_(std::move(importer)), started_(false)
                 {
-                    importer_.core_->addHandler(&localH_);
                 }
                 virtual ~LocalA() {}
                 virtual bool isThreaded() const override final {
@@ -2315,6 +2310,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 virtual void handle(InnerData<T1> &&d) override final {
                     if (!started_) {
                         started_ = true;
+                        this->Producer<T2>::copyHandlersTo(importer_.core_.get());
                         importer_.core_->start(d.environment);
                     }
                 }
@@ -2323,26 +2319,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
         }
-        template <class T1, class T2>
+        template <class T1, class T2, typename = std::enable_if_t<!withtime_utils::IsVariant<T2>::Value>>
         static std::shared_ptr<Action<T1,T2>> lazyImporter(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory) {
             class LocalA final : public AbstractAction<T1,T2> {
             private:
                 std::function<std::shared_ptr<Importer<T2>>(T1 &&)> importerFactory_;
                 std::shared_ptr<Importer<T2>> importer_;
-                class LocalH final : public RealTimeAppComponents<StateT>::template IHandler<T2> {
-                private:
-                    LocalA *parent_;
-                public:
-                    LocalH(LocalA *parent) : parent_(parent) {}
-                    virtual void handle(InnerData<T2> &&t2) override final {
-                        parent_->publish(std::move(t2));
-                    }
-                };
-                LocalH localH_;
                 std::atomic<bool> started_;
             public:
                 LocalA(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory)
-                    : importerFactory_(importerFactory), importer_(), localH_(this), started_(false)
+                    : importerFactory_(importerFactory), importer_(), started_(false)
                 {
                 }
                 virtual ~LocalA() {}
@@ -2356,7 +2342,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!started_) {
                         started_ = true;
                         importer_ = importerFactory_(std::move(d.timedData.value));
-                        importer_->core_->addHandler(&localH_);
+                        this->Producer<T2>::copyHandlersTo(importer_->core_.get());
                         importer_->core_->start(d.environment);
                     }
                 }

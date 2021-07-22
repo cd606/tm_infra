@@ -272,6 +272,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TopDownSinglePassIterationApp *parent() const {
                 return parent_;
             }
+            void copyHandlersTo(ProducerBase<T> *p) const {
+                for (auto *x : handlers_) {
+                    p->addHandler(x);
+                }
+            }
         public:
             ProducerBase() : handlers_(), handlerSet_(), parent_(nullptr) {}
             ProducerBase(ProducerBase const &) = delete;
@@ -1795,32 +1800,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return std::make_shared<Exporter<T1>>(new LocalE(std::move(pre), std::move(orig)));
         }
-        template <class T1, class T2>
+        template <class T1, class T2, typename = std::enable_if_t<!withtime_utils::IsVariant<T2>::Value>>
         static std::shared_ptr<Action<T1,T2>> delayedImporter(Importer<T2> &&importer) {
             class LocalA final : public AbstractAction<T1,T2> {
             private:
                 Importer<T2> importer_;
-                class LocalH final : public IHandler<T2> {
-                private:
-                    LocalA *parent_;
-                public:
-                    LocalH(LocalA *parent) : parent_(parent) {}
-                    virtual void handle(InnerData<T2> &&t2) override final {
-                        parent_->publish(std::move(t2));
-                    }
-                };
-                LocalH localH_;
                 bool started_;
             public:
                 LocalA(Importer<T2> &&importer)
-                    : importer_(std::move(importer)), localH_(this), started_(false)
+                    : importer_(std::move(importer)), started_(false)
                 {
-                    importer_.core_->addHandler(&localH_);
                 }
                 virtual ~LocalA() {}
                 virtual void handle(InnerData<T1> &&d) override final {
                     if (!started_) {
                         started_ = true;
+                        this->ProducerBase<T2>::copyHandlersTo(importer_.core_.get());
                         this->parent()->registerImporter(importer_.core_.get());
                         importer_.core_->start(d.environment);
                     }
@@ -1834,27 +1829,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
         }
-        template <class T1, class T2>
+        template <class T1, class T2, typename = std::enable_if_t<!withtime_utils::IsVariant<T2>::Value>>
         static std::shared_ptr<Action<T1,T2>> lazyImporter(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory) {
             class LocalA final : public AbstractAction<T1,T2> {
             private:
                 std::function<std::shared_ptr<Importer<T2>>(T1 &&)> importerFactory_;
                 std::shared_ptr<Importer<T2>> importer_;
-                class LocalH final : public IHandler<T2> {
-                private:
-                    LocalA *parent_;
-                public:
-                    LocalH(LocalA *parent) : parent_(parent) {}
-                    virtual void handle(InnerData<T2> &&t2) override final {
-                        parent_->publish(std::move(t2));
-                    }
-                };
-                LocalH localH_;
                 bool started_;
                 TopDownSinglePassIterationApp *parent_;
             public:
                 LocalA(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory)
-                    : importerFactory_(importerFactory), importer_(), localH_(this), started_(false), parent_(nullptr)
+                    : importerFactory_(importerFactory), importer_(), started_(false), parent_(nullptr)
                 {
                 }
                 virtual ~LocalA() {}
@@ -1862,7 +1847,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!started_) {
                         started_ = true;
                         importer_ = importerFactory_(std::move(d.timedData.value));
-                        importer_->core_->addHandler(&localH_);
+                        this->ProducerBase<T2>::copyHandlersTo(importer_->core_.get());
                         importer_->core_->setParentForProducer(parent_);
                         this->parent()->registerImporter(importer_->core_.get());
                         importer_->core_->start(d.environment);
