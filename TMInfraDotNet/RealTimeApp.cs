@@ -898,6 +898,68 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             return new LazyImporter<T1,T2>(importerFactory);
         } 
+        class KleisliFacility<T1,T2> : AbstractOnOrderFacility<Env,T1,T2> 
+        {
+            private Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> func;
+            private IHandler<Env,Key<T1>> handler;
+            bool threaded;
+            public KleisliFacility(Func<TimedDataWithEnvironment<Env,T1>,Option<TimedDataWithEnvironment<Env,T2>>> func, bool threaded)
+            {
+                this.func = func;
+                this.handler = null;
+                this.threaded = threaded;
+            }
+            public override void start(Env env)
+            {
+                if (threaded)
+                {
+                    handler = new ThreadedHandler<Env,Key<T1>>(this.actuallyHandle);
+                }
+                else 
+                {
+                    handler = new NonThreadedHandler<Env,Key<T1>>(this.actuallyHandle);
+                }
+            }
+            public void actuallyHandle(TimedDataWithEnvironment<Env, Key<T1>> input)
+            {
+                var output = func(new TimedDataWithEnvironment<Env, T1>(
+                    input.environment 
+                    , new WithTime<T1>(
+                        input.timedData.timePoint 
+                        , input.timedData.value.key 
+                        , input.timedData.finalFlag
+                    )
+                ));
+                if (output)
+                {
+                    var o = output.Unwrap();
+                    publish(new TimedDataWithEnvironment<Env, Key<T2>>(
+                        o.environment
+                        , new WithTime<Key<T2>>(
+                            o.timedData.timePoint
+                            , new Key<T2>(
+                                input.timedData.value.id 
+                                , o.timedData.value
+                            )
+                            , true
+                        )
+                    ));
+                }
+            }
+            public override void handle(TimedDataWithEnvironment<Env, Key<T1>> data)
+            {
+                if (this.handler != null)
+                {
+                    this.handler.handle(data);
+                }
+            }
+        }
+        public static AbstractOnOrderFacility<Env,T1,T2> liftPureOnOrderFacility<T1,T2>(Func<T1,T2> f, bool threaded)
+        {
+            return new KleisliFacility<T1,T2>(
+                KleisliUtils<Env>.liftPure(f), threaded
+            );
+        }
         class KleisliAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
         {
             private Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,OutT>>> func;
