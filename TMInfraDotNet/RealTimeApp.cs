@@ -429,6 +429,19 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         private object lockObj = new object();
         private List<IHandler<Env,T>> handlers = new List<IHandler<Env, T>>();
         private static bool canClone = (!(typeof(T).IsValueType)) && (typeof(T).GetInterface("ICloneable") != null);
+        protected void copyHandlersTo(Producer<Env,T> other)
+        {
+            if (other != this)
+            {
+                lock (lockObj)
+                {
+                    foreach (var h in handlers)
+                    {
+                        other.addHandler(h);
+                    }
+                }
+            }
+        }
         public void addHandler(IHandler<Env,T> handler)
         {
             lock (lockObj)
@@ -579,6 +592,42 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         ) 
         {
             return new SimpleImporter<T>(generator);
+        }
+
+        class UniformSimpleImporter<T> : AbstractImporter<Env,T>
+        {
+            private Env env;
+            private Func<Env, (bool, Option<TimedDataWithEnvironment<Env,T>>)> generator;
+            public UniformSimpleImporter(Func<Env, (bool, Option<TimedDataWithEnvironment<Env,T>>)> generator)
+            {
+                this.generator = generator;
+            }
+            private void run()
+            {
+                while (true) 
+                {
+                    var x = generator(env);
+                    if (x.Item2) 
+                    {
+                        publish(x.Item2.Unwrap());
+                    }
+                    if (!x.Item1) 
+                    {
+                        break;
+                    }
+                }
+            }
+            public override void start(Env env)
+            {
+                this.env = env;
+                new Thread(this.run).Start();
+            }
+        }
+        public static AbstractImporter<Env,T> uniformSimpleImporter<T>(
+            Func<Env, (bool, Option<TimedDataWithEnvironment<Env,T>>)> generator
+        ) 
+        {
+            return new UniformSimpleImporter<T>(generator);
         }
 
         public class TriggerImporter<T> : AbstractImporter<Env, T> 
@@ -766,6 +815,45 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 realHandler.handle(data);
             }
         }
+        public class DelayedImporter<T1,T2> : AbstractAction<Env,T1,T2> 
+        {
+            private AbstractImporter<Env,T2> importer;
+            private volatile bool started;
+            public DelayedImporter(AbstractImporter<Env,T2> importer)
+            {
+                this.importer = importer;
+                this.started = false;
+            }
+            public override void handle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                if (!started)
+                {
+                    started = true;
+                    copyHandlersTo(importer);
+                    importer.start(data.environment);
+                }
+            }
+        }
+        public class LazyImporter<T1,T2> : AbstractAction<Env,T1,T2> 
+        {
+            private Func<T1,AbstractImporter<Env,T2>> importerFactory;
+            private volatile bool started;
+            public LazyImporter(Func<T1,AbstractImporter<Env,T2>> importerFactory)
+            {
+                this.importerFactory = importerFactory;
+                this.started = false;
+            }
+            public override void handle(TimedDataWithEnvironment<Env,T1> data)
+            {
+                if (!started)
+                {
+                    started = true;
+                    var importer = importerFactory(data.timedData.value);
+                    copyHandlersTo(importer);
+                    importer.start(data.environment);
+                }
+            }
+        }
         public static AbstractAction<Env,T1,T2> liftPure<T1,T2>(Func<T1,T2> f, bool threaded) 
         {
             return new KleisliAction<T1,T2>(KleisliUtils<Env>.liftPure<T1,T2>(f), threaded);
@@ -802,6 +890,14 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
         {
             return new ContinuationAction<T1,T2>(f, threaded);
         }
+        public static AbstractAction<Env,T1,T2> delayedImporter<T1,T2>(AbstractImporter<Env,T2> importer)
+        {
+            return new DelayedImporter<T1,T2>(importer);
+        } 
+        public static AbstractAction<Env,T1,T2> lazyImporter<T1,T2>(Func<T1,AbstractImporter<Env,T2>> importerFactory)
+        {
+            return new LazyImporter<T1,T2>(importerFactory);
+        } 
         class KleisliAction2<T1,T2,OutT> : AbstractAction2<Env,T1,T2,OutT>
         {
             private Func<TimedDataWithEnvironment<Env,Either<T1,T2>>,Option<TimedDataWithEnvironment<Env,OutT>>> func;
