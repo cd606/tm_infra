@@ -1,3 +1,4 @@
+import { env } from 'process';
 import * as Stream from 'stream'
 import {v4 as uuidv4} from 'uuid';
 const BitSet = require('fast-bitset');
@@ -138,6 +139,9 @@ export namespace RealTimeApp {
         }
         protected publish(data : T, isFinal : boolean = false) {
             this.theStream.push(pureTimedDataWithEnvironment(this.env, data, isFinal));
+        }
+        protected publishTimedDataWithEnvironment(data : TimedDataWithEnvironment<Env,T>) {
+            this.theStream.push(data);
         }
         public stream() : Stream.Readable {
             return this.theStream;
@@ -329,6 +333,8 @@ export namespace RealTimeApp {
     };
     export type PubFunc<T> = ((t : T, isFinal : boolean) => void);
     export type Generator<Env extends EnvBase,T> = ((env : Env, pub : PubFunc<T>) => void);
+    export type UniformSimpleGenerator<Env extends EnvBase,T> = 
+        ((env : Env) => Promise<[boolean, TimedDataWithEnvironment<Env, T>]>);
     export namespace Utils {
         export function simpleImporter<Env extends EnvBase,T>(gen : Generator<Env,T>) : Importer<Env,T> {
             class LocalI extends Importer<Env,T> {
@@ -343,6 +349,31 @@ export namespace RealTimeApp {
                     this.genFunc(e, (t : T, isFinal : boolean) => {
                         thisObj.publish(t, isFinal);
                     });
+                }
+            };
+            return new LocalI();
+        }
+        export function uniformSimpleImporter<Env extends EnvBase,T>(gen : UniformSimpleGenerator<Env,T>) {
+            class LocalI extends Importer<Env,T> {
+                private genFunc : UniformSimpleGenerator<Env,T>;
+                public constructor() {
+                    super();
+                    this.genFunc = gen;
+                }
+                public start(e : Env) : void {
+                    this.env = e;
+                    let thisObj = this;
+                    (async () => {
+                        while (true) {
+                            let x = await thisObj.genFunc(thisObj.env);
+                            if (x[1] !== null) {
+                                thisObj.publishTimedDataWithEnvironment(x[1]);
+                            }
+                            if (!x[0]) {
+                                break;
+                            }
+                        }
+                    })();
                 }
             };
             return new LocalI();
@@ -634,6 +665,45 @@ export namespace RealTimeApp {
                     f(data, this.publish);
                 }
             };
+            return new LocalA();
+        }
+        export function delayedFunction<Env extends EnvBase,T1,T2>(i : Importer<Env,T2>) : Action<Env,T1,T2> {
+            class LocalA extends Action<Env,T1,T2> {
+                private importer : Importer<Env,T2>;
+                private started : boolean;
+                public constructor() {
+                    super();
+                    this.importer = i;
+                    this.started = false;
+                }
+                public handle(data : TimedDataWithEnvironment<Env, T1>) : void {
+                    if (!this.started) {
+                        this.started = true;
+                        this.importer.stream().pipe(this.stream());
+                        this.importer.start(data.environment);
+                    }
+                }
+            }
+            return new LocalA();
+        }
+        export function lazyFunction<Env extends EnvBase,T1,T2>(f : (t1 : T1) => Importer<Env,T2>) : Action<Env,T1,T2> {
+            class LocalA extends Action<Env,T1,T2> {
+                private importerFactory : (t1 : T1) => Importer<Env,T2>;
+                private started : boolean;
+                public constructor() {
+                    super();
+                    this.importerFactory = f;
+                    this.started = false;
+                }
+                public handle(data : TimedDataWithEnvironment<Env, T1>) : void {
+                    if (!this.started) {
+                        this.started = true;
+                        let imp = this.importerFactory(data.timedData.value);
+                        imp.stream().pipe(this.stream());
+                        imp.start(data.environment);
+                    }
+                }
+            }
             return new LocalA();
         }
     }
