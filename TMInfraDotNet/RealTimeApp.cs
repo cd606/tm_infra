@@ -525,6 +525,16 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 }
             }
         }
+        protected void copyOneHandlerTo(string keyID, KeyedDataProducer<Env,T1,T2> producer)
+        {
+            lock (lockObj)
+            {
+                if (handlers.TryGetValue(keyID, out (T1, IHandler<Env,KeyedData<T1,T2>>) handler))
+                {
+                    producer.addHandler(new Key<T1>(keyID, handler.Item1), handler.Item2);
+                }
+            }
+        }
         public void publish(TimedDataWithEnvironment<Env,Key<T2>> data)
         {
             lock (lockObj)
