@@ -667,7 +667,7 @@ export namespace RealTimeApp {
             };
             return new LocalA();
         }
-        export function delayedFunction<Env extends EnvBase,T1,T2>(i : Importer<Env,T2>) : Action<Env,T1,T2> {
+        export function delayedImporter<Env extends EnvBase,T1,T2>(i : Importer<Env,T2>) : Action<Env,T1,T2> {
             class LocalA extends Action<Env,T1,T2> {
                 private importer : Importer<Env,T2>;
                 private started : boolean;
@@ -686,7 +686,7 @@ export namespace RealTimeApp {
             }
             return new LocalA();
         }
-        export function lazyFunction<Env extends EnvBase,T1,T2>(f : (t1 : T1) => Importer<Env,T2>) : Action<Env,T1,T2> {
+        export function lazyImporter<Env extends EnvBase,T1,T2>(f : (t1 : T1) => Importer<Env,T2>) : Action<Env,T1,T2> {
             class LocalA extends Action<Env,T1,T2> {
                 private importerFactory : (t1 : T1) => Importer<Env,T2>;
                 private started : boolean;
@@ -705,6 +705,23 @@ export namespace RealTimeApp {
                 }
             }
             return new LocalA();
+        }
+        export function liftPureOnOrderFacility<Env extends EnvBase,T,OutT>(f : (a : T) => OutT) : OnOrderFacility<Env,T,OutT> {
+            class LocalO extends OnOrderFacility<Env,T,OutT> {
+                public start(e : Env) : void {
+                }
+                public handle(data : TimedDataWithEnvironment<Env, Key<T>>) : void {
+                    this.publish(pureTimedDataWithEnvironment(
+                        data.environment
+                        , {
+                            id : data.timedData.value.id 
+                            , key : f(data.timedData.value.key)
+                        }
+                        , true
+                    ));
+                }
+            };
+            return new LocalO();
         }
     }
 
