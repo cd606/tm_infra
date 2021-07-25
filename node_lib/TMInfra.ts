@@ -679,8 +679,12 @@ export namespace RealTimeApp {
                 public handle(data : TimedDataWithEnvironment<Env, T1>) : void {
                     if (!this.started) {
                         this.started = true;
-                        this.importer.stream().pipe(this.stream());
                         this.importer.start(data.environment);
+                        (async () => {
+                            for await (const x of this.importer.stream()) {
+                                this.publish(x);
+                            }
+                        })();
                     }
                 }
             }
@@ -699,8 +703,12 @@ export namespace RealTimeApp {
                     if (!this.started) {
                         this.started = true;
                         let imp = this.importerFactory(data.timedData.value);
-                        imp.stream().pipe(this.stream());
                         imp.start(data.environment);
+                        (async () => {
+                            for await (const x of imp.stream()) {
+                                this.publish(x);
+                            }
+                        })();
                     }
                 }
             }
