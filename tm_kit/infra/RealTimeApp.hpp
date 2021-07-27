@@ -2940,6 +2940,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 value_type operator*() {
                     return iter_->get();
                 }
+                std::optional<value_type> fetch_with_time_out(std::chrono::system_clock::duration const &timeout) {
+                    if (iter_->wait_for(timeout) == std::future_status::ready) {
+                        return iter_->get();
+                    } else {
+                        return std::nullopt;
+                    }
+                }
                 Iterator &operator++() {
                     std::lock_guard<std::mutex> _(*mutex_);
                     ++iter_;
@@ -2992,6 +2999,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     p = &(theList_.back());
                 }
                 return p->get();
+            }
+            std::optional<InnerData<T>> front_with_time_out(std::chrono::system_clock::duration const &timeout) {
+                std::future<InnerData<T>> *p = nullptr;
+                {
+                    std::lock_guard<std::mutex> _(mutex_);
+                    p = &(theList_.front());
+                }
+                if (p->wait_for(timeout) == std::future_status::ready) {
+                    return p->get();
+                } else {
+                    return std::nullopt;
+                }
+            }
+            std::optional<InnerData<T>> back_with_time_out(std::chrono::system_clock::duration const &timeout) {
+                std::future<InnerData<T>> *p = nullptr;
+                {
+                    std::lock_guard<std::mutex> _(mutex_);
+                    p = &(theList_.back());
+                }
+                if (p->wait_for(timeout) == std::future_status::ready) {
+                    return p->get();
+                } else {
+                    return std::nullopt;
+                }
             }
         };
 
