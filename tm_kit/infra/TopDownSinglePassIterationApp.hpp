@@ -21,6 +21,8 @@
 #include <any>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+    template <class M>
+    class SynchronousRunner;
 
     namespace top_down_single_pass_iteration_app_utils {
         template <class T>
@@ -80,6 +82,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             >;
     public:
         friend class AppRunner<TopDownSinglePassIterationApp>;
+        friend class SynchronousRunner<TopDownSinglePassIterationApp>;
 
         static constexpr bool PossiblyMultiThreaded = false;
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
@@ -2496,6 +2499,144 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = typename X::ExtraInputType;
             using ExtraOutputType = typename X::ExtraOutputType;
         };
+
+        template <class T>
+        using SynchronousRunResult = std::deque<InnerData<T>>;
+
+    private:
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *importerAsExternalComponent(std::shared_ptr<Importer<T>> const &importer) {
+            return static_cast<IExternalComponent *>(importer->core_.get());
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *exporterAsExternalComponent(std::shared_ptr<Exporter<T>> const &exporter) {
+            return static_cast<IExternalComponent *>(exporter->core_.get());
+        }
+        template <class T1, class T2>
+        static IExternalComponent *facilityAsExternalComponent(std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+            return dynamic_cast<IExternalComponent *>(facility->core_.get());
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronously(StateT *env, std::shared_ptr<Importer<T>> const &importer) {
+            class InnerH final : public IHandler<T> {
+            private:
+                SynchronousRunResult<T> *res_;
+            public:
+                InnerH(SynchronousRunResult<T> *res) : res_(res) {}
+                virtual void handle(InnerData<T> &&x) override final {
+                    res_->push_back(std::move(x));
+                }
+            };
+            std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
+            InnerH h(res.get());
+            importer->core_->addHandler(&h);
+            importer->core_->setParentForProducer(this);
+            importer->core_->start(env);
+            while (importer->core_->next()) {
+                while (!taskQueue_.empty()) {
+                    auto *topTask = taskQueue_.top();
+                    taskQueue_.pop();
+                    topTask->act(env);
+                    delete topTask;
+                }
+            }
+            while (!taskQueue_.empty()) {
+                auto *topTask = taskQueue_.top();
+                taskQueue_.pop();
+                topTask->act(env);
+                delete topTask;
+            }
+            return res;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronouslyUntil(StateT *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition) {
+            class InnerH final : public IHandler<T> {
+            private:
+                SynchronousRunResult<T> *res_;
+                std::function<bool(InnerData<T> const &)> condition_;
+                bool conditionSatisfied_;
+            public:
+                InnerH(SynchronousRunResult<T> *res, std::function<bool(InnerData<T> const &)> const &condition) : res_(res), condition_(condition), conditionSatisfied_(false) {}
+                virtual void handle(InnerData<T> &&x) override final {
+                    if (!conditionSatisfied_) {
+                        conditionSatisfied_ = condition_(x);
+                        res_->push_back(std::move(x));
+                    }
+                }
+                bool conditionSatisfied() const {
+                    return conditionSatisfied_;
+                }
+            };
+            std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
+            InnerH h(res.get(), condition);
+            importer->core_->addHandler(&h);
+            importer->core_->setParentForProducer(this);
+            importer->core_->start(env);
+            while (importer->core_->next()) {
+                while (!taskQueue_.empty()) {
+                    auto *topTask = taskQueue_.top();
+                    taskQueue_.pop();
+                    topTask->act(env);
+                    delete topTask;
+                    if (h.conditionSatisfied()) {
+                        break;
+                    }
+                }
+                if (h.conditionSatisfied()) {
+                    break;
+                }
+            }
+            while (!taskQueue_.empty()) {
+                auto *topTask = taskQueue_.top();
+                taskQueue_.pop();
+                topTask->act(env);
+                delete topTask;
+                if (h.conditionSatisfied()) {
+                    break;
+                }
+            }
+            return res;
+        }
+        template <class T1, class T2>
+        void startFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+            facility->core_->setParentForProducer(this);
+            auto *p = facilityAsExternalComponent(facility);
+            if (p) {
+                p->start(env);
+            }
+        }
+        template <class T1, class T2>
+        std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
+            class InnerH final : public IHandler<KeyedData<T1,T2>> {
+            private:
+                SynchronousRunResult<KeyedData<T1,T2>> *res_;
+            public:
+                InnerH(SynchronousRunResult<KeyedData<T1,T2>> *res) : res_(res) {}
+                virtual void handle(InnerData<KeyedData<T1,T2>> &&x) override final {
+                    res_->push_back(std::move(x));
+                }
+            };
+            std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> res = std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
+            InnerH h(res.get());
+            facility->core_->registerKeyHandler(key.timedData.value, &h);
+            facility->core_->handle(std::move(key));
+            while (!taskQueue_.empty()) {
+                auto *topTask = taskQueue_.top();
+                taskQueue_.pop();
+                topTask->act(env);
+                delete topTask;
+            }
+            return res;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            exporter->core_->setParentForExporter(this);
+            exporter->core_->start(env);
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
+            exporter->core_->handle(std::move(data));
+        }
     };
 
     template <class T>

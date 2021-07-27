@@ -18,6 +18,9 @@
 #include <any>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+    template <class M>
+    class SynchronousRunner;
+
     class OutputRealTimeThreadBufferSizeComponent {};
 
     class RealTimeAppException : public std::runtime_error {
@@ -630,6 +633,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class RealTimeApp {
     private:  
         friend class AppRunner<RealTimeApp>;
+        friend class SynchronousRunner<RealTimeApp>;
 
     public:
         static constexpr bool PossiblyMultiThreaded = true;
@@ -2903,6 +2907,196 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = typename X::ExtraInputType;
             using ExtraOutputType = typename X::ExtraOutputType;
         };
+
+        template <class T>
+        class SynchronousRunResult {
+        private:
+            using L = std::list<std::future<InnerData<T>>>;
+            L theList_;
+            std::promise<InnerData<T>> currentPromise_;
+            std::mutex mutex_;
+            friend class Iterator;
+        public:
+            class Iterator {
+            public:
+                using value_type = InnerData<T>;
+            private:
+                typename L::iterator iter_;
+                std::mutex *mutex_;
+            public:
+                Iterator() : iter_(), mutex_(nullptr) {}
+                Iterator(typename L::iterator iter, std::mutex *mutex) : iter_(iter), mutex_(mutex) {}
+                Iterator(Iterator const &) = default;
+                Iterator(Iterator &&) = default;
+                Iterator &operator=(Iterator const &) = default;
+                Iterator &operator=(Iterator &&) = default;
+
+                bool operator==(Iterator iter) const {
+                    return (iter_ == iter.iter_);
+                }
+                bool operator!=(Iterator iter) const {
+                    return (iter_ != iter.iter_);
+                }
+                value_type operator*() {
+                    return iter_->get();
+                }
+                Iterator &operator++() {
+                    std::lock_guard<std::mutex> _(*mutex_);
+                    ++iter_;
+                    return *this;
+                }
+                Iterator operator++(int) {
+                    Iterator iter = *this;
+                    ++iter;
+                    return iter;
+                }
+            };
+            SynchronousRunResult() : theList_(), currentPromise_(), mutex_() {
+                std::lock_guard<std::mutex> _(mutex_);
+                theList_.push_back(currentPromise_.get_future());
+            }
+            ~SynchronousRunResult() = default;
+            SynchronousRunResult(SynchronousRunResult const &) = delete;
+            SynchronousRunResult &operator=(SynchronousRunResult const &) = delete;
+            SynchronousRunResult(SynchronousRunResult &&) = delete;
+            SynchronousRunResult &operator=(SynchronousRunResult &&) = delete;
+            Iterator begin() {
+                std::lock_guard<std::mutex> _(mutex_);
+                return Iterator(theList_.begin(), &mutex_);
+            }
+            Iterator end() {
+                std::lock_guard<std::mutex> _(mutex_);
+                return Iterator(theList_.end(), &mutex_);
+            }
+            void push(InnerData<T> &&data, bool dontAddNewPromise=false) {
+                std::lock_guard<std::mutex> _(mutex_);
+                bool lastOne = data.timedData.finalFlag;
+                currentPromise_.set_value(std::move(data));
+                if (!lastOne && !dontAddNewPromise) {
+                    currentPromise_ = std::promise<InnerData<T>>();
+                    theList_.push_back(currentPromise_.get_future());
+                }
+            }
+            InnerData<T> front() {
+                std::future<InnerData<T>> *p = nullptr;
+                {
+                    std::lock_guard<std::mutex> _(mutex_);
+                    p = &(theList_.front());
+                }
+                return p->get();
+            }
+            InnerData<T> back() {
+                std::future<InnerData<T>> *p = nullptr;
+                {
+                    std::lock_guard<std::mutex> _(mutex_);
+                    p = &(theList_.back());
+                }
+                return p->get();
+            }
+        };
+
+    private:
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *importerAsExternalComponent(std::shared_ptr<Importer<T>> const &importer) {
+            return static_cast<IExternalComponent *>(importer->core_.get());
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *exporterAsExternalComponent(std::shared_ptr<Exporter<T>> const &exporter) {
+            return static_cast<IExternalComponent *>(exporter->core_.get());
+        }
+        template <class T1, class T2>
+        static IExternalComponent *facilityAsExternalComponent(std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+            return dynamic_cast<IExternalComponent *>(facility->core_.get());
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronously(StateT *env, std::shared_ptr<Importer<T>> const &importer) {
+            std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
+            class LocalH final : public IHandler<T> {
+            private:
+                SynchronousRunResult<T> *res_;
+            public:
+                LocalH(SynchronousRunResult<T> *res) : res_(res) {}
+                virtual void handle(InnerData<T> &&data) {
+                    bool lastOne = data.timedData.finalFlag;
+                    res_->push(std::move(data));
+                    if (lastOne) {
+                        delete this;
+                    }
+                }
+            };
+            importer->core_->addHandler(new LocalH(res.get()));
+            importer->core_->start(env);
+            return res;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronouslyUntil(StateT *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition) {
+            std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
+            class LocalH final : public IHandler<T> {
+            private:
+                SynchronousRunResult<T> *res_;
+                Importer<T> *importer_;
+                StateT *env_;
+                std::function<bool(InnerData<T> const &)> condition_;
+                bool conditionSatisfied_;
+            public:
+                LocalH(SynchronousRunResult<T> *res, Importer<T> *importer, StateT *env, std::function<bool(InnerData<T> const &)> const &condition) : res_(res), importer_(importer), env_(env), condition_(condition), conditionSatisfied_(false) {}
+                virtual void handle(InnerData<T> &&data) {
+                    if (!conditionSatisfied_) {
+                        conditionSatisfied_ = condition_(data);
+                        if (conditionSatisfied_) {
+                            importer_->control(env_, "stop", {});
+                        }
+                        bool lastOne = data.timedData.finalFlag;
+                        res_->push(std::move(data), conditionSatisfied_);
+                        if (lastOne) {
+                            delete this;
+                        }
+                    } else {
+                        if (data.timedData.finalFlag) {
+                            delete this;
+                        }
+                    }
+                }
+            };
+            importer->core_->addHandler(new LocalH(res.get(), importer.get(), env, condition));
+            importer->core_->start(env);
+            return res;
+        }
+        template <class T1, class T2>
+        static void startFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+            auto *p = facilityAsExternalComponent(facility);
+            if (p) {
+                p->start(env);
+            }
+        }
+        template <class T1, class T2>
+        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
+            std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> res = std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
+            class LocalH final : public IHandler<KeyedData<T1,T2>> {
+            private:
+                SynchronousRunResult<KeyedData<T1,T2>> *res_;
+            public:
+                LocalH(SynchronousRunResult<KeyedData<T1,T2>> *res) : res_(res) {}
+                virtual void handle(InnerData<KeyedData<T1,T2>> &&data) {
+                    bool lastOne = data.timedData.finalFlag;
+                    res_->push(std::move(data));
+                    if (lastOne) {
+                        delete this;
+                    }
+                }
+            };
+            facility->core_->registerKeyHandler(key.timedData.value, new LocalH(res.get()));
+            facility->core_->handle(std::move(key));
+            return res;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            exporter->core_->start(env);
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
+            exporter->core_->handle(std::move(data));
+        }
     };
 
     template <class T>

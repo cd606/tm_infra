@@ -8,10 +8,14 @@
 #include <tm_kit/infra/ObservableNode.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+    template <class M>
+    class SynchronousRunner;
+
     template <class StateT>
     class BasicWithTimeApp {
     private:
         friend class AppRunner<BasicWithTimeApp>;
+        friend class SynchronousRunner<BasicWithTimeApp>;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
@@ -758,6 +762,44 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = typename X::ExtraInputType;
             using ExtraOutputType = typename X::ExtraOutputType;
         };
+
+        template <class T>
+        using SynchronousRunResult = std::array<InnerData<T>,0>;
+
+    private:
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *importerAsExternalComponent(std::shared_ptr<Importer<T>> const &importer) {
+            return nullptr;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *exporterAsExternalComponent(std::shared_ptr<Exporter<T>> const &importer) {
+            return nullptr;
+        }
+        template <class T1, class T2>
+        static IExternalComponent *facilityAsExternalComponent(std::shared_ptr<OnOrderFacility<T1,T2>> const &importer) {
+            return nullptr;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronously(StateT *env, std::shared_ptr<Importer<T>> const &importer) {
+            return std::make_unique<SynchronousRunResult<T>>();
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronouslyUntil(StateT *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition) {
+            return std::make_unique<SynchronousRunResult<T>>();
+        }
+        template <class T1, class T2>
+        static void startFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+        }
+        template <class T1, class T2>
+        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
+            return std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&) {
+        }
     };
 
     template <class T>

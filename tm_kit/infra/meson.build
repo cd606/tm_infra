@@ -73,6 +73,7 @@ tm_infra_headers = [
     , 'DeclarativeGraph.hpp'
     , 'NodeClassifier.hpp'
     , 'KleisliSequence.hpp'
+    , 'SynchronousRunner.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')

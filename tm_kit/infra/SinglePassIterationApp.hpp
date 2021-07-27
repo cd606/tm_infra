@@ -11,6 +11,8 @@
 #include <stack>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+    template <class M>
+    class SynchronousRunner;
 
     namespace single_pass_iteration_app_utils {
         template <class T>
@@ -55,6 +57,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class SinglePassIterationApp {
     private:
         friend class AppRunner<SinglePassIterationApp>;
+        friend class SynchronousRunner<SinglePassIterationApp>;
     public:
         static constexpr bool PossiblyMultiThreaded = false;
         static constexpr bool CannotHaveLoopEvenWithFacilities = false;
@@ -1516,6 +1519,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         class OnOrderFacilityCore {
         private:
+            friend class SinglePassIterationApp;
             struct TimeComparer {
                 bool operator()(InnerData<KeyedData<A,B>> const &a, InnerData<KeyedData<A,B>> const &b) {
                     return (a.timedData.timePoint > b.timedData.timePoint);
@@ -1546,6 +1550,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
             std::unordered_map<typename StateT::IDType, std::tuple<Key<A>, bool, ResponseProvider *>, typename StateT::IDHash> keyMap_;
             std::unordered_map<AbstractConsumer<KeyedData<A,B>> *, std::unique_ptr<ResponseProvider>> providers_;
+            bool synchronousRunnerMode_;
+            void enableSynchronousRunnerMode() {
+                synchronousRunnerMode_ = true;
+            }
+            void clearConsumersInSynchronousRunnerMode() {
+                if (synchronousRunnerMode_) {
+                    keyMap_.clear();
+                    providers_.clear();
+                }
+            }
         protected:
             void publishResponse(InnerData<Key<B>> &&response) {
                 auto iter = keyMap_.find(response.timedData.value.id());
@@ -1563,7 +1577,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
                 auto *responder = std::get<2>(iter->second);
                 if (isFinalResponseForThisKey) {
-                    if (!std::get<1>(iter->second)) {
+                    if (!synchronousRunnerMode_ && !std::get<1>(iter->second)) {
                         //this key is not final
                         keyedData.timedData.finalFlag = false; 
                     }
@@ -1582,7 +1596,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             static constexpr OnOrderFacilityCore *nullptrToInheritedFacility() {return nullptr;}
         public:
-            OnOrderFacilityCore() : keyMap_(), providers_() {}
+            OnOrderFacilityCore() : keyMap_(), providers_(), synchronousRunnerMode_(false) {}
             virtual ~OnOrderFacilityCore() {}           
             void placeOrder(InnerData<Key<A>> &&input, AbstractConsumer<KeyedData<A,B>> *consumer) {
                 if (consumer != nullptr) {
@@ -3068,6 +3082,103 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraInputType = typename X::ExtraInputType;
             using ExtraOutputType = typename X::ExtraOutputType;
         };
+
+        template <class T>
+        using SynchronousRunResult = std::deque<InnerData<T>>;
+
+    private:
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *importerAsExternalComponent(std::shared_ptr<Importer<T>> const &importer) {
+            return static_cast<IExternalComponent *>(importer->core_.get());
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static IExternalComponent *exporterAsExternalComponent(std::shared_ptr<Exporter<T>> const &exporter) {
+            return static_cast<IExternalComponent *>(exporter->core_.get());
+        }
+        template <class T1, class T2>
+        static IExternalComponent *facilityAsExternalComponent(std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+            return dynamic_cast<IExternalComponent *>(facility->core_.get());
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronously(StateT *env, std::shared_ptr<Importer<T>> const &importer) {
+            std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
+            importer->core_->start(env);
+            while (true) {
+                auto cert = importer->core_->poll();
+                if (cert.check()) {
+                    auto data = importer->core_->next(std::move(cert));
+                    if (data) {
+                        bool lastOne = data->timedData.finalFlag;
+                        res->push_back(std::move(*data));
+                        if (lastOne) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return res;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronouslyUntil(StateT *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition) {
+            std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
+            importer->core_->start(env);
+            while (true) {
+                auto cert = importer->core_->poll();
+                if (cert.check()) {
+                    auto data = importer->core_->next(std::move(cert));
+                    if (data) {
+                        bool conditionSatisfied = condition(*data);
+                        bool lastOne = data->timedData.finalFlag;
+                        res->push_back(std::move(*data));
+                        if (conditionSatisfied || lastOne) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return res;
+        }
+        template <class T1, class T2>
+        static void startFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
+            facility->core_->enableSynchronousRunnerMode();
+            auto *p = facilityAsExternalComponent(facility);
+            if (p) {
+                p->start(env);
+            }
+        }
+        template <class T1, class T2>
+        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
+            std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> res = std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
+            auto action = liftPure<KeyedData<T1,T2>>(
+                [](KeyedData<T1,T2> &&d) -> KeyedData<T1,T2> {
+                    return std::move(d);
+                }
+            );
+            facility->core_->placeOrder(std::move(key), action->core_.get());
+            while (true) {
+                auto cert = action->core_->poll();
+                if (cert.check()) {
+                    auto data = action->core_->next(std::move(cert));
+                    if (data) {
+                        bool lastOne = data->timedData.finalFlag;
+                        res->push_back(std::move(*data));
+                        if (lastOne) {
+                            break;
+                        }
+                    }
+                }
+            }
+            facility->core_->clearConsumersInSynchronousRunnerMode();
+            return res;
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            exporter->core_->start(env);
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
+            exporter->core_->handle(std::move(data));
+        }
     };
 
     template <class T>
