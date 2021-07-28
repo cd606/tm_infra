@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace Dev.CD606.TM.Infra.RealTimeApp
@@ -145,6 +147,258 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                     e.start(env);
                 }
             }
+        }
+    }
+
+    public class SynchronousRunner<Env> where Env : EnvBase
+    {
+        private Env env;
+        private HashSet<IExternalComponent<Env>> startedComponents;
+        private object lockObj;
+        public SynchronousRunner(Env env)
+        {
+            this.env = env;
+            this.startedComponents = new HashSet<IExternalComponent<Env>>();
+            this.lockObj = new object();
+        }
+        private class ResultHolder<T> 
+        {
+            private TaskCompletionSource<TimedDataWithEnvironment<Env,T>> promise;
+            private LinkedList<Task<TimedDataWithEnvironment<Env,T>>> results;
+            private object lockObj = new object();
+
+            public ResultHolder()
+            {
+                promise = new TaskCompletionSource<TimedDataWithEnvironment<Env, T>>();
+                results = new LinkedList<Task<TimedDataWithEnvironment<Env, T>>>();
+                results.AddLast(new LinkedListNode<Task<TimedDataWithEnvironment<Env, T>>>(
+                    promise.Task
+                ));
+            }
+            public void Push(TimedDataWithEnvironment<Env,T> data, bool noNewPromise)
+            {
+                lock (lockObj)
+                {
+                    bool final = data.timedData.finalFlag;
+                    promise.SetResult(data);
+                    if (!final && !noNewPromise)
+                    {
+                        promise = new TaskCompletionSource<TimedDataWithEnvironment<Env, T>>();
+                        results.AddLast(new LinkedListNode<Task<TimedDataWithEnvironment<Env, T>>>(
+                            promise.Task
+                        ));
+                    }
+                }
+            }
+            public async Task<TimedDataWithEnvironment<Env,T>> Front()
+            {
+                Task<TimedDataWithEnvironment<Env,T>> task;
+                lock (lockObj)
+                {
+                    task = results.First.Value;
+                }
+                return await task;
+            }
+            public async Task<TimedDataWithEnvironment<Env,T>> Back()
+            {
+                Task<TimedDataWithEnvironment<Env,T>> task;
+                lock (lockObj)
+                {
+                    task = results.Last.Value;
+                }
+                return await task;
+            }
+            public void PopFront()
+            {
+                lock (lockObj)
+                {
+                    results.RemoveFirst();
+                }
+            }
+            public bool Empty
+            {
+                get 
+                {
+                    lock (lockObj)
+                    {
+                        return results.Count == 0;
+                    }
+                }
+            }
+        }
+        private class ImporterHandler1<T> : IHandler<Env, T>
+        {
+            private ResultHolder<T> resultHolder;
+            public ImporterHandler1(ResultHolder<T> resultHolder)
+            {
+                this.resultHolder = resultHolder;
+            }
+            public void handle(TimedDataWithEnvironment<Env,T> data)
+            {
+                resultHolder.Push(data, false);
+            }
+        }
+        public async IAsyncEnumerable<TimedDataWithEnvironment<Env,T>> importItem<T>(AbstractImporter<Env,T> importer)
+        {
+            ResultHolder<T> holder= new ResultHolder<T>();
+            lock (lockObj)
+            {
+                if (startedComponents.Contains(importer))
+                {
+                    throw new InvalidOperationException(
+                        "importer previously started"
+                    );
+                }
+                importer.addHandler(new ImporterHandler1<T>(holder));
+                importer.start(env);
+                startedComponents.Add(importer);
+            }
+            while (!holder.Empty)
+            {
+                yield return await holder.Front();
+                holder.PopFront();
+            }
+        }
+        private class ImporterHandler2<T> : IHandler<Env, T>
+        {
+            private ResultHolder<T> resultHolder;
+            private Predicate<TimedDataWithEnvironment<Env,T>> condition;
+            private bool alreadySatisfied;
+            public ImporterHandler2(ResultHolder<T> resultHolder, Predicate<TimedDataWithEnvironment<Env,T>> condition)
+            {
+                this.resultHolder = resultHolder;
+                this.condition = condition;
+                this.alreadySatisfied = false;
+            }
+            public void handle(TimedDataWithEnvironment<Env,T> data)
+            {
+                lock (this)
+                {
+                    if (!alreadySatisfied)
+                    {
+                        alreadySatisfied = condition(data);
+                        resultHolder.Push(data, alreadySatisfied);   
+                    }
+                }
+            }
+        }
+        public async IAsyncEnumerable<TimedDataWithEnvironment<Env,T>> importItemUntil<T>(
+            AbstractImporter<Env,T> importer
+            , Predicate<TimedDataWithEnvironment<Env,T>> condition
+        )
+        {
+            ResultHolder<T> holder= new ResultHolder<T>();
+            lock (lockObj)
+            {
+                if (startedComponents.Contains(importer))
+                {
+                    throw new InvalidOperationException(
+                        "importer previously started"
+                    );
+                }
+                importer.addHandler(new ImporterHandler2<T>(holder,condition));
+                importer.start(env);
+                startedComponents.Add(importer);
+            }
+            while (!holder.Empty)
+            {
+                yield return await holder.Front();
+                holder.PopFront();
+            }
+        }
+        public async IAsyncEnumerable<TimedDataWithEnvironment<Env,KeyedData<T1,T2>>> placeOrderWithFacility<T1,T2>(
+            TimedDataWithEnvironment<Env,Key<T1>> key
+            , AbstractOnOrderFacility<Env,T1,T2> facility
+        )
+        {
+            ResultHolder<KeyedData<T1,T2>> holder = new ResultHolder<KeyedData<T1, T2>>();
+            if (facility is IExternalComponent<Env>)
+            {
+                var p = facility as IExternalComponent<Env>;
+                lock (lockObj)
+                {
+                    if (!startedComponents.Contains(p))
+                    {
+                        p.start(env);
+                        startedComponents.Add(p);
+                    }
+                }
+            }
+            facility.placeRequest(key, new ImporterHandler1<KeyedData<T1,T2>>(holder));
+            while (!holder.Empty)
+            {
+                yield return await holder.Front();
+                holder.PopFront();
+            }
+        }
+        public async IAsyncEnumerable<TimedDataWithEnvironment<Env,KeyedData<T1,T2>>> placeOrderWithFacility<T1,T2>(
+            TimedDataWithEnvironment<Env,T1> key
+            , AbstractOnOrderFacility<Env,T1,T2> facility
+        )
+        {
+            await foreach (var x in placeOrderWithFacility(
+                new TimedDataWithEnvironment<Env, Key<T1>>(
+                    key.environment, new WithTime<Key<T1>>(
+                        key.timedData.timePoint
+                        , new Key<T1>(key.timedData.value)
+                        , key.timedData.finalFlag
+                    )
+                )
+                , facility
+            )) 
+            {
+                yield return x;
+            }
+        }
+        public async IAsyncEnumerable<TimedDataWithEnvironment<Env,KeyedData<T1,T2>>> placeOrderWithFacility<T1,T2>(
+            T1 key
+            , AbstractOnOrderFacility<Env,T1,T2> facility
+        )
+        {
+            await foreach (var x in placeOrderWithFacility(
+                new TimedDataWithEnvironment<Env, Key<T1>>(
+                    env, new WithTime<Key<T1>>(
+                        env.now()
+                        , new Key<T1>(key)
+                        , false
+                    )
+                )
+                , facility
+            )) 
+            {
+                yield return x;
+            }
+        }
+        public void exportItem<T>(
+            AbstractExporter<Env, T> exporter 
+            , TimedDataWithEnvironment<Env,T> data
+        )
+        {
+            lock (lockObj)
+            {
+                if (!startedComponents.Contains(exporter))
+                {
+                    exporter.start(env);
+                    startedComponents.Add(exporter);
+                }
+            }
+            exporter.handle(data);
+        }
+        public void exportItem<T>(
+            AbstractExporter<Env, T> exporter 
+            , T data
+        )
+        {
+            exportItem(
+                exporter 
+                , new TimedDataWithEnvironment<Env, T>(
+                    env, new WithTime<T>(
+                        env.now()
+                        , data 
+                        , false
+                    )
+                )
+            );
         }
     }
 }
