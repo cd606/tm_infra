@@ -134,6 +134,82 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             exportItem<T>(exporter, M::template pureInnerData<T>(env_, std::move(data)));
         }
     };
+
+    template <class Env>
+    class SynchronousRunner<BasicWithTimeApp<Env>> {
+    public:
+        using M = BasicWithTimeApp<Env>;
+        using AppType = M;  
+        using EnvironmentType = typename M::EnvironmentType;
+        template <class T>
+        using ImporterPtr = std::shared_ptr<typename M::template Importer<T>>;
+        template <class T1, class T2>
+        using OnOrderFacilityPtr = std::shared_ptr<typename M::template OnOrderFacility<T1,T2>>;
+        template <class T>
+        using ExporterPtr = std::shared_ptr<typename M::template Exporter<T>>;
+    private:
+        typename M::EnvironmentType *env_;
+        M app_;
+    public:
+        SynchronousRunner(typename M::EnvironmentType *env) : env_(env), app_() {}
+        ~SynchronousRunner() = default;
+        SynchronousRunner(SynchronousRunner const &) = delete;
+        SynchronousRunner &operator=(SynchronousRunner const &) = delete;
+        SynchronousRunner(SynchronousRunner &&) = delete;
+        SynchronousRunner &operator=(SynchronousRunner &&) = delete;
+
+        typename M::EnvironmentType *environment() const {
+            return env_;
+        }
+
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        std::unique_ptr<typename M::template SynchronousRunResult<T>> importItem(
+            std::shared_ptr<typename M::template Importer<T>> const &importer
+        ) {
+            return std::make_unique<typename M::template SynchronousRunResult<T>>();
+        }
+        template <class T, class Condition, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        std::unique_ptr<typename M::template SynchronousRunResult<T>> importItemUntil(
+            std::shared_ptr<typename M::template Importer<T>> const &importer
+            , Condition const &condition
+        ) {
+            return std::make_unique<typename M::template SynchronousRunResult<T>>();
+        }
+        //The parameter order is trying to imitate the order in AppRunner
+        template <class T1, class T2>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>>> placeOrderWithFacility(
+            typename M::template InnerData<typename M::template Key<T1>> &&key
+            , std::shared_ptr<typename M::template OnOrderFacility<T1,T2>> const &facility
+        ) {
+            return std::make_unique<typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>>>();
+        }
+        template <class T1, class T2>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>>> placeOrderWithFacility(
+            typename M::template InnerData<T1> &&key
+            , std::shared_ptr<typename M::template OnOrderFacility<T1,T2>> const &facility
+        ) {
+            return std::make_unique<typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>>>();
+        }
+        template <class T1, class T2>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>>> placeOrderWithFacility(
+            T1 &&key
+            , std::shared_ptr<typename M::template OnOrderFacility<T1,T2>> const &facility
+        ) {
+            return std::make_unique<typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>>>();
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        void exportItem(
+            std::shared_ptr<typename M::template Exporter<T>> const &exporter
+            , typename M::template InnerData<T> &&data
+        ) {
+        }
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        void exportItem(
+            std::shared_ptr<typename M::template Exporter<T>> const &exporter
+            , T &&data
+        ) {
+        }
+    };
 } } } }
 
 #endif

@@ -764,7 +764,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class T>
-        using SynchronousRunResult = std::array<InnerData<T>,0>;
+        using SynchronousRunResult = std::deque<InnerData<T>>;
 
     private:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
