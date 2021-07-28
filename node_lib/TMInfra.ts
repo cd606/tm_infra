@@ -828,4 +828,63 @@ export namespace RealTimeApp {
             }
         }
     }
+    export class SynchronousRunner<Env extends EnvBase> {
+        private env : Env;
+        private started : Map<RealTimeApp.IExternalComponent<Env>,boolean>; 
+        public constructor(e : Env) {
+            this.env = e;
+            this.started = new Map<RealTimeApp.IExternalComponent<Env>,boolean>();
+        }
+        public async * importItem<T>(importer : Importer<Env,T>) {
+            if (this.started.has(importer)) {
+                throw 'importer already started';
+            }
+            importer.start(this.env);
+            this.started.set(importer, true);
+            for await (const item of importer.stream()) {
+                yield item;
+                if (item.timedData.finalFlag) {
+                    return;
+                }
+            }
+        }
+        public async * importItemUntil<T>(importer : Importer<Env,T>, condition : (data : TimedDataWithEnvironment<Env,T>) => boolean) {
+            if (this.started.has(importer)) {
+                throw 'importer already started';
+            }
+            importer.start(this.env);
+            this.started.set(importer, true);
+            for await (const item of importer.stream()) {
+                yield item;
+                if (condition(item)) {
+                    return;
+                }
+                if (item.timedData.finalFlag) {
+                    return;
+                }
+            }
+        }
+        public async * placeOrderWithFacility<T1,T2>(key : TimedDataWithEnvironment<Env,Key<T1>>, facility : OnOrderFacility<Env,T1,T2>) {
+            if (!this.started.has(facility)) {
+                facility.start(this.env);
+                this.started.set(facility, true);
+            }
+            facility.stream().write(key);
+            //facility.handle(key);
+            for await (const item of (facility.stream() as any).iterator({destroyOnReturn: false, destroyOnError: false})) {
+                yield item;
+                if (item.timedData.finalFlag) {
+                    break;
+                }
+            }
+            return;
+        }
+        public exportItem<T>(exporter : Exporter<Env,T>, item : TimedDataWithEnvironment<Env,T>) : void {
+            if (!this.started.has(exporter)) {
+                exporter.start(this.env);
+                this.started.set(exporter, true);
+            }
+            exporter.stream().write(item);
+        }
+    }
 }
