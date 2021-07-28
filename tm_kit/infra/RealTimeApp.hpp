@@ -3024,6 +3024,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return std::nullopt;
                 }
             }
+            void pop_front() {
+                std::lock_guard<std::mutex> _(mutex_);
+                theList_.pop_front();
+            }
         };
 
     private:
