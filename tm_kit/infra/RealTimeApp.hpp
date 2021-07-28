@@ -2914,7 +2914,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using L = std::list<std::future<InnerData<T>>>;
             L theList_;
             std::promise<InnerData<T>> currentPromise_;
-            std::mutex mutex_;
+            mutable std::mutex mutex_;
             friend class Iterator;
         public:
             class Iterator {
@@ -3027,6 +3027,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void pop_front() {
                 std::lock_guard<std::mutex> _(mutex_);
                 theList_.pop_front();
+            }
+            bool empty() const {
+                std::lock_guard<std::mutex> _(mutex_);
+                return theList_.empty();
             }
         };
 
