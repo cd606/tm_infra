@@ -180,7 +180,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                 lock (lockObj)
                 {
                     bool final = data.timedData.finalFlag;
-                    promise.SetResult(data);
+                    var oldPromise = promise;
                     if (!final && !noNewPromise)
                     {
                         promise = new TaskCompletionSource<TimedDataWithEnvironment<Env, T>>();
@@ -188,6 +188,7 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
                             promise.Task
                         ));
                     }
+                    oldPromise.SetResult(data);
                 }
             }
             public async Task<TimedDataWithEnvironment<Env,T>> Front()
@@ -368,6 +369,79 @@ namespace Dev.CD606.TM.Infra.RealTimeApp
             {
                 yield return x;
             }
+        }
+        public class FacilityStreamer<T1,T2>
+        {
+            private Env env;
+            private AbstractOnOrderFacility<Env,T1,T2> facility;
+            private ResultHolder<KeyedData<T1,T2>> resultHolder;            
+            private string id;
+            private bool first;
+            public FacilityStreamer(Env env, AbstractOnOrderFacility<Env,T1,T2> facility)
+            {
+                this.env = env;
+                this.facility = facility;
+                this.resultHolder = new ResultHolder<KeyedData<T1, T2>>();
+                this.id = Guid.NewGuid().ToString();
+                this.first = true;
+            }
+            public void Send(TimedDataWithEnvironment<Env,T1> data)
+            {
+                if (first)
+                {
+                    facility.placeRequest(new TimedDataWithEnvironment<Env, Key<T1>>(
+                        data.environment, new WithTime<Key<T1>>(
+                            data.timedData.timePoint
+                            , new Key<T1>(id, data.timedData.value)
+                            , data.timedData.finalFlag
+                        )
+                    ), new ImporterHandler1<KeyedData<T1,T2>>(resultHolder));
+                    first = false;
+                }
+                else 
+                {
+                    facility.handle(new TimedDataWithEnvironment<Env, Key<T1>>(
+                        data.environment, new WithTime<Key<T1>>(
+                            data.timedData.timePoint
+                            , new Key<T1>(id, data.timedData.value)
+                            , data.timedData.finalFlag
+                        )
+                    ));
+                }
+            }
+            public void Send(T1 data)
+            {
+                Send(new TimedDataWithEnvironment<Env, T1>(
+                    env
+                    , new WithTime<T1>(
+                        env.now(), data, false
+                    )
+                ));
+            }
+            public async IAsyncEnumerable<TimedDataWithEnvironment<Env,KeyedData<T1,T2>>> Results()
+            {
+                while (!resultHolder.Empty)
+                {
+                    yield return await resultHolder.Front();
+                    resultHolder.PopFront();
+                }
+            }
+        }
+        public FacilityStreamer<T1,T2> facilityStreamer<T1,T2>(AbstractOnOrderFacility<Env,T1,T2> facility)
+        {
+            if (facility is IExternalComponent<Env>)
+            {
+                var p = facility as IExternalComponent<Env>;
+                lock (lockObj)
+                {
+                    if (!startedComponents.Contains(p))
+                    {
+                        p.start(env);
+                        startedComponents.Add(p);
+                    }
+                }
+            }
+            return new FacilityStreamer<T1,T2>(env, facility);
         }
         public void exportItem<T>(
             AbstractExporter<Env, T> exporter 
