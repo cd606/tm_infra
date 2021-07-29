@@ -828,6 +828,10 @@ export namespace RealTimeApp {
             }
         }
     }
+    export interface FacilityStreamer<Env extends EnvBase, T1, T2> {
+        send : ((x : (T1 | TimedDataWithEnvironment<Env,T1>)) => void);
+        read : (() => AsyncGenerator<TimedDataWithEnvironment<Env,KeyedData<T1,T2>>>);
+    }
     export class SynchronousRunner<Env extends EnvBase> {
         private env : Env;
         private started : Map<RealTimeApp.IExternalComponent<Env>,boolean>; 
@@ -879,6 +883,48 @@ export namespace RealTimeApp {
             }
             return;
         }
+
+        public facilityStreamer<T1,T2>(facility : OnOrderFacility<Env,T1,T2>) : FacilityStreamer<Env,T1,T2> {
+            if (!this.started.has(facility)) {
+                facility.start(this.env);
+                this.started.set(facility, true);
+            }
+            let id = uuidv4();
+            let env = this.env;
+            return {
+                send : (x : (T1 | TimedDataWithEnvironment<Env,T1>)) => {
+                    if (<T1>(x) !== undefined) {
+                        facility.stream().write({
+                            environment: env
+                            , timedData: {
+                                timePoint: env.now()
+                                , value: {id : id, key : (x as T1)}
+                                , finalFlag : false
+                            }
+                        });
+                    } else {
+                        facility.stream().write({
+                            environment: env
+                            , timedData: {
+                                timePoint: (x as TimedDataWithEnvironment<Env,T1>).timedData.timePoint
+                                , value: {id : id, key : (x as TimedDataWithEnvironment<Env,T1>).timedData.value}
+                                , finalFlag : (x as TimedDataWithEnvironment<Env,T1>).timedData.finalFlag
+                            }
+                        });
+                    }
+                }
+                , read : async function *f() {
+                    for await (const item of (facility.stream() as any).iterator({destroyOnReturn: false, destroyOnError: false})) {
+                        yield item;
+                        if (item.timedData.finalFlag) {
+                            break;
+                        }
+                    }
+                    return;
+                }
+            };
+        }
+        
         public exportItem<T>(exporter : Exporter<Env,T>, item : TimedDataWithEnvironment<Env,T>) : void {
             if (!this.started.has(exporter)) {
                 exporter.start(this.env);
