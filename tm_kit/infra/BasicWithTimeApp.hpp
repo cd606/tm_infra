@@ -169,6 +169,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         protected:
             static constexpr AbstractOnOrderFacility *nullptrToInheritedFacility() {return nullptr;}
         public: 
+            virtual ~AbstractOnOrderFacility() = default;
             void publish(InnerData<Key<B>> &&response) {
             }   
             void publish(StateT *env, Key<B> &&data, bool isFinal) {

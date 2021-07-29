@@ -188,6 +188,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         SynchronousFacilityStreamer<T1,T2> facilityStreamer(
             std::shared_ptr<typename M::template OnOrderFacility<T1,T2>> const &facility
         ) {
+            if constexpr(!std::is_same_v<M, infra::RealTimeApp<typename M::EnvironmentType>>) {
+                static_assert(
+                    !std::is_same_v<M, infra::SinglePassIterationApp<typename M::EnvironmentType>>
+                    , "single pass iteration app does not support synchronous facility streamer" 
+                );
+            }
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(facility));
@@ -310,6 +316,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             SynchronousFacilityStreamer &operator=(SynchronousFacilityStreamer &&) = default;
             typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>> *operator->() {
                 return result_.get();
+            }
+            typename M::template SynchronousRunResult<typename M::template KeyedData<T1,T2>> &operator*() {
+                return *(result_.get());
             }
             void operator<<(typename M::template InnerData<T1> &&key) {}
             void operator<<(T1 &&key) {}
