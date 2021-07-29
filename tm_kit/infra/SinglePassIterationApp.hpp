@@ -3171,6 +3171,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             facility->core_->clearConsumersInSynchronousRunnerMode();
             return res;
         }
+        template <class T1, class T2>
+        static void streamToStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
+            if (output) {
+                auto action = liftPure<KeyedData<T1,T2>>(
+                    [](KeyedData<T1,T2> &&d) -> KeyedData<T1,T2> {
+                        return std::move(d);
+                    }
+                );
+                facility->core_->placeOrder(std::move(key), action->core_.get());
+                while (true) {
+                    auto cert = action->core_->poll();
+                    if (cert.check()) {
+                        auto data = action->core_->next(std::move(cert));
+                        if (data) {
+                            bool lastOne = data->timedData.finalFlag;
+                            output->push_back(std::move(*data));
+                            if (lastOne) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                facility->core_->clearConsumersInSynchronousRunnerMode();
+            } else {
+                facility->core_->placeOrder(std::move(key), nullptr);
+            }
+        }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         static void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
             exporter->core_->start(env);

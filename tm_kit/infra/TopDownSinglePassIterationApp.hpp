@@ -390,8 +390,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::unordered_map<typename StateT::IDType, std::tuple<Key<A>, IHandler<KeyedData<A,B>> *>, typename StateT::IDHash> theMap_;
             virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
             }
+            bool synchronousRunnerMode_;
+            void enableSynchronousRunnerMode() {
+                synchronousRunnerMode_ = true;
+            }
+            void clearConsumersInSynchronousRunnerMode() {
+                if (synchronousRunnerMode_) {
+                    theMap_.clear();
+                }
+            }
         public:
-            OnOrderFacilityProducer() : parent_(nullptr), theMap_() {}
+            OnOrderFacilityProducer() : parent_(nullptr), theMap_(), synchronousRunnerMode_(false) {}
             OnOrderFacilityProducer(OnOrderFacilityProducer const &) = delete;
             OnOrderFacilityProducer &operator=(OnOrderFacilityProducer const &) = delete;
             OnOrderFacilityProducer(OnOrderFacilityProducer &&) = default;
@@ -2600,6 +2609,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T1, class T2>
         void startFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility) {
             facility->core_->setParentForProducer(this);
+            facility->core_->enableSynchronousRunnerMode();
             auto *p = facilityAsExternalComponent(facility);
             if (p) {
                 p->start(env);
@@ -2626,7 +2636,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 topTask->act(env);
                 delete topTask;
             }
+            facility->core_->clearConsumersInSynchronousRunnerMode();
             return res;
+        }
+        template <class T1, class T2>
+        void streamToStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
+            if (output) {
+                class InnerH final : public IHandler<KeyedData<T1,T2>> {
+                private:
+                    SynchronousRunResult<KeyedData<T1,T2>> *res_;
+                public:
+                    InnerH(SynchronousRunResult<KeyedData<T1,T2>> *res) : res_(res) {}
+                    virtual void handle(InnerData<KeyedData<T1,T2>> &&x) override final {
+                        res_->push_back(std::move(x));
+                    }
+                };
+                InnerH h(output);
+                facility->core_->registerKeyHandler(key.timedData.value, &h);
+                facility->core_->handle(std::move(key));
+                while (!taskQueue_.empty()) {
+                    auto *topTask = taskQueue_.top();
+                    taskQueue_.pop();
+                    topTask->act(env);
+                    delete topTask;
+                }
+                facility->core_->clearConsumersInSynchronousRunnerMode();
+            } else {
+                facility->core_->registerKeyHandler(key.timedData.value, nullptr);
+                facility->core_->handle(std::move(key));
+            }
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {

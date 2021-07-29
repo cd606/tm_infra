@@ -794,6 +794,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
             return std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
         }
+        template <class T1, class T2>
+        static void streamToStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
+        }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         static void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
         }

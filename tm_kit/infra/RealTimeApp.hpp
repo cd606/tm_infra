@@ -3128,6 +3128,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             facility->core_->handle(std::move(key));
             return res;
         }
+        template <class T1, class T2>
+        static void streamToStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
+            //for real time mode, we DO NOT need to re-attach the handler
+            //because the only way this private method is called now is through SynchronousRunner
+            //which will make sure that it will only call when the handler is already in place
+            facility->core_->handle(std::move(key));
+        }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         static void startExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter) {
             exporter->core_->start(env);
