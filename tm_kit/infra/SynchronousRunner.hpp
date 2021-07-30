@@ -193,14 +193,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 app_classification_v<M> != AppClassification::SinglePass
                 , "single pass iteration app does not support synchronous facility streamer" 
             );
-            /*
-            if constexpr(!std::is_same_v<M, infra::RealTimeApp<typename M::EnvironmentType>>) {
-                static_assert(
-                    !std::is_same_v<M, infra::SinglePassIterationApp<typename M::EnvironmentType>>
-                    , "single pass iteration app does not support synchronous facility streamer" 
-                );
-            }
-            */
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(facility));
