@@ -232,7 +232,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.dynamicPlaceOrder(
                     (prefix=="")?source:(prefix+"/"+source)
                     , 0
-                    , facility
+                    , (prefix=="")?facility:(prefix+"/"+facility)
                     , (prefix=="")?sink:(prefix+"/"+sink)
                     , 0
                 );
@@ -243,7 +243,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.dynamicPlaceOrder(
                     (prefix=="")?sourceName:(prefix+"/"+sourceName)
                     , sourceIdx
-                    , facility
+                    , (prefix=="")?facility:(prefix+"/"+facility)
                     , (prefix=="")?sink:(prefix+"/"+sink)
                     , 0
                 );
@@ -254,7 +254,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.dynamicPlaceOrder(
                     (prefix=="")?source:(prefix+"/"+source)
                     , 0
-                    , facility
+                    , (prefix=="")?facility:(prefix+"/"+facility)
                     , (prefix=="")?sinkName:(prefix+"/"+sinkName)
                     , sinkIdx
                 );
@@ -265,7 +265,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.dynamicPlaceOrder(
                     (prefix=="")?sourceName:(prefix+"/"+sourceName)
                     , sourceIdx
-                    , facility
+                    , (prefix=="")?facility:(prefix+"/"+facility)
                     , (prefix=="")?sinkName:(prefix+"/"+sinkName)
                     , sinkIdx
                 );
@@ -276,7 +276,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.dynamicPlaceOrder(
                     (prefix=="")?source:(prefix+"/"+source)
                     , 0
-                    , facility
+                    , (prefix=="")?facility:(prefix+"/"+facility)
                     , std::nullopt
                     , 0
                 );
@@ -287,7 +287,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 r.dynamicPlaceOrder(
                     (prefix=="")?sourceName:(prefix+"/"+sourceName)
                     , sourceIdx
-                    , facility
+                    , (prefix=="")?facility:(prefix+"/"+facility)
                     , std::nullopt
                     , 0
                 );
