@@ -489,6 +489,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return this->producerStoppedStatus();
             }
         };
+        
+        template <class A, class B>
+        class SingleEntryAbstractAction : public AbstractAction<A,B> {};
 
         #include <tm_kit/infra/TopDownSinglePassIterationApp_AbstractAction_Piece.hpp>
 
