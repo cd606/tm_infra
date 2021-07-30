@@ -74,6 +74,7 @@ tm_infra_headers = [
     , 'NodeClassifier.hpp'
     , 'KleisliSequence.hpp'
     , 'SynchronousRunner.hpp'
+    , 'AppClassifier.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')
