@@ -26,8 +26,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static constexpr bool running() {
             return true;
         }
-        static void exit() {
-            std::exit(0);
+        static void exit(int status=0) {
+            std::exit(status);
         }
     };
     //The "exit control by a flag" component 
@@ -38,7 +38,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         bool running() const {
             return running_;
         }
-        void exit() {
+        void exit(int status=0) {
             running_ = false;
         }
     };
