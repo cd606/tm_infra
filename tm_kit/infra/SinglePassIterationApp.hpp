@@ -1521,17 +1521,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class SinglePassIterationApp;
             struct TimeComparer {
-                bool operator()(InnerData<KeyedData<A,B>> const &a, InnerData<KeyedData<A,B>> const &b) {
-                    return (a.timedData.timePoint > b.timedData.timePoint);
+                bool operator()(std::tuple<uint64_t,InnerData<KeyedData<A,B>>> const &a, std::tuple<uint64_t,InnerData<KeyedData<A,B>>> const &b) {
+                    if (std::get<1>(a).timedData.timePoint > std::get<1>(b).timedData.timePoint) {
+                        return true;
+                    } else if (std::get<1>(a).timedData.timePoint < std::get<1>(b).timedData.timePoint) {
+                        return false;
+                    } else {
+                        return (std::get<0>(a) > std::get<0>(b));
+                    }
                 }
             };
-            using DQueue = std::priority_queue<InnerData<KeyedData<A,B>>, std::vector<InnerData<KeyedData<A,B>>>, TimeComparer>;
+            using DQueue = std::priority_queue<std::tuple<uint64_t,InnerData<KeyedData<A,B>>>, std::vector<std::tuple<uint64_t,InnerData<KeyedData<A,B>>>>, TimeComparer>;
             class ResponseProvider final : public virtual Provider<KeyedData<A,B>> {
             private:
                 DQueue queue_;
                 friend class OnOrderFacilityCore;
+                uint64_t counter_ = 0;
                 void addResponse(InnerData<KeyedData<A,B>> &&response) {
-                    queue_.push(std::move(response));
+                    queue_.push({counter_, std::move(response)});
+                    ++counter_;
                 }
             public:
                 ResponseProvider() = default;
@@ -1539,11 +1547,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (queue_.empty()) {
                         return Certificate<KeyedData<A,B>> {std::nullopt, this};
                     }
-                    return Certificate<KeyedData<A,B>> {queue_.top().timedData.timePoint, this};
+                    return Certificate<KeyedData<A,B>> {std::get<1>(queue_.top()).timedData.timePoint, this};
                 }
                 virtual Data<KeyedData<A,B>> next(Certificate<KeyedData<A,B>> &&cert) override final {
                     cert.consume(this);
-                    auto ret = std::move(queue_.top());              
+                    auto ret = std::move(std::get<1>(queue_.top()));              
                     queue_.pop();
                     return {ret};
                 }
@@ -3166,6 +3174,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             break;
                         }
                     }
+                } else {
+                    break;
                 }
             }
             facility->core_->clearConsumersInSynchronousRunnerMode();
@@ -3191,6 +3201,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                 break;
                             }
                         }
+                    } else {
+                        break;
                     }
                 }
                 facility->core_->clearConsumersInSynchronousRunnerMode();

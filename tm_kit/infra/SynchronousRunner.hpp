@@ -189,10 +189,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         SynchronousFacilityStreamer<T1,T2> facilityStreamer(
             std::shared_ptr<typename M::template OnOrderFacility<T1,T2>> const &facility
         ) {
-            static_assert(
-                app_classification_v<M> != AppClassification::SinglePass
-                , "single pass iteration app does not support synchronous facility streamer" 
-            );
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(facility));
