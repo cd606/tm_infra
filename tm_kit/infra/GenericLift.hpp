@@ -187,6 +187,60 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return M::template uniformSimpleImporter<A>(std::move(f), liftParam);
             }
         };
+        template <class A>
+    #ifdef _MSC_VER 
+        class GenericLiftImpl<typename M::EnvironmentType *, std::optional<TimedDataWithEnvironment<A, typename M::StateType, typename M::TimePoint>>, false> {
+    #else
+        class GenericLiftImpl<typename M::EnvironmentType *, typename M::template Data<A>, false> {
+    #endif
+        public:
+            template <class F>
+            static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
+                return M::template uniformSimpleImporter<A>([f=std::move(f)](typename M::EnvironmentType *env) mutable -> 
+    #ifdef _MSC_VER
+                    std::tuple<bool, std::optional<TimedDataWithEnvironment<A, typename M::StateType, typename M::TimePoint>>>
+    #else
+                    std::tuple<bool, typename M::template Data<A>>
+    #endif
+                {
+                    auto d = f(env);
+                    bool hasNext = false;
+                    if (d) {
+                        hasNext = !d->timedData.finalFlag;
+                    } else {
+                        hasNext = true;
+                    }
+                    return {hasNext, std::move(d)};
+                }, liftParam);
+            }
+        };
+        template <class A>
+        class GenericLiftImpl<typename M::EnvironmentType *, std::tuple<bool, A>, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam) {
+                return M::template uniformSimpleImporter<A>([f=std::move(f)](typename M::EnvironmentType *env) mutable -> 
+    #ifdef _MSC_VER
+                    std::tuple<bool, std::optional<TimedDataWithEnvironment<A, typename M::StateType, typename M::TimePoint>>>
+    #else
+                    std::tuple<bool, typename M::template Data<A>>
+    #endif
+                {
+                    auto [hasNext, a] = f(env);
+                    return {
+                        hasNext 
+                        , {{
+                            env
+                            , {
+                                env->resolveTime()
+                                , std::move(a)
+                                , !hasNext
+                            }
+                        }}
+                    };
+                }, liftParam);
+            }
+        };
         template <class A, class B>
         class GenericLiftMultiImpl {
         };

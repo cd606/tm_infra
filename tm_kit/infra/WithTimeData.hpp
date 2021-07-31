@@ -434,6 +434,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using ValueType = T;
         Environment * const environment;
         WithTime<T, TimePoint> timedData;
+    #ifdef _MSC_VER
+        TimedDataWithEnvironment() : environment(nullptr), timedData() {}
+    #endif
         TimedDataWithEnvironment(Environment *env, WithTime<T, TimePoint> &&t) : environment(env), timedData(std::move(t)) {}
         TimedDataWithEnvironment(Environment *env, WithTime<T, TimePoint> const &t) : environment(env), timedData(withtime_utils::makeCopy(t)) {}
         TimedDataWithEnvironment(TimedDataWithEnvironment const &d) : environment(d.environment), timedData(withtime_utils::makeCopy(d.timedData)) {}
