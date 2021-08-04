@@ -2908,6 +2908,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using ExtraOutputType = typename X::ExtraOutputType;
         };
 
+    private:
+        template <class T>
+        class ITerminableHandler : public IHandler<T> {
+        public:
+            virtual ~ITerminableHandler() = default;
+            virtual void terminate() = 0;
+        };
+    public:
         template <class T>
         class SynchronousRunResult {
         private:
@@ -2916,6 +2924,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::promise<InnerData<T>> currentPromise_;
             mutable std::mutex mutex_;
             friend class Iterator;
+            ITerminableHandler<T> *handler_;
         public:
             class Iterator {
             public:
@@ -2958,11 +2967,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return iter;
                 }
             };
-            SynchronousRunResult() : theList_(), currentPromise_(), mutex_() {
+            SynchronousRunResult() : theList_(), currentPromise_(), mutex_(), handler_(nullptr) {
                 std::lock_guard<std::mutex> _(mutex_);
                 theList_.push_back(currentPromise_.get_future());
             }
-            ~SynchronousRunResult() = default;
+            ~SynchronousRunResult() {
+                std::lock_guard<std::mutex> _(mutex_);
+                if (handler_) {
+                    handler_->terminate();
+                }
+            }
             SynchronousRunResult(SynchronousRunResult const &) = delete;
             SynchronousRunResult &operator=(SynchronousRunResult const &) = delete;
             SynchronousRunResult(SynchronousRunResult &&) = delete;
@@ -3032,6 +3046,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 return theList_.empty();
             }
+        private:
+            friend class RealTimeApp;
+            void setTerminableHandler(ITerminableHandler<T> *p) {
+                std::lock_guard<std::mutex> _(mutex_);
+                handler_ = p;
+            }
+        public:
+            void removeTerminableHandler() {
+                std::lock_guard<std::mutex> _(mutex_);
+                handler_ = nullptr;
+            }
+
         };
 
     private:
@@ -3050,35 +3076,50 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronously(StateT *env, std::shared_ptr<Importer<T>> const &importer) {
             std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
-            class LocalH final : public IHandler<T> {
+            class LocalH final : public ITerminableHandler<T> {
             private:
                 SynchronousRunResult<T> *res_;
+                Importer<T> *importer_;
+                StateT *env_;
+                std::atomic<bool> terminated_;
             public:
-                LocalH(SynchronousRunResult<T> *res) : res_(res) {}
+                LocalH(SynchronousRunResult<T> *res, Importer<T> *importer, StateT *env) : res_(res), importer_(importer), env_(env), terminated_(false) {}
                 virtual void handle(InnerData<T> &&data) {
                     bool lastOne = data.timedData.finalFlag;
-                    res_->push(std::move(data));
+                    if (!terminated_) {
+                        res_->push(std::move(data));
+                    }
                     if (lastOne) {
+                        if (!terminated_) {
+                            res_->removeTerminableHandler();
+                        }
                         delete this;
                     }
                 }
+                virtual void terminate() override final {
+                    terminated_ = true;
+                    importer_->control(env_, "stop", {});
+                }
             };
-            importer->core_->addHandler(new LocalH(res.get()));
+            auto *h = new LocalH(res.get(), importer.get(), env);
+            res->setTerminableHandler(h);
+            importer->core_->addHandler(h);
             importer->core_->start(env);
             return res;
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         static std::unique_ptr<SynchronousRunResult<T>> runUnstartedImporterSynchronouslyUntil(StateT *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition) {
             std::unique_ptr<SynchronousRunResult<T>> res = std::make_unique<SynchronousRunResult<T>>();
-            class LocalH final : public IHandler<T> {
+            class LocalH final : public ITerminableHandler<T> {
             private:
                 SynchronousRunResult<T> *res_;
                 Importer<T> *importer_;
                 StateT *env_;
                 std::function<bool(InnerData<T> const &)> condition_;
                 bool conditionSatisfied_;
+                std::atomic<bool> terminated_;
             public:
-                LocalH(SynchronousRunResult<T> *res, Importer<T> *importer, StateT *env, std::function<bool(InnerData<T> const &)> const &condition) : res_(res), importer_(importer), env_(env), condition_(condition), conditionSatisfied_(false) {}
+                LocalH(SynchronousRunResult<T> *res, Importer<T> *importer, StateT *env, std::function<bool(InnerData<T> const &)> const &condition) : res_(res), importer_(importer), env_(env), condition_(condition), conditionSatisfied_(false), terminated_(false) {}
                 virtual void handle(InnerData<T> &&data) {
                     if (!conditionSatisfied_) {
                         conditionSatisfied_ = condition_(data);
@@ -3086,18 +3127,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             importer_->control(env_, "stop", {});
                         }
                         bool lastOne = data.timedData.finalFlag;
-                        res_->push(std::move(data), conditionSatisfied_);
+                        if (!terminated_) {
+                            res_->push(std::move(data), conditionSatisfied_);
+                        }
                         if (lastOne) {
+                            if (!terminated_) {
+                                res_->removeTerminableHandler();
+                            }
                             delete this;
                         }
                     } else {
                         if (data.timedData.finalFlag) {
+                            if (!terminated_) {
+                                res_->removeTerminableHandler();
+                            }
                             delete this;
                         }
                     }
                 }
+                virtual void terminate() override final {
+                    terminated_ = true;
+                    importer_->control(env_, "stop", {});
+                }
             };
-            importer->core_->addHandler(new LocalH(res.get(), importer.get(), env, condition));
+            auto *h = new LocalH(res.get(), importer.get(), env, condition);
+            res->setTerminableHandler(h);
+            importer->core_->addHandler(h);
             importer->core_->start(env);
             return res;
         }
@@ -3111,20 +3166,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T1, class T2>
         static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
             std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> res = std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
-            class LocalH final : public IHandler<KeyedData<T1,T2>> {
+            class LocalH final : public ITerminableHandler<KeyedData<T1,T2>> {
             private:
                 SynchronousRunResult<KeyedData<T1,T2>> *res_;
+                std::atomic<bool> terminated_;
             public:
-                LocalH(SynchronousRunResult<KeyedData<T1,T2>> *res) : res_(res) {}
+                LocalH(SynchronousRunResult<KeyedData<T1,T2>> *res) : res_(res), terminated_(false) {}
                 virtual void handle(InnerData<KeyedData<T1,T2>> &&data) {
                     bool lastOne = data.timedData.finalFlag;
-                    res_->push(std::move(data));
+                    if (!terminated_) {
+                        res_->push(std::move(data));
+                    }
                     if (lastOne) {
+                        if (!terminated_) {
+                            res_->removeTerminableHandler();
+                        }
                         delete this;
                     }
                 }
+                virtual void terminate() override final {
+                    terminated_ = true;
+                }
             };
-            facility->core_->registerKeyHandler(key.timedData.value, new LocalH(res.get()));
+            auto *h = new LocalH(res.get());
+            res->setTerminableHandler(h);
+            facility->core_->registerKeyHandler(key.timedData.value, h);
             facility->core_->handle(std::move(key));
             return res;
         }
