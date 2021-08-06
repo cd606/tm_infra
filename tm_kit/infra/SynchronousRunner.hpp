@@ -218,7 +218,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(exporter));
                 auto *p = app_.template exporterAsExternalComponent<T>(exporter);
-                if (startedComponents_.find(p) != startedComponents_.end()) {
+                if (startedComponents_.find(p) == startedComponents_.end()) {
                     app_.template startExporterSynchronously<T>(env_, exporter);
                     startedComponents_.insert(p);
                 }
