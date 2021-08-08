@@ -25,15 +25,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::chrono::system_clock::from_time_t(std::mktime(m))+std::chrono::microseconds(microseconds);
         }
         //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmm" (the microsecond part can be omitted)
-        std::chrono::system_clock::time_point parseLocalTime(std::string const &s) {
+        std::chrono::system_clock::time_point parseLocalTime(std::string_view const &s) {
+            int year = (s[0]-'0')*1000+(s[1]-'0')*100+(s[2]-'0')*10+(s[3]-'0');
+            int mon = (s[5]-'0')*10+(s[6]-'0');
+            int day = (s[8]-'0')*10+(s[9]-'0');
+            int hour = (s[11]-'0')*10+(s[12]-'0');
+            int min = (s[14]-'0')*10+(s[15]-'0');
+            int sec = 0;
+            if (s.length() >= 19) {
+                sec = (s[17]-'0')*10+(s[18]-'0');
+            }
+            int microsec = 0;
+            if (s.length() > 20 && s[19] == '.') {
+                int unit = 100000;
+                for (std::size_t ii=0; ii<6; ++ii,unit/=10) {
+                    if (s.length() > (20+ii)) {
+                        microsec += (s[20+ii]-'0')*unit;
+                    } else {
+                        break;
+                    }
+                }
+
+            }
             return parseLocalTime(
-                std::stoi(s.substr(0,4))
-                , std::stoi(s.substr(5,2))
-                , std::stoi(s.substr(8,2))
-                , std::stoi(s.substr(11,2))
-                , std::stoi(s.substr(14,2))
-                , ((s.length() == 16)?0:std::stoi(s.substr(17,2)))
-                , ((s.length() > 20 && s[19] == '.')?std::stoi(s.substr(20,6)+std::string(26-s.length(), '0')):0)
+                year, mon, day, hour, min, sec, microsec
             );
         }    
         std::string localTimeString(std::chrono::system_clock::time_point const &tp) {
