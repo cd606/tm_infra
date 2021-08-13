@@ -7,6 +7,7 @@
 #include <tm_kit/infra/SinglePassIterationApp.hpp>
 #include <tm_kit/infra/TopDownSinglePassIterationApp.hpp>
 #include <tm_kit/infra/AppClassifier.hpp>
+#include <tm_kit/infra/NodeClassifier.hpp>
 
 #include <unordered_set>
 
@@ -40,10 +41,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return env_;
         }
 
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItem(
+            std::shared_ptr<Im> const &importer
+        ) {
+            using T = typename Im::DataType;
+#else
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<T>> importItem(
             std::shared_ptr<typename M::template Importer<T>> const &importer
         ) {
+#endif
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(importer));
@@ -55,11 +64,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return app_.template runUnstartedImporterSynchronously<T>(env_, importer);
         }
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Im, class Condition, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItemUntil(
+            std::shared_ptr<Im> const &importer
+            , Condition const &condition
+        ) {
+            using T = typename Im::DataType;
+#else
         template <class T, class Condition, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<T>> importItemUntil(
             std::shared_ptr<typename M::template Importer<T>> const &importer
             , Condition const &condition
         ) {
+#endif
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(importer));
@@ -209,11 +227,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
 
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
+        void exportItem(
+            std::shared_ptr<Ex> const &exporter
+            , typename M::template InnerData<typename Ex::DataType> &&data
+        ) {
+            using T = typename Ex::DataType;
+#else
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void exportItem(
             std::shared_ptr<typename M::template Exporter<T>> const &exporter
             , typename M::template InnerData<T> &&data
         ) {
+#endif
             {
                 std::lock_guard<std::mutex> _(mutex_);
                 components_.insert(std::static_pointer_cast<void>(exporter));
@@ -225,12 +252,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return app_.template runStartedExporterSynchronously<T>(env_, exporter, std::move(data));
         }
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
+        void exportItem(
+            std::shared_ptr<Ex> const &exporter
+            , typename Ex::DataType &&data
+        ) {
+            using T = typename Ex::DataType;
+#else
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void exportItem(
             std::shared_ptr<typename M::template Exporter<T>> const &exporter
             , T &&data
         ) {
-            exportItem<T>(exporter, M::template pureInnerData<T>(env_, std::move(data)));
+#endif
+            this->exportItem(exporter, M::template pureInnerData<T>(env_, std::move(data)));
         }
     };
 
@@ -261,17 +297,34 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return env_;
         }
 
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItem(
+            std::shared_ptr<Im> const &importer
+        ) {
+            using T = typename Im::DataType;
+#else
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<T>> importItem(
             std::shared_ptr<typename M::template Importer<T>> const &importer
         ) {
+#endif
             return std::make_unique<typename M::template SynchronousRunResult<T>>();
         }
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Im, class Condition, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItem(
+            std::shared_ptr<Im> const &importer
+            , Condition const &condition
+        ) {
+            using T = typename Im::DataType;
+#else
         template <class T, class Condition, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<T>> importItemUntil(
             std::shared_ptr<typename M::template Importer<T>> const &importer
             , Condition const &condition
         ) {
+#endif
             return std::make_unique<typename M::template SynchronousRunResult<T>>();
         }
         //The parameter order is trying to imitate the order in AppRunner
@@ -328,17 +381,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , facility
             );
         }
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
+        void exportItem(
+            std::shared_ptr<Ex> const &exporter
+            , typename M::template InnerData<typename Ex::DataType> &&data
+        ) {
+            using T = typename Ex::DataType;
+#else
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void exportItem(
             std::shared_ptr<typename M::template Exporter<T>> const &exporter
             , typename M::template InnerData<T> &&data
         ) {
+#endif
         }
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
+        void exportItem(
+            std::shared_ptr<Ex> const &exporter
+            , typename Ex::DataType &&data
+        ) {
+            using T = typename Ex::DataType;
+#else
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void exportItem(
             std::shared_ptr<typename M::template Exporter<T>> const &exporter
             , T &&data
         ) {
+#endif
         }
     };
 } } } }

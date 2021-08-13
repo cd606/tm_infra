@@ -651,13 +651,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class Source {
         private:
             friend class AppRunner;
-            using TheDataTypeOfThisSource = T;
             typename App::template Source<T> mSource;
             std::string producer;
             bool useAltOutput;
             Source(typename App::template Source<T> &&s, std::string const &p) : mSource(std::move(s)), producer(p), useAltOutput(false) {}
             Source(typename App::template Source<T> &&s, std::string const &p, bool ao) : mSource(std::move(s)), producer(p), useAltOutput(ao) {}
         public:
+            using TheDataTypeOfThisSource = T;
             Source<T> clone() const {
                 return {mSource.clone(), producer, useAltOutput};
             }
@@ -670,12 +670,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class Sink {
         private:
             friend class AppRunner;
-            using TheDataTypeOfThisSink = T;
             typename App::template Sink<T> mSink;
             std::string consumer;
             int pos;
             Sink(typename App::template Sink<T> &&s, std::string const &c, int p) : mSink(std::move(s)), consumer(c), pos(p) {}
         public:
+            using TheDataTypeOfThisSink = T;
             //The name is always copied back for safety
             std::string registeredNodeName() const {
                 return consumer;

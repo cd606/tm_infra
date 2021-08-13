@@ -293,8 +293,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             };
         }
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+        template <class Src, class Snk>
+        OneDeclarativeGraphItem(std::string const &sourceName, std::function<void(R &, Src, Snk)> const &facilitioid, std::string const &sinkName) {
+            using A = typename std::decay_t<Src>::TheDataTypeOfThisSource::KeyType;
+            using B = typename std::decay_t<Snk>::value_type::TheDataTypeOfThisSink::DataType;
+#else    
         template <class A, class B>
         OneDeclarativeGraphItem(std::string const &sourceName, typename R::template FacilitioidConnector<A,B> const &facilitioid, std::string const &sinkName) {
+#endif
             registration_ = [sourceName,facilitioid,sinkName](R &r, std::string const &prefix) {
                 facilitioid(
                     r 
