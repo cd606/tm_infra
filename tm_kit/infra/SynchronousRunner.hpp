@@ -41,7 +41,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return env_;
         }
 
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItem(
             std::shared_ptr<Im> const &importer
@@ -64,7 +64,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return app_.template runUnstartedImporterSynchronously<T>(env_, importer);
         }
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Im, class Condition, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItemUntil(
             std::shared_ptr<Im> const &importer
@@ -227,7 +227,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
 
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
         void exportItem(
             std::shared_ptr<Ex> const &exporter
@@ -252,7 +252,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return app_.template runStartedExporterSynchronously<T>(env_, exporter, std::move(data));
         }
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
         void exportItem(
             std::shared_ptr<Ex> const &exporter
@@ -297,7 +297,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return env_;
         }
 
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItem(
             std::shared_ptr<Im> const &importer
@@ -311,7 +311,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 #endif
             return std::make_unique<typename M::template SynchronousRunResult<T>>();
         }
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Im, class Condition, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
         std::unique_ptr<typename M::template SynchronousRunResult<typename Im::DataType>> importItem(
             std::shared_ptr<Im> const &importer
@@ -381,7 +381,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , facility
             );
         }
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
         void exportItem(
             std::shared_ptr<Ex> const &exporter
@@ -396,7 +396,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         ) {
 #endif
         }
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
         void exportItem(
             std::shared_ptr<Ex> const &exporter
