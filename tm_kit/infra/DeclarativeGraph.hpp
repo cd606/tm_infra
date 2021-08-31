@@ -293,7 +293,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             };
         }
-#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 9)
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Src, class Snk>
         OneDeclarativeGraphItem(std::string const &sourceName, std::function<void(R &, Src, Snk)> const &facilitioid, std::string const &sinkName) {
             using A = typename std::decay_t<Src>::TheDataTypeOfThisSource::KeyType;
