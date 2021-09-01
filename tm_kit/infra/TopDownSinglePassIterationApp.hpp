@@ -2700,13 +2700,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using iterator_category = std::input_iterator_tag;
         private:
             friend class TopDownSinglePassIterationApp;
-            std::shared_ptr<Importer<T>> importer_;
             AbstractImporter<T> *importerCore_;
             Data<T> data_;
             bool hasMore_;
-            UnregisteredImporterIterator() : importer_(), importerCore_(nullptr), data_(std::nullopt), hasMore_(false) {}
-            UnregisteredImporterIterator(EnvironmentType *env, std::shared_ptr<Importer<T>> const &importer, AbstractImporter<T> *importerCore) 
-                : importer_(importer), importerCore_(importerCore), data_(), hasMore_(true) {
+            UnregisteredImporterIterator() : importerCore_(nullptr), data_(std::nullopt), hasMore_(false) {}
+            UnregisteredImporterIterator(EnvironmentType *env, AbstractImporter<T> *importerCore) 
+                : importerCore_(importerCore), data_(), hasMore_(true) {
                 if (importerCore_) {
                     importerCore_->start(env);
                 }
@@ -2715,7 +2714,6 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void next() {
                 if (importerCore_) {
                     if (!hasMore_) {
-                        importer_.reset();
                         importerCore_ = nullptr;
                     } else {
                         auto x = importerCore_->generate(nullptr);
@@ -2731,12 +2729,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return UnregisteredImporterIterator();
             }
             UnregisteredImporterIterator(UnregisteredImporterIterator const &iter) 
-                : importer_(iter.importer_), importerCore_(iter.importerCore_), data_(withtime_utils::clone(iter.data_)), hasMore_(iter.hasMore_)
+                : importerCore_(iter.importerCore_), data_(withtime_utils::clone(iter.data_)), hasMore_(iter.hasMore_)
             {
             }
             UnregisteredImporterIterator &operator=(UnregisteredImporterIterator const &iter) {
                 if (this != &iter) {
-                    importer_ = iter.importer_;
                     importerCore_ = iter.importerCore_;
                     data_ = withtime_utils::clone(iter.data_);
                     hasMore_ = iter.hasMore_;
@@ -2779,7 +2776,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (!importer) {
                 return UnregisteredImporterIterator<T>::endIter();
             } else {
-                return UnregisteredImporterIterator<T>(env, importer, importer->core_.get());
+                return UnregisteredImporterIterator<T>(env, importer->core_.get());
             }
         }
         template <class T>
@@ -2803,23 +2800,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             using iterator_category = std::output_iterator_tag;
         private:
             friend class TopDownSinglePassIterationApp;
-            std::shared_ptr<Exporter<T>> exporter_;
             AbstractExporter<T> *exporterCore_;
-            UnregisteredExporterIterator() : exporter_(), exporterCore_(nullptr) {}
-            UnregisteredExporterIterator(EnvironmentType *env, std::shared_ptr<Exporter<T>> const &exporter, AbstractExporter<T> *exporterCore) 
-                : exporter_(exporter), exporterCore_(exporterCore) {
+            UnregisteredExporterIterator() : exporterCore_(nullptr) {}
+            UnregisteredExporterIterator(EnvironmentType *env, AbstractExporter<T> *exporterCore) 
+                : exporterCore_(exporterCore) {
                 if (exporterCore_) {
                     exporterCore_->start(env);
                 }
             }
         public:
             UnregisteredExporterIterator(UnregisteredExporterIterator const &iter) 
-                : exporter_(iter.exporter_), exporterCore_(iter.exporterCore_)
+                : exporterCore_(iter.exporterCore_)
             {
             }
             UnregisteredExporterIterator &operator=(UnregisteredExporterIterator const &iter) {
                 if (this != &iter) {
-                    exporter_ = iter.exporter_;
                     exporterCore_ = iter.exporterCore_;
                 }
                 return *this;
@@ -2865,7 +2860,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (!exporter) {
                 return UnregisteredExporterIterator<T>();
             } else {
-                return UnregisteredExporterIterator<T>(env, exporter, exporter->core_.get());
+                return UnregisteredExporterIterator<T>(env, exporter->core_.get());
             }
         }
         template <class T>

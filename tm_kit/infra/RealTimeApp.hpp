@@ -3209,6 +3209,183 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
             exporter->core_->handle(std::move(data));
         }
+
+    public:
+        template <class T>
+        class UnregisteredImporterIterator {
+        private:
+            std::shared_ptr<SynchronousRunResult<T>> res_;
+            bool atEnd_;
+            Data<T> data_;
+        public:
+            using difference_type = void;
+            using value_type = Data<T>;
+            using pointer = Data<T> *;
+            using const_pointer = Data<T> const *;
+            using reference = Data<T> &;
+            using const_reference = Data<T> const &;
+            using iterator_category = std::input_iterator_tag;
+        private:
+            friend class RealTimeApp;
+            UnregisteredImporterIterator() : res_(), atEnd_(true), data_(std::nullopt) {}
+            UnregisteredImporterIterator(EnvironmentType *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition = std::function<bool(InnerData<T> const &)>()) 
+                : res_(
+                    condition 
+                    ?
+                    RealTimeApp::runUnstartedImporterSynchronouslyUntil(env, importer, condition)
+                    :
+                    RealTimeApp::runUnstartedImporterSynchronously(env, importer)
+                )
+                , atEnd_(false)
+                , data_(std::nullopt)
+            {
+                if (res_->empty()) {
+                    res_.reset();
+                    atEnd_ = true;
+                } else {
+                    data_ = std::move(res_->front());
+                    res_->pop_front();
+                }
+            }
+        public:
+            UnregisteredImporterIterator(UnregisteredImporterIterator const &) = default;
+            UnregisteredImporterIterator &operator=(UnregisteredImporterIterator const &) = default;
+            UnregisteredImporterIterator(UnregisteredImporterIterator &&) = default;
+            UnregisteredImporterIterator &operator=(UnregisteredImporterIterator &&) = default;
+
+            bool operator==(UnregisteredImporterIterator const &iter) const {
+                return res_.get() == iter.res_.get() && atEnd_ == iter.atEnd_;
+            }
+            bool operator!=(UnregisteredImporterIterator const &iter) const {
+                return !operator==(iter);
+            }
+            reference operator*() {
+                return data_;
+            }
+            const_reference operator*() const {
+                return data_;
+            }
+            pointer operator->() {
+                return &data_;
+            }
+            const_pointer operator->() const {
+                return &data_;
+            }
+            UnregisteredImporterIterator &operator++() {
+                if (res_->empty()) {
+                    res_.reset();
+                    data_ = std::nullopt;
+                    atEnd_ = true;
+                } else {
+                    data_ = std::move(res_->front());
+                    res_->pop_front();
+                }
+                return *this;
+            }
+            UnregisteredImporterIterator operator++(int) {
+                UnregisteredImporterIterator iter(*this);
+                ++(*this);
+                return iter;
+            }
+        };
+
+        template <class T>
+        static UnregisteredImporterIterator<T> beginIterateUnregisteredImporter(EnvironmentType *env, std::shared_ptr<Importer<T>> const &importer, std::function<bool(InnerData<T> const &)> const &condition = std::function<bool(InnerData<T> const &)>()) {
+            if (!importer) {
+                return UnregisteredImporterIterator<T>();
+            } else {
+                return UnregisteredImporterIterator<T>(env, importer, condition);
+            }
+        }
+        template <class T>
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter() {
+            return UnregisteredImporterIterator<T>();
+        }
+        template <class T>
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &importer) {
+            return UnregisteredImporterIterator<T>();
+        }
+        template <class T>
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &importer) {
+            return UnregisteredImporterIterator<T>();
+        }
+
+        template <class T>
+        class UnregisteredExporterIterator {
+        public:
+            using difference_type = void;
+            using value_type = Data<T>;
+            using iterator_category = std::output_iterator_tag;
+        private:
+            friend class RealTimeApp;
+            AbstractExporter<T> *exporterCore_;
+            UnregisteredExporterIterator() : exporterCore_(nullptr) {}
+            UnregisteredExporterIterator(EnvironmentType *env, AbstractExporter<T> *exporterCore) 
+                : exporterCore_(exporterCore) {
+                if (exporterCore_) {
+                    exporterCore_->start(env);
+                }
+            }
+        public:
+            UnregisteredExporterIterator(UnregisteredExporterIterator const &iter) 
+                : exporterCore_(iter.exporterCore_)
+            {
+            }
+            UnregisteredExporterIterator &operator=(UnregisteredExporterIterator const &iter) {
+                if (this != &iter) {
+                    exporterCore_ = iter.exporterCore_;
+                }
+                return *this;
+            }
+            UnregisteredExporterIterator &operator++() {
+                return *this;
+            }
+            UnregisteredExporterIterator operator++(int) {
+                UnregisteredExporterIterator iter(*this);
+                ++(*this);
+                return iter;
+            }
+            UnregisteredExporterIterator &operator*() {
+                return *this;
+            }
+            void operator=(Data<T> &&data) {
+                if (data) {
+                    if (exporterCore_) {
+                        exporterCore_->handle(std::move(*data));
+                    }
+                }
+            }
+            void operator=(Data<T> const &data) {
+                if (data) {
+                    if (exporterCore_) {
+                        exporterCore_->handle(InnerData<T> {*data});
+                    }
+                }
+            }
+            void operator=(InnerData<T> &&data) {
+                if (exporterCore_) {
+                    exporterCore_->handle(std::move(data));
+                }
+            }
+            void operator=(InnerData<T> const &data) {
+                if (exporterCore_) {
+                    exporterCore_->handle(InnerData<T> {data});
+                }
+            }
+        };
+        template <class T>
+        static UnregisteredExporterIterator<T> unregisteredExporterIterator(EnvironmentType *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            if (!exporter) {
+                return UnregisteredExporterIterator<T>();
+            } else {
+                exporter->core_->start(env);
+                return UnregisteredExporterIterator<T>(env, exporter->core_.get());
+            }
+        }
+        template <class T>
+        static UnregisteredExporterIterator<T> iterateUnregisteredExporter(EnvironmentType *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            return unregisteredExporterIterator(env, exporter);
+        }
     };
 
     template <class T>
