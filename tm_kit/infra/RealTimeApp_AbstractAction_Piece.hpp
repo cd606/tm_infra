@@ -4,6 +4,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -54,6 +55,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -114,6 +116,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -184,6 +187,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -264,6 +268,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -354,6 +359,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -454,6 +460,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -564,6 +571,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
@@ -684,6 +692,7 @@ public:
     virtual bool isThreaded() const = 0;
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+    virtual void setStartWaiter(std::function<void()> waiter) = 0;
     void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {

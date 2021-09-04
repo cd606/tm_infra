@@ -124,6 +124,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 running_ = false;
             }
             void runThread() {
+                static_cast<W *>(this)->waitForStart();
                 while (running_) {
                     {
                         std::unique_lock<std::mutex> lock(mutex_);
@@ -220,6 +221,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 running_ = false;
             }
             void runThread() {
+                static_cast<W *>(this)->waitForStart();
                 while (running_) {
                     static_cast<W *>(this)->idleWork();
                     {
@@ -440,6 +442,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isThreaded() const = 0;
             virtual bool isOneTimeOnly() const = 0;
             virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
+            virtual void setStartWaiter(std::function<void()> waiter) = 0;
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
                     if (params.empty()) {
@@ -968,6 +971,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::function<void(void *)> idleWorker_;
             std::mutex idleWorkerMutex_;
             T t_;
+            std::function<void()> startWaiter_;
+            std::mutex startWaiterMutex_;
         public:
             void actuallyHandle(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
@@ -996,7 +1001,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             template <class F>
-            ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+            ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
             }
             virtual ~ActionCore() {
             }
@@ -1014,6 +1019,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(idleWorkerMutex_);
                 if (idleWorker_) {
                     idleWorker_(t_.getIdleHandlerParam());
+                }
+            }
+            virtual void setStartWaiter(std::function<void()> waiter) override final {
+                std::lock_guard<std::mutex> _(startWaiterMutex_);
+                startWaiter_ = waiter;
+            }
+            void waitForStart() {
+                std::lock_guard<std::mutex> _(startWaiterMutex_);
+                if (startWaiter_) {
+                    startWaiter_();
                 }
             }
         };
@@ -1060,6 +1075,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual void setIdleWorker(std::function<void(void *)> worker) override final {
             }
+            virtual void setStartWaiter(std::function<void()> waiter) override final {
+            }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
         using PureActionCore = ActionCore<A,B,Threaded,FireOnceOnly,typename RealTimeAppComponents<StateT>::template PureOneLevelDownKleisli<A,B,F,false>>;
@@ -1095,6 +1112,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         static void setIdleWorkerForAction(std::shared_ptr<Action<A,B>> const &a, std::function<void(void *)> idleWorker) {
             a->core_->setIdleWorker(idleWorker);
+        }
+        template <class A, class B>
+        static void setStartWaiterForAction(std::shared_ptr<Action<A,B>> const &a, std::function<void()> startWaiter) {
+            a->core_->setStartWaiter(startWaiter);
         }
         
         template <class A, class F>
@@ -1179,6 +1200,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::function<void(void *)> idleWorker_;
             std::mutex idleWorkerMutex_;
             T t_;
+            std::function<void()> startWaiter_;
+            std::mutex startWaiterMutex_;
         public:
             void actuallyHandle(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
@@ -1221,7 +1244,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             template <class F>
-            MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,MultiActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+            MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,MultiActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
             }
             virtual ~MultiActionCore() {
             }
@@ -1239,6 +1262,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(idleWorkerMutex_);
                 if (idleWorker_) {
                     idleWorker_(t_.getIdleHandlerParam());
+                }
+            }
+            virtual void setStartWaiter(std::function<void()> waiter) override final {
+                std::lock_guard<std::mutex> _(startWaiterMutex_);
+                startWaiter_ = waiter;
+            }
+            void waitForStart() {
+                std::lock_guard<std::mutex> _(startWaiterMutex_);
+                if (startWaiter_) {
+                    startWaiter_();
                 }
             }
         };
@@ -1299,6 +1332,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return FireOnceOnly;
             }
             virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+            }
+            virtual void setStartWaiter(std::function<void()> waiter) override final {
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
@@ -1393,6 +1428,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 });
             }
             void idleWork() {}
+            void waitForStart() {}
         public:
             ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly>>(), cont_(cont), state_(std::move(state)), done_(false) {
             }
@@ -1489,6 +1525,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             void idleWork() {}
+            void waitForStart() {}
         public:
             template <class F>
             OnOrderFacilityCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCore<A,B,true,T>>(), t_(std::move(f)) {
@@ -1531,6 +1568,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             T t_;
             StartF startF_;
+            std::atomic<bool> started_;
         public:
             void actuallyHandle(InnerData<Key<A>> &&data) {  
                 if (!this->timeCheckGood(data)) {
@@ -1549,12 +1587,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             void idleWork() {}
+            void waitForStart() {
+                while (!started_) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+            }
             virtual void start(StateT *env) override final {
                 startF_(env);
+                started_ = true;
             }
         public:
             template <class F>
-            OnOrderFacilityCoreWithStart(F &&f, StartF &&startF) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCoreWithStart<A,B,true,T,StartF>>(), t_(std::move(f)), startF_(std::move(startF)) {
+            OnOrderFacilityCoreWithStart(F &&f, StartF &&startF) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCoreWithStart<A,B,true,T,StartF>>(), t_(std::move(f)), startF_(std::move(startF)), started_(false) {
             }
             virtual ~OnOrderFacilityCoreWithStart() {
             }
@@ -1811,6 +1855,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return f_->isOneTimeOnly() || g_->isOneTimeOnly();
             }
             virtual void setIdleWorker(std::function<void(void *)> worker) override final {}
+            virtual void setStartWaiter(std::function<void()> waiter) override final {}
         };
     public:   
         template <class A, class B, class C>
@@ -2173,6 +2218,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 f_(std::move(d));
             }   
             void idleWork() {} 
+            void waitForStart() {}
         public:
         #ifdef _MSC_VER
             SimpleExporter(F &&f, bool isTrivial=false) : f_(std::move(f)), isTrivial_(isTrivial) {}
@@ -2320,6 +2366,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 virtual void setIdleWorker(std::function<void(void *)> worker) override final {
                 }
+                virtual void setStartWaiter(std::function<void()> waiter) override final {
+                }
             };
             return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
         }
@@ -2351,6 +2399,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                }
+                virtual void setStartWaiter(std::function<void()> waiter) override final {
                 }
             };
             return std::make_shared<Action<T1,T2>>(new LocalA(importerFactory));

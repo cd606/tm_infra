@@ -5,6 +5,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) {
@@ -49,7 +51,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>,MultiActionCore<std::variant<A0,A1>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>,MultiActionCore<std::variant<A0,A1>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -67,6 +69,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -143,6 +155,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>,MultiActionCore<std::variant<A0,A1,A2>,B,true,FireOnceOnly,T>> {
@@ -151,6 +165,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) {
@@ -195,7 +211,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>,MultiActionCore<std::variant<A0,A1,A2>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>,MultiActionCore<std::variant<A0,A1,A2>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -213,6 +229,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -295,6 +321,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>,MultiActionCore<std::variant<A0,A1,A2,A3>,B,true,FireOnceOnly,T>> {
@@ -303,6 +331,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
@@ -347,7 +377,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>,MultiActionCore<std::variant<A0,A1,A2,A3>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>,MultiActionCore<std::variant<A0,A1,A2,A3>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -365,6 +395,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -453,6 +493,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>,MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,true,FireOnceOnly,T>> {
@@ -461,6 +503,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
@@ -505,7 +549,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>,MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>,MultiActionCore<std::variant<A0,A1,A2,A3,A4>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -523,6 +567,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -617,6 +671,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,true,FireOnceOnly,T>> {
@@ -625,6 +681,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
@@ -669,7 +727,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -687,6 +745,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -787,6 +855,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,true,FireOnceOnly,T>> {
@@ -795,6 +865,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
@@ -839,7 +911,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -857,6 +929,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -963,6 +1045,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,true,FireOnceOnly,T>> {
@@ -971,6 +1055,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
@@ -1015,7 +1101,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -1033,6 +1119,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -1145,6 +1241,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,true,FireOnceOnly,T>> {
@@ -1153,6 +1251,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
@@ -1197,7 +1297,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -1215,6 +1315,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -1333,6 +1443,8 @@ public:
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
     }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly, class T>
 class MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>, B, true, FireOnceOnly, T> : public RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>, public RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,true,FireOnceOnly,T>> {
@@ -1341,6 +1453,8 @@ private:
     std::function<void(void *)> idleWorker_;
     std::mutex idleWorkerMutex_;
     T t_;
+    std::function<void()> startWaiter_;
+    std::mutex startWaiterMutex_;
 public:
     virtual void *getIdleHandlerParam() {return nullptr;}
     void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
@@ -1385,7 +1499,7 @@ public:
     }
 public:
     template <class F>
-    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)) {
+    MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,MultiActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
     }
     virtual ~MultiActionCore() {
     }
@@ -1403,6 +1517,16 @@ public:
         std::lock_guard<std::mutex> _(idleWorkerMutex_);
         if (idleWorker_) {
             idleWorker_(t_.getIdleHandlerParam());
+        }
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        startWaiter_ = waiter;
+    }
+    void waitForStart() {
+        std::lock_guard<std::mutex> _(startWaiterMutex_);
+        if (startWaiter_) {
+            startWaiter_();
         }
     }
 };
@@ -1526,5 +1650,7 @@ public:
         return FireOnceOnly;
     }
     virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    }
+    virtual void setStartWaiter(std::function<void()> waiter) override final {
     }
 };
