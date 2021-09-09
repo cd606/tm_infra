@@ -257,7 +257,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             taskQueue_.push(new TaskQueueItem(this, importer, tp, std::move(action)));
             if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
                 if (importer != nullptr) {
-                    importerInQueueSet_.insert(importer);
+                    auto iter = importerInQueueMap_.find(importer);
+                    if (iter == importerInQueueMap_.end()) {
+                        importerInQueueMap_.insert({importer, 1});
+                    } else {
+                        ++(iter->second);
+                    }
                 }
             }
         }
@@ -2194,9 +2199,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::list<IExternalComponent *> externalComponents_[3];
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         std::list<AbstractImporterBase *> importers_;
-        std::unordered_set<AbstractImporterBase *> importerSet_, importerInQueueSet_;
+        std::unordered_set<AbstractImporterBase *> importerSet_;
+        std::unordered_map<AbstractImporterBase *, std::size_t> importerInQueueMap_;
         std::mutex mutex_;
-        TopDownSinglePassIterationApp() : idCounter_(0), taskQueue_(), externalComponents_(), externalComponentsSet_(), importers_(), importerSet_(), importerInQueueSet_(), mutex_() {}
+        TopDownSinglePassIterationApp() : idCounter_(0), taskQueue_(), externalComponents_(), externalComponentsSet_(), importers_(), importerSet_(), importerInQueueMap_(), mutex_() {}
         ~TopDownSinglePassIterationApp() = default;
 
         void registerExternalComponent(IExternalComponent *c, int idx) {
@@ -2416,7 +2422,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
                 for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
                     auto *pImporter = *iter;
-                    if (importerInQueueSet_.find(pImporter) == importerInQueueSet_.end()) {
+                    if (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
                         if (!pImporter->next()) {
                             importerSet_.erase(pImporter);
                             doneIterators.push_back(iter);
@@ -2433,7 +2439,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     topTask->act(env);
                     delete topTask;
                     if (topTaskImporter != nullptr) {
-                        importerInQueueSet_.erase(topTaskImporter);
+                        auto iter = importerInQueueMap_.find(topTaskImporter);
+                        if (iter != importerInQueueMap_.end()) {
+                            if (iter->second <= 1) {
+                                importerInQueueMap_.erase(iter);
+                            } else {
+                                --(iter->second);
+                            }
+                        }
                     }
                 }
             } else {
