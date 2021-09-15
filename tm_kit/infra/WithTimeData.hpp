@@ -2757,6 +2757,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         void finalizeBegin() {
+            env_->EnvironmentType::finalizeEnvironment();
             doTouchups();
             {
                 std::lock_guard<std::recursive_mutex> _(mutex_);

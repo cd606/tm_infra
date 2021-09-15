@@ -10,10 +10,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     //an environment is simply a mixture of components
     template <class ... Components>
     class Environment : public virtual Components... {
+    private:
+        template <class X>
+        struct TrueType : std::true_type {};
+        template <class X>
+        static auto hasFinalizeEnvironment(int) -> TrueType<decltype(std::declval<X>().finalizeEnvironment())>;
+        template <class X>
+        static auto hasFinalizeEnvironment(long) -> std::false_type;
+
+        template <class FirstComponent, class... RemainingComponents>
+        void internal_finalizeEnvironment() {
+            if constexpr (decltype(hasFinalizeEnvironment<FirstComponent>(0))::value) {
+                this->FirstComponent::finalizeEnvironment();
+            }
+            if constexpr (sizeof...(RemainingComponents) > 0) {
+                internal_finalizeEnvironment<RemainingComponents...>();
+            }
+        }
     public:
         Environment() : Components()... {}
         Environment(Components const &... components) : Components(components)... {}
         Environment(Components &&... components) : Components(std::move(components))... {}
+
+        void finalizeEnvironment() {
+            internal_finalizeEnvironment<Components...>();
+        }
     };
 
     //The "checktime" component
