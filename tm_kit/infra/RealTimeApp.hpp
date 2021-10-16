@@ -2104,7 +2104,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         running_ = true;
                         while (running_) {
                             std::unique_lock<std::mutex> lock(mutex_);
-                            cond_.wait(lock);
+                            cond_.wait_for(lock, std::chrono::milliseconds(1));
                             if (!running_) {
                                 lock.unlock();
                                 break;
