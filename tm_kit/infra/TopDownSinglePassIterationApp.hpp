@@ -2814,21 +2814,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class TopDownSinglePassIterationApp;
             AbstractExporter<T> *exporterCore_;
-            UnregisteredExporterIterator() : exporterCore_(nullptr) {}
+            EnvironmentType *env_;
+            UnregisteredExporterIterator() : exporterCore_(nullptr), env_(nullptr) {}
             UnregisteredExporterIterator(EnvironmentType *env, AbstractExporter<T> *exporterCore) 
-                : exporterCore_(exporterCore) {
+                : exporterCore_(exporterCore), env_(env) {
                 if (exporterCore_) {
                     exporterCore_->start(env);
                 }
             }
         public:
             UnregisteredExporterIterator(UnregisteredExporterIterator const &iter) 
-                : exporterCore_(iter.exporterCore_)
+                : exporterCore_(iter.exporterCore_), env_(iter.env_)
             {
             }
             UnregisteredExporterIterator &operator=(UnregisteredExporterIterator const &iter) {
                 if (this != &iter) {
                     exporterCore_ = iter.exporterCore_;
+                    env_ = iter.env_;
                 }
                 return *this;
             }
@@ -2865,6 +2867,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void operator=(InnerData<T> const &data) {
                 if (exporterCore_) {
                     exporterCore_->handle(InnerData<T> {data});
+                }
+            }
+            void operator=(T &&data) {
+                if (exporterCore_) {
+                    exporterCore_->handle(InnerData<T> {
+                        env_ 
+                        , {
+                            env_->resolveTime()
+                            , std::move(data)
+                            , false
+                        }
+                    });
+                }
+            }
+            void operator=(T const &data) {
+                if (exporterCore_) {
+                    exporterCore_->handle(InnerData<T> {
+                        env_ 
+                        , {
+                            env_->resolveTime()
+                            , std::move(data)
+                            , false
+                        }
+                    });
                 }
             }
         };

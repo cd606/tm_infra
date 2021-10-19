@@ -268,6 +268,53 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 #endif
             this->exportItem(exporter, M::template pureInnerData<T>(env_, std::move(data)));
         }
+
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
+        template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        typename M::template UnregisteredImporterIterator<typename Im::DataType> beginImporterIterator(
+            std::shared_ptr<Im> const &importer
+        ) {
+            using T = typename Im::DataType;
+#else
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        typename M::template UnregisteredImporterIterator<T> beginImporterIterator(
+            std::shared_ptr<typename M::template Importer<T>> const &importer
+        ) {
+#endif
+            return M::template beginIterateUnregisteredImporter<T>(env_, importer);
+        }
+
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
+        template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        typename M::template UnregisteredImporterIterator<typename Im::DataType> endImporterIterator(
+            std::shared_ptr<Im> const &importer
+        ) {
+            using T = typename Im::DataType;
+#else
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        typename M::template UnregisteredImporterIterator<T> endImporterIterator(
+            std::shared_ptr<typename M::template Importer<T>> const &importer
+        ) {
+#endif
+            return M::template endIterateUnregisteredImporter<T>(importer);
+        }
+
+        template <class T>
+        typename M::template UnregisteredImporterIterator<T> endImporterIterator()
+        {
+            return M::template endIterateUnregisteredImporter<T>();
+        }
+
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
+        template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
+        typename M::template UnregisteredExporterIterator<typename Ex::DataType> exporterIterator(std::shared_ptr<Ex> const &exporter) {
+            using T = typename Ex::DataType;
+#else
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        typename M::template UnregisteredExporterIterator<T> exporterIterator(std::shared_ptr<typename M::template Exporter<T>> const &exporter) {
+#endif
+            return M::template unregisteredExporterIterator<T>(env_, exporter);
+        }
     };
 
     template <class Env>
@@ -410,6 +457,53 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , T &&data
         ) {
 #endif
+        }
+
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
+        template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        typename M::template UnregisteredImporterIterator<typename Im::DataType> beginImporterIterator(
+            std::shared_ptr<Im> const &importer
+        ) {
+            using T = typename Im::DataType;
+#else
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        typename M::template UnregisteredImporterIterator<T> beginImporterIterator(
+            std::shared_ptr<typename M::template Importer<T>> const &importer
+        ) {
+#endif
+            return M::template beginIterateUnregisteredImporter<T>(env_, importer);
+        }
+
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
+        template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>
+        typename M::template UnregisteredImporterIterator<typename Im::DataType> endImporterIterator(
+            std::shared_ptr<Im> const &importer
+        ) {
+            using T = typename Im::DataType;
+#else
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        typename M::template UnregisteredImporterIterator<T> endImporterIterator(
+            std::shared_ptr<typename M::template Importer<T>> const &importer
+        ) {
+#endif
+            return M::template endIterateUnregisteredImporter<T>(importer);
+        }
+
+        template <class T>
+        typename M::template UnregisteredImporterIterator<T> endImporterIterator()
+        {
+            return M::template endIterateUnregisteredImporter<T>();
+        }
+
+#if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
+        template <class Ex, typename=std::enable_if_t<NodeClassifier<M>::template IsExporter<Ex>::Value && !withtime_utils::IsVariant<typename Ex::DataType>::Value>>
+        typename M::template UnregisteredExporterIterator<typename Ex::DataType> exporterIterator(std::shared_ptr<Ex> const &exporter) {
+            using T = typename Ex::DataType;
+#else
+        template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
+        typename M::template UnregisteredExporterIterator<T> exporterIterator(std::shared_ptr<typename M::template Exporter<T>> const &exporter) {
+#endif
+            return M::template unregisteredExporterIterator<T>(env_, exporter);
         }
     };
 } } } }

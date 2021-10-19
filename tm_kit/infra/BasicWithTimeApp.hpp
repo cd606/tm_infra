@@ -804,6 +804,116 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&) {
         }
+
+    public:
+        //This is supposed to be used outside of any Runner instance
+        //on an unregistered importer
+        template <class T>
+        class UnregisteredImporterIterator {
+        public:
+            using difference_type = void;
+            using value_type = Data<T>;
+            using pointer = Data<T> *;
+            using const_pointer = Data<T> const *;
+            using reference = Data<T> &;
+            using const_reference = Data<T> const &;
+            using iterator_category = std::input_iterator_tag;
+        private:
+            UnregisteredImporterIterator() = default;
+        public:
+            static UnregisteredImporterIterator endIter() {
+                return UnregisteredImporterIterator();
+            }
+            UnregisteredImporterIterator(UnregisteredImporterIterator const &iter) = default;
+            UnregisteredImporterIterator &operator=(UnregisteredImporterIterator const &iter) = default;
+            bool operator==(UnregisteredImporterIterator const &iter) const {
+                return true;
+            }
+            bool operator!=(UnregisteredImporterIterator const &iter) const {
+                return false;
+            }
+            UnregisteredImporterIterator &operator++() {
+                return *this;
+            }
+            UnregisteredImporterIterator operator++(int) {
+                UnregisteredImporterIterator iter(*this);
+                ++(*this);
+                return iter;
+            }
+            reference operator*() {
+                throw std::logic_error("Not implemented");
+            }
+            pointer operator->() {
+                return nullptr;
+            }
+            const_reference operator*() const {
+                throw std::logic_error("Not implemented");
+            }
+            const_pointer operator->() const {
+                return nullptr;
+            }
+        };
+
+        template <class T>
+        static UnregisteredImporterIterator<T> beginIterateUnregisteredImporter(EnvironmentType *env, std::shared_ptr<Importer<T>> const &importer) {
+            return UnregisteredImporterIterator<T>::endIter();
+        }
+        template <class T>
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter() {
+            return UnregisteredImporterIterator<T>::endIter();
+        }
+        template <class T>
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &importer) {
+            return UnregisteredImporterIterator<T>::endIter();
+        }
+        template <class T>
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &importer) {
+            return UnregisteredImporterIterator<T>::endIter();
+        }
+
+        template <class T>
+        class UnregisteredExporterIterator {
+        public:
+            using difference_type = void;
+            using value_type = Data<T>;
+            using iterator_category = std::output_iterator_tag;
+        private:
+            UnregisteredExporterIterator() = default;
+        public:
+            UnregisteredExporterIterator(UnregisteredExporterIterator const &iter) = default;
+            UnregisteredExporterIterator &operator=(UnregisteredExporterIterator const &iter)  = default;
+            UnregisteredExporterIterator &operator++() {
+                return *this;
+            }
+            UnregisteredExporterIterator operator++(int) {
+                UnregisteredExporterIterator iter(*this);
+                ++(*this);
+                return iter;
+            }
+            UnregisteredExporterIterator &operator*() {
+                return *this;
+            }
+            void operator=(Data<T> &&data) {
+            }
+            void operator=(Data<T> const &data) {
+            }
+            void operator=(InnerData<T> &&data) {
+            }
+            void operator=(InnerData<T> const &data) {
+            }
+            void operator=(T &&data) {
+            }
+            void operator=(T const &data) {
+            }
+        };
+        template <class T>
+        static UnregisteredExporterIterator<T> unregisteredExporterIterator(EnvironmentType *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            return UnregisteredExporterIterator<T>();
+        }
+        template <class T>
+        static UnregisteredExporterIterator<T> iterateUnregisteredExporter(EnvironmentType *env, std::shared_ptr<Exporter<T>> const &exporter) {
+            return unregisteredExporterIterator(env, exporter);
+        }
     };
 
     template <class T>

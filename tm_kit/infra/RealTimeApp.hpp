@@ -50,6 +50,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             virtual ~IHandler() {}
             virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
+            virtual void notifyForSourceTermination(std::any const &extraInfo, T const *notUsed) {}
         };
 
         template <bool MutexProtected, class T>
@@ -355,6 +356,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         break;
                 }
             }
+            void notifyHandlersForTermination(std::any const &info) {
+                for (auto const &h : handlers_) {
+                    h->notifyForSourceTermination(info, (T const *) nullptr);
+                }
+            }
         };
 
         #include <tm_kit/infra/RealTimeApp_ProducerN_Piece.hpp>
@@ -426,7 +432,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             void markEndHandlingRequest(typename StateT::IDType const &id) {
                 std::lock_guard<std::recursive_mutex> _(mutex_);
-                theMap_.erase(id);
+                auto iter = theMap_.find(id);
+                if (iter == theMap_.end()) {
+                    return;
+                }
+                auto *h = std::get<1>(iter->second);
+                if (h != nullptr) {  
+                    h->notifyForSourceTermination(
+                        std::any {id}
+                        , (KeyedData<A,B> const *) nullptr
+                    );
+                }
+                theMap_.erase(iter);
             }
         };
 
@@ -460,6 +477,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::vector<std::string> observe(StateT *env) const override final {
                 return this->producerStoppedStatus();
+            }
+            virtual void notifyForSourceTermination(std::any const &info, A const *notUsed) override {
+                this->Producer<B>::notifyHandlersForTermination(info);
             }
         };
         template <class A, class B>
@@ -1781,6 +1801,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }, std::move(o1));
                     outputT_->handle(std::move(x));
                 }
+                void notifyForSourceTermination(std::any const &info, KeyedData<I1,O1> const *notUsed) override final {
+                    outputT_->notifyHandlersForTermination(info);
+                }
             }; 
             class Conduit3 final : public RealTimeAppComponents<StateT>::template IHandler<Key<O0>> {
             private:
@@ -1790,6 +1813,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     : parent_(parent) {}
                 void handle(InnerData<Key<O0>> &&o0) override final {
                     parent_->publish(std::move(o0));
+                }
+                void notifyForSourceTermination(std::any const &info, Key<O0> const *notUsed) override final {
+                    typename StateT::IDType const *pID = std::any_cast<typename StateT::IDType>(&info);
+                    if (pID) {
+                        parent_->markEndHandlingRequest(*pID);
+                    }
                 }
             };        
             Conduit3 c3_;   
@@ -2966,6 +2995,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void terminate() = 0;
         };
     public:
+        class NoMoreSynchronousResultException : public std::exception {
+        };
         template <class T>
         class SynchronousRunResult {
         private:
@@ -2975,7 +3006,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             mutable std::mutex mutex_;
             friend class Iterator;
             ITerminableHandler<T> *handler_;
-        public:
+        public:    
             class Iterator {
             public:
                 using value_type = InnerData<T>;
@@ -3048,6 +3079,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     theList_.push_back(currentPromise_.get_future());
                 }
             }
+            void noMoreResult() {
+                std::lock_guard<std::mutex> _(mutex_);
+                currentPromise_.set_exception(std::make_exception_ptr(NoMoreSynchronousResultException()));
+            }
             InnerData<T> front() {
                 std::future<InnerData<T>> *p = nullptr;
                 {
@@ -3071,7 +3106,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     p = &(theList_.front());
                 }
                 if (p->wait_for(timeout) == std::future_status::ready) {
-                    return p->get();
+                    try {
+                        return p->get();
+                    } catch (NoMoreSynchronousResultException const &) {
+                        return std::nullopt;
+                    }
                 } else {
                     return std::nullopt;
                 }
@@ -3083,7 +3122,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     p = &(theList_.back());
                 }
                 if (p->wait_for(timeout) == std::future_status::ready) {
-                    return p->get();
+                    try {
+                        return p->get();
+                    } catch (NoMoreSynchronousResultException const &) {
+                        return std::nullopt;
+                    }
                 } else {
                     return std::nullopt;
                 }
@@ -3234,6 +3277,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         delete this;
                     }
                 }
+                virtual void notifyForSourceTermination(std::any const &info, KeyedData<T1,T2> const *notUsed) override final {
+                    if (std::any_cast<typename StateT::IDType>(&info)) {
+                        if (!terminated_) {
+                            res_->noMoreResult();
+                            res_->removeTerminableHandler();
+                            delete this;
+                        }
+                    }
+                }
                 virtual void terminate() override final {
                     terminated_ = true;
                 }
@@ -3282,9 +3334,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 : res_(
                     condition 
                     ?
-                    RealTimeApp::runUnstartedImporterSynchronouslyUntil(env, importer, condition)
+                    RealTimeApp::template runUnstartedImporterSynchronouslyUntil<T>(env, importer, condition)
                     :
-                    RealTimeApp::runUnstartedImporterSynchronously(env, importer)
+                    RealTimeApp::template runUnstartedImporterSynchronously<T>(env, importer)
                 )
                 , atEnd_(false)
                 , data_(std::nullopt)
@@ -3369,21 +3421,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             friend class RealTimeApp;
             AbstractExporter<T> *exporterCore_;
-            UnregisteredExporterIterator() : exporterCore_(nullptr) {}
+            EnvironmentType *env_;
+            UnregisteredExporterIterator() : exporterCore_(nullptr), env_(nullptr) {}
             UnregisteredExporterIterator(EnvironmentType *env, AbstractExporter<T> *exporterCore) 
-                : exporterCore_(exporterCore) {
+                : exporterCore_(exporterCore), env_(env) {
                 if (exporterCore_) {
                     exporterCore_->start(env);
                 }
             }
         public:
             UnregisteredExporterIterator(UnregisteredExporterIterator const &iter) 
-                : exporterCore_(iter.exporterCore_)
+                : exporterCore_(iter.exporterCore_), env_(iter.env_)
             {
             }
             UnregisteredExporterIterator &operator=(UnregisteredExporterIterator const &iter) {
                 if (this != &iter) {
                     exporterCore_ = iter.exporterCore_;
+                    env_ = iter.env_;
                 }
                 return *this;
             }
@@ -3420,6 +3474,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void operator=(InnerData<T> const &data) {
                 if (exporterCore_) {
                     exporterCore_->handle(InnerData<T> {data});
+                }
+            }
+            void operator=(T &&data) {
+                if (exporterCore_) {
+                    exporterCore_->handle(InnerData<T> {
+                        env_ 
+                        , {
+                            env_->resolveTime()
+                            , std::move(data)
+                            , false
+                        }
+                    });
+                }
+            }
+            void operator=(T const &data) {
+                if (exporterCore_) {
+                    exporterCore_->handle(InnerData<T> {
+                        env_ 
+                        , {
+                            env_->resolveTime()
+                            , std::move(data)
+                            , false
+                        }
+                    });
                 }
             }
         };

@@ -91,6 +91,14 @@ public:
             break;
         }
     }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+    }
 };
 template <class A0, class A1, class A2>
 class Producer<std::variant<A0,A1,A2>> : public virtual IStoppableRealTimeProducer<3> {
@@ -218,6 +226,17 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
         }
     }
 };
@@ -382,6 +401,20 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
         }
     }
 };
@@ -581,6 +614,23 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
+        }
+        for (auto const &h : handlerSet4_) {
+            h->notifyForSourceTermination(info, (A4 const *) nullptr);
         }
     }
 };
@@ -815,6 +865,26 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
+        }
+        for (auto const &h : handlerSet4_) {
+            h->notifyForSourceTermination(info, (A4 const *) nullptr);
+        }
+        for (auto const &h : handlerSet5_) {
+            h->notifyForSourceTermination(info, (A5 const *) nullptr);
         }
     }
 };
@@ -1084,6 +1154,29 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
+        }
+        for (auto const &h : handlerSet4_) {
+            h->notifyForSourceTermination(info, (A4 const *) nullptr);
+        }
+        for (auto const &h : handlerSet5_) {
+            h->notifyForSourceTermination(info, (A5 const *) nullptr);
+        }
+        for (auto const &h : handlerSet6_) {
+            h->notifyForSourceTermination(info, (A6 const *) nullptr);
         }
     }
 };
@@ -1388,6 +1481,32 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
+        }
+        for (auto const &h : handlerSet4_) {
+            h->notifyForSourceTermination(info, (A4 const *) nullptr);
+        }
+        for (auto const &h : handlerSet5_) {
+            h->notifyForSourceTermination(info, (A5 const *) nullptr);
+        }
+        for (auto const &h : handlerSet6_) {
+            h->notifyForSourceTermination(info, (A6 const *) nullptr);
+        }
+        for (auto const &h : handlerSet7_) {
+            h->notifyForSourceTermination(info, (A7 const *) nullptr);
         }
     }
 };
@@ -1727,6 +1846,35 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
+        }
+        for (auto const &h : handlerSet4_) {
+            h->notifyForSourceTermination(info, (A4 const *) nullptr);
+        }
+        for (auto const &h : handlerSet5_) {
+            h->notifyForSourceTermination(info, (A5 const *) nullptr);
+        }
+        for (auto const &h : handlerSet6_) {
+            h->notifyForSourceTermination(info, (A6 const *) nullptr);
+        }
+        for (auto const &h : handlerSet7_) {
+            h->notifyForSourceTermination(info, (A7 const *) nullptr);
+        }
+        for (auto const &h : handlerSet8_) {
+            h->notifyForSourceTermination(info, (A8 const *) nullptr);
         }
     }
 };
@@ -2101,6 +2249,38 @@ public:
             break;
         default:
             break;
+        }
+    }
+    void notifyHandlersForTermination(std::any const &info) {
+        for (auto const &h : handlerSet0_) {
+            h->notifyForSourceTermination(info, (A0 const *) nullptr);
+        }
+        for (auto const &h : handlerSet1_) {
+            h->notifyForSourceTermination(info, (A1 const *) nullptr);
+        }
+        for (auto const &h : handlerSet2_) {
+            h->notifyForSourceTermination(info, (A2 const *) nullptr);
+        }
+        for (auto const &h : handlerSet3_) {
+            h->notifyForSourceTermination(info, (A3 const *) nullptr);
+        }
+        for (auto const &h : handlerSet4_) {
+            h->notifyForSourceTermination(info, (A4 const *) nullptr);
+        }
+        for (auto const &h : handlerSet5_) {
+            h->notifyForSourceTermination(info, (A5 const *) nullptr);
+        }
+        for (auto const &h : handlerSet6_) {
+            h->notifyForSourceTermination(info, (A6 const *) nullptr);
+        }
+        for (auto const &h : handlerSet7_) {
+            h->notifyForSourceTermination(info, (A7 const *) nullptr);
+        }
+        for (auto const &h : handlerSet8_) {
+            h->notifyForSourceTermination(info, (A8 const *) nullptr);
+        }
+        for (auto const &h : handlerSet9_) {
+            h->notifyForSourceTermination(info, (A9 const *) nullptr);
         }
     }
 };
