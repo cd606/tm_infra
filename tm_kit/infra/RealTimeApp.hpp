@@ -123,6 +123,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             void stopThread() {
                 running_ = false;
+                cond_.notify_one();
             }
             void runThread() {
                 static_cast<W *>(this)->waitForStart();
@@ -163,12 +164,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             ThreadedHandlerBase() : timeChecker_(), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_() {
-                running_ = true;
-                th_ = std::thread(&ThreadedHandlerBase::runThread, this);
-                th_.detach();
             }
             virtual ~ThreadedHandlerBase() {
                 stopThread();
+                try {
+                    if (th_.joinable()) {
+                        th_.join();
+                    }
+                } catch (...) {}
+            }
+            void startThread() {
+                running_ = true;
+                th_ = std::thread(&ThreadedHandlerBase::runThread, this);
+                th_.detach();
             }
             virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
                 return th_.native_handle();
@@ -257,12 +265,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         public:
             BusyLoopThreadedHandlerBase(bool noYield=false) : noYield_(noYield), timeChecker_(), mutex_(), th_(), running_(false), incoming_(), processing_() {
-                running_ = true;
-                th_ = std::thread(&BusyLoopThreadedHandlerBase::runThread, this);
-                th_.detach();
             }
             virtual ~BusyLoopThreadedHandlerBase() {
                 stopThread();
+                try {
+                    if (th_.joinable()) {
+                        th_.join();
+                    }
+                } catch (...) {}
+            }
+            void startThread() {
+                running_ = true;
+                th_ = std::thread(&BusyLoopThreadedHandlerBase::runThread, this);
+                th_.detach();
             }
             virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
                 return th_.native_handle();
@@ -1022,6 +1037,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             template <class F>
             ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+                this->startThread();
             }
             virtual ~ActionCore() {
             }
@@ -1265,6 +1281,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             template <class F>
             MultiActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,MultiActionCore<A,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+                this->startThread();
             }
             virtual ~MultiActionCore() {
             }
@@ -1451,6 +1468,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void waitForStart() {}
         public:
             ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure()) : RealTimeAppComponents<StateT>::template AbstractAction<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<A,ContinuationActionCore<A, B, ContinuationStructure, true, FireOnceOnly>>(), cont_(cont), state_(std::move(state)), done_(false) {
+                this->startThread();
             }
             virtual ~ContinuationActionCore() {
             }
@@ -1549,6 +1567,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             template <class F>
             OnOrderFacilityCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCore<A,B,true,T>>(), t_(std::move(f)) {
+                this->startThread();
             }
             virtual ~OnOrderFacilityCore() {
             }
@@ -1619,6 +1638,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             template <class F>
             OnOrderFacilityCoreWithStart(F &&f, StartF &&startF) : RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<Key<A>,OnOrderFacilityCoreWithStart<A,B,true,T,StartF>>(), t_(std::move(f)), startF_(std::move(startF)), started_(false) {
+                this->startThread();
             }
             virtual ~OnOrderFacilityCoreWithStart() {
             }
@@ -2250,10 +2270,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void waitForStart() {}
         public:
         #ifdef _MSC_VER
-            SimpleExporter(F &&f, bool isTrivial=false) : f_(std::move(f)), isTrivial_(isTrivial) {}
+            SimpleExporter(F &&f, bool isTrivial=false) : f_(std::move(f)), isTrivial_(isTrivial) {
         #else
-            SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T,SimpleExporter<T,F,true>>(), f_(std::move(f)), isTrivial_(isTrivial) {}
+            SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), RealTimeAppComponents<StateT>::template ThreadedHandler<T,SimpleExporter<T,F,true>>(), f_(std::move(f)), isTrivial_(isTrivial) {
         #endif            
+                this->startThread();
+            }
             virtual ~SimpleExporter() {}
             virtual void start(StateT *) override final {}
             virtual bool isTrivialExporter() const override final {
@@ -3098,6 +3120,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     p = &(theList_.back());
                 }
                 return p->get();
+            }
+            std::future<InnerData<T>> consumeFrontFuture() {
+                std::lock_guard<std::mutex> _(mutex_);
+                std::future<InnerData<T>> f = std::move(theList_.front());
+                theList_.pop_front();
+                return std::move(f);
+            }
+            std::future<InnerData<T>> consumeUntilLastFuture() {
+                auto p = std::make_shared<std::promise<InnerData<T>>>();
+                std::thread th([p,this]() {
+                    std::optional<InnerData<T>> value;
+                    try {
+                        while (!empty()) {
+                            value = std::move(consumeFrontFuture().get());
+                        }
+                    } catch (NoMoreSynchronousResultException const &) {}
+                    if (value) {
+                        p->set_value_at_thread_exit(std::move(*value));
+                    }
+                });
+                th.detach();
+                return p->get_future();
             }
             std::optional<InnerData<T>> front_with_time_out(std::chrono::system_clock::duration const &timeout) {
                 std::future<InnerData<T>> *p = nullptr;

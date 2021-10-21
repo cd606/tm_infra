@@ -38,6 +38,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1>,ActionCore<std::variant<A0,A1>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -170,6 +171,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2>,ActionCore<std::variant<A0,A1,A2>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -308,6 +310,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3>,ActionCore<std::variant<A0,A1,A2,A3>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -452,6 +455,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4>,ActionCore<std::variant<A0,A1,A2,A3,A4>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -602,6 +606,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -758,6 +763,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -920,6 +926,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -1088,6 +1095,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
@@ -1262,6 +1270,7 @@ public:
 public:
     template <class F>
     ActionCore(F &&f) : RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>(), RealTimeAppComponents<StateT>::template ThreadedHandler<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,ActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B,true,FireOnceOnly,T>>(), done_(false), idleWorker_(), idleWorkerMutex_(), t_(std::move(f)), startWaiter_(), startWaiterMutex_() {
+        this->startThread();
     }
     virtual ~ActionCore() {
     }
