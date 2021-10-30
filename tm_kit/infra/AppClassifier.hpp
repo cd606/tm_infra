@@ -45,6 +45,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class M>
     constexpr AppClassification app_classification_v = AppClassifier<M>::TheClassification;
 
+    template <class M, class MutexType=std::mutex>
+    using AppSpecificMutex = std::conditional_t<app_classification_v<M> == AppClassification::RealTime, MutexType, bool>;
+
+    template <class M, class MutexType=std::mutex>
+    using AppSpecificLockGuard = std::conditional_t<app_classification_v<M> == AppClassification::RealTime, std::lock_guard<MutexType>, bool>;
+
 } } } }
 
 #endif
