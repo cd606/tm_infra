@@ -1462,6 +1462,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     #include <tm_kit/infra/TopDownSinglePassIterationApp_KleisliMultiN_Piece.hpp>  
 
     public:
+        template <class T, typename=std::enable_if_t<
+            !withtime_utils::IsVariant<T>::Value
+            && !std::is_same_v<T, std::any>
+        >>
+        static auto passThroughAction() {
+            return liftPure<T>([](T &&t) {return std::move(t);});
+        }
+    
+    public:
         template <class T>
         using Importer = OneWayHolder<AbstractImporter<T>,T>;
     private:

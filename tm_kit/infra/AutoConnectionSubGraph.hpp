@@ -10,6 +10,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class VacuousImporterItem {};
     template <class A>
     class TrivialExporterItem {};
+    template <class A>
+    class PassThroughActionItem {};
 
     template <class R>
     class OneAutoConnectionItem {
@@ -129,6 +131,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A>
         OneAutoConnectionItem(std::string const &name, TrivialExporterItem<A> &&) : registration_() {
             auto component = R::AppType::template trivialExporter<A>();
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
+        }
+        template <class A>
+        OneAutoConnectionItem(std::string const &name, PassThroughActionItem<A> &&) : registration_() {
+            auto component = R::AppType::template passThroughAction<A>();
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
         }
         template <class A>

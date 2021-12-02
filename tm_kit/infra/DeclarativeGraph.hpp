@@ -182,6 +182,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto component = R::AppType::template trivialExporter<A>();
             registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
         }
+        template <class A>
+        OneDeclarativeGraphItem(std::string const &name, PassThroughActionItem<A> &&) : registration_() {
+            auto component = R::AppType::template passThroughAction<A>();
+            registration_ = RegistrationResolver<std::decay_t<decltype(component)>>::resolve(name, component);      
+        }
         OneDeclarativeGraphItem(DeclarativeGraphChain &&chain) {
             registration_ = [chain=std::move(chain)](R &r, std::string const &prefix) {
                 chain.template connect<R>(r, prefix);

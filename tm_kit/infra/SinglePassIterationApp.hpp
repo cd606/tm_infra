@@ -1507,7 +1507,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Action<A,C>> compose(Action<A,B> &&x, Action<B,C> &&y) {
             return std::make_shared<Action<A,C>>(new ComposeCore<A,B,C>(std::move(x.core_), std::move(y.core_)));
         }
-
+    public:
+        template <class T, typename=std::enable_if_t<
+            !withtime_utils::IsVariant<T>::Value
+            && !std::is_same_v<T, std::any>
+        >>
+        static auto passThroughAction() {
+            return liftPure<T>([](T &&t) {return std::move(t);});
+        }
     public:
         class IExternalComponent {
         public:

@@ -36,7 +36,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     
     template <uint8_t N>
     using IStoppableRealTimeProducer = IStoppableProducer<N>;
-    
+  
     template <class StateT>
     class RealTimeAppComponents {
     public:
@@ -1538,6 +1538,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         }
+    private:
+        template <class T, typename=std::enable_if_t<
+            !withtime_utils::IsVariant<T>::Value
+            && !std::is_same_v<T, std::any>
+        >>
+        class PassThroughAction final : public AbstractAction<T,T> {
+        private:
+            friend class RealTimeApp;
+            std::recursive_mutex mutex_;
+            std::list<Producer<T> *> producers_;
+            std::list<IHandler<T> *> handlers_;
+        public:
+            virtual bool isThreaded() const override final {return false;}
+            virtual bool isOneTimeOnly() const override final {return false;}
+            virtual void setIdleWorker(std::function<void(void *)> worker) override final {}
+            virtual void setStartWaiter(std::function<void()> waiter) override final {}
+            virtual void handle(InnerData<T> &&data) override final {}
+        
+            PassThroughAction() = default;
+            virtual ~PassThroughAction() = default;
+        };
+    public:
+        template <class T, typename=std::enable_if_t<
+            !withtime_utils::IsVariant<T>::Value
+            && !std::is_same_v<T, std::any>
+        >>
+        static auto passThroughAction() {
+            return std::make_shared<Action<T,T>>(new PassThroughAction<T>());
+        }
     public:
         template <class A, class B, bool Threaded, class T>
         class OnOrderFacilityCore {};
@@ -2788,7 +2817,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A>
         static void innerConnect(IHandler<A> *handler, Producer<A> *producer) {
-            producer->addHandler(handler);
+            if constexpr (
+                !withtime_utils::IsVariant<A>::Value
+                && !std::is_same_v<A, std::any>
+            ) {
+                auto *passThroughHandlerCast = dynamic_cast<PassThroughAction<A> *>(handler);
+                auto *passThroughProducerCast = dynamic_cast<PassThroughAction<A> *>(producer);
+                if (passThroughHandlerCast != nullptr && passThroughProducerCast == passThroughHandlerCast) {
+                    return;
+                }
+                if (passThroughHandlerCast != nullptr) {
+                    std::lock_guard<std::recursive_mutex> _(passThroughHandlerCast->mutex_);
+                    passThroughHandlerCast->producers_.push_back(producer);
+                    for (auto *h : passThroughHandlerCast->handlers_) {
+                        innerConnect<A>(h, producer);
+                    }
+                } else if (passThroughProducerCast != nullptr) {
+                    std::lock_guard<std::recursive_mutex> _(passThroughProducerCast->mutex_);
+                    passThroughProducerCast->handlers_.push_back(handler);
+                    for (auto *p : passThroughProducerCast->producers_) {
+                        innerConnect<A>(handler, p);
+                    }
+                } else {
+                    producer->addHandler(handler);
+                }
+            } else {
+                producer->addHandler(handler);
+            }
         }
         template <class A>
         class AnyHandlerAdapter : public IHandler<A> {

@@ -157,6 +157,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , x.oneTimeOnly && y.oneTimeOnly
             );
         }
+        template <class T, typename=std::enable_if_t<
+            !withtime_utils::IsVariant<T>::Value
+            && !std::is_same_v<T, std::any>
+        >>
+        static auto passThroughAction() {
+            return liftPure<T>([](T &&t) {return std::move(t);});
+        }
 
         class IExternalComponent {
         public:

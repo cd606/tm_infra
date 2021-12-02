@@ -3145,14 +3145,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A>
         Source<A> sourceoidToSource(Sourceoid<A> const &src, std::string const &connectorName) {
-            auto connector = App::template liftPure<A>([](A&&a) -> A {return std::move(a);});
+            auto connector = App::template passThroughAction<A>();
             registerAction(connectorName, connector);
             src(*this, actionAsSink(connector));
             return actionAsSource(connector);
         }
         template <class A>
         Sink<A> sinkoidToSink(Sinkoid<A> const &sink, std::string const &connectorName) {
-            auto connector = App::template liftPure<A>([](A&&a) -> A {return std::move(a);});
+            auto connector = App::template passThroughAction<A>();
             registerAction(connectorName, connector);
             sink(*this, actionAsSource(connector));
             return actionAsSink(connector);
