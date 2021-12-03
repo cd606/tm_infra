@@ -1461,13 +1461,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     #include <tm_kit/infra/TopDownSinglePassIterationApp_EnhancedMultiN_Piece.hpp>  
     #include <tm_kit/infra/TopDownSinglePassIterationApp_KleisliMultiN_Piece.hpp>  
 
+    private:
+        template <class T, typename=std::enable_if_t<
+            !withtime_utils::IsVariant<T>::Value
+            && !std::is_same_v<T, std::any>
+        >>
+        class PassThroughAction final : public AbstractAction<T,T> {
+        private:
+            friend class TopDownSinglePassIterationApp;
+            std::recursive_mutex mutex_;
+            std::list<ProducerBase<T> *> producers_;
+            std::list<IHandler<T> *> handlers_;
+        public:
+            virtual bool isOneTimeOnly() const override final {return false;}
+            virtual void handle(InnerData<T> &&data) override final {}
+        
+            PassThroughAction() = default;
+            virtual ~PassThroughAction() = default;
+        };
     public:
         template <class T, typename=std::enable_if_t<
             !withtime_utils::IsVariant<T>::Value
             && !std::is_same_v<T, std::any>
         >>
         static auto passThroughAction() {
-            return liftPure<T>([](T &&t) {return std::move(t);});
+            return std::make_shared<Action<T,T>>(new PassThroughAction<T>());
         }
     
     public:
@@ -2237,7 +2255,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A>
         static void innerConnect(IHandler<A> *handler, ProducerBase<A> *producer) {
-            producer->addHandler(handler);
+            if constexpr (
+                !withtime_utils::IsVariant<A>::Value
+                && !std::is_same_v<A, std::any>
+            ) {
+                auto *passThroughHandlerCast = dynamic_cast<PassThroughAction<A> *>(handler);
+                auto *passThroughProducerCast = dynamic_cast<PassThroughAction<A> *>(producer);
+                if (passThroughHandlerCast != nullptr && passThroughProducerCast == passThroughHandlerCast) {
+                    return;
+                }
+                if (passThroughHandlerCast != nullptr) {
+                    std::lock_guard<std::recursive_mutex> _(passThroughHandlerCast->mutex_);
+                    passThroughHandlerCast->producers_.push_back(producer);
+                    for (auto *h : passThroughHandlerCast->handlers_) {
+                        innerConnect<A>(h, producer);
+                    }
+                } else if (passThroughProducerCast != nullptr) {
+                    std::lock_guard<std::recursive_mutex> _(passThroughProducerCast->mutex_);
+                    passThroughProducerCast->handlers_.push_back(handler);
+                    for (auto *p : passThroughProducerCast->producers_) {
+                        innerConnect<A>(handler, p);
+                    }
+                } else {
+                    producer->addHandler(handler);
+                }
+            } else {
+                producer->addHandler(handler);
+            }
         }
         template <class A>
         class AnyHandlerAdapter : public IHandler<A> {
