@@ -768,7 +768,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
 
             template <class A, class B>
-            static ActionCheckData create(Action<A,B> *f, std::string const &n)
+            static ActionCheckData create(Action<A,B> */*f*/, std::string const &n)
             {
                 if constexpr (!withtime_utils::IsVariant<A>::Value) {
                     ActionCheckData d {n, 1};

@@ -335,7 +335,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(typename R::template Source<T> &&source, std::string const &sinkName) {
-            registration_ = [source=std::move(source),sinkName](R &r, std::string const &prefix) mutable {
+            registration_ = [source=std::move(source),sinkName](R &r, std::string const &/*prefix*/) mutable {
                 r.connect(
                     std::move(source)
                     , r.template sinkByName<T>(sinkName)
@@ -344,7 +344,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(std::string const &sourceName, typename R::template Sink<T> const &sink) {
-            registration_ = [sourceName,sink](R &r, std::string const &prefix) {
+            registration_ = [sourceName,sink](R &r, std::string const &/*prefix*/) {
                 r.connect(
                     r.template sourceByName<T>(sourceName)
                     , sink
@@ -353,7 +353,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(typename R::template Source<T> &&source, typename R::template Sink<T> const &sink) {
-            registration_ = [source=std::move(source),sink](R &r, std::string const &prefix) mutable {
+            registration_ = [source=std::move(source),sink](R &r, std::string const &/*prefix*/) mutable {
                 r.connect(
                     std::move(source)
                     , sink
@@ -362,7 +362,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(typename R::template Source<T> &&source, typename R::template Sinkoid<T> const &sinkoid) {
-            registration_ = [source=std::move(source),sinkoid](R &r, std::string const &prefix) mutable {
+            registration_ = [source=std::move(source),sinkoid](R &r, std::string const &/*prefix*/) mutable {
                 sinkoid(
                     r
                     , std::move(source)
@@ -371,7 +371,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(typename R::template Sourceoid<T> const &sourceoid, typename R::template Sink<T> const &sink) {
-            registration_ = [sourceoid,sink](R &r, std::string const &prefix) mutable {
+            registration_ = [sourceoid,sink](R &r, std::string const &/*prefix*/) mutable {
                 sourceoid(
                     r
                     , sink
