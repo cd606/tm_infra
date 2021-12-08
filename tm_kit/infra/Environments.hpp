@@ -59,7 +59,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         bool running() const {
             return running_;
         }
-        void exit(int status=0) {
+        void exit(int /*status*/=0) {
             running_ = false;
         }
     };

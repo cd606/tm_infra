@@ -784,7 +784,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
 
             template <class A>
-            static ActionCheckData createForImporter(Importer<A> *f, std::string const &n)
+            static ActionCheckData createForImporter(Importer<A> */*f*/, std::string const &n)
             {
                 ActionCheckData d {n, 0};
                 d.isImporter = true;
@@ -792,7 +792,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return d;
             }
             template <class A>
-            static ActionCheckData createForExporter(Exporter<A> *f, std::string const &n)
+            static ActionCheckData createForExporter(Exporter<A> */*f*/, std::string const &n)
             {
                 ActionCheckData d {n, 1};
                 d.isImporter = false;
@@ -800,7 +800,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return d;
             }
             template <class A, class B>
-            static ActionCheckData createForOnOrderFacility(OnOrderFacility<A,B> *f, std::string const &n)
+            static ActionCheckData createForOnOrderFacility(OnOrderFacility<A,B> */*f*/, std::string const &n)
             {
                 ActionCheckData d {n, 1};
                 d.isImporter = false;
@@ -809,7 +809,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return d;
             }
             template <class A, class B, class C>
-            static ActionCheckData createForLocalOnOrderFacility(LocalOnOrderFacility<A,B,C> *f, std::string const &n)
+            static ActionCheckData createForLocalOnOrderFacility(LocalOnOrderFacility<A,B,C> */*f*/, std::string const &n)
             {
                 ActionCheckData d {n, 2};
                 d.isImporter = false;
@@ -818,7 +818,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return d;
             }
             template <class A, class B, class C>
-            static ActionCheckData createForOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<A,B,C> *f, std::string const &n)
+            static ActionCheckData createForOnOrderFacilityWithExternalEffects(OnOrderFacilityWithExternalEffects<A,B,C> */*f*/, std::string const &n)
             {
                 ActionCheckData d {n, 1};
                 d.isImporter = false;
@@ -828,7 +828,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return d;
             }
             template <class A, class B, class C, class D>
-            static ActionCheckData createForVIEOnOrderFacility(VIEOnOrderFacility<A,B,C,D> *f, std::string const &n)
+            static ActionCheckData createForVIEOnOrderFacility(VIEOnOrderFacility<A,B,C,D> */*f*/, std::string const &n)
             {
                 ActionCheckData d {n, 2};
                 d.isImporter = false;

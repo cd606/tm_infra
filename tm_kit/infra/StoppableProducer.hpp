@@ -1,6 +1,9 @@
 #ifndef TM_KIT_INFRA_STOPPABLE_PRODUCER_HPP_
 #define TM_KIT_INFRA_STOPPABLE_PRODUCER_HPP_
 
+#include <stdint.h>
+#include <atomic>
+
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <uint8_t N>
     class IStoppableProducer {
@@ -86,16 +89,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     public:
         void stopProducer() {
         }
-        void stopProducer(uint8_t which) {
+        void stopProducer(uint8_t /*which*/) {
         }
         void restartProducer() {
         }
-        void restartProducer(uint8_t which) {
+        void restartProducer(uint8_t /*which*/) {
         }
         bool producerIsStopped() const {
             return false;
         }
-        bool producerIsStopped(uint8_t which) const {
+        bool producerIsStopped(uint8_t /*which*/) const {
             return false;
         }
         std::vector<std::string> producerStoppedStatus() const {

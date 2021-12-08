@@ -50,7 +50,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             virtual ~IHandler() {}
             virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
-            virtual void notifyForSourceTermination(std::any const &extraInfo, T const *notUsed) {}
+            virtual void notifyForSourceTermination(std::any const &/*extraInfo*/, T const */*notUsed*/) {}
         };
 
         template <bool MutexProtected, class T>
@@ -475,7 +475,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const = 0;
             virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
             virtual void setStartWaiter(std::function<void()> waiter) = 0;
-            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+            void control(StateT */*env*/, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
                     if (params.empty()) {
                         this->stopProducer();
@@ -490,10 +490,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
             }
-            std::vector<std::string> observe(StateT *env) const override final {
+            std::vector<std::string> observe(StateT */*env*/) const override final {
                 return this->producerStoppedStatus();
             }
-            virtual void notifyForSourceTermination(std::any const &info, A const *notUsed) override {
+            virtual void notifyForSourceTermination(std::any const &info, A const */*notUsed*/) override {
                 this->Producer<B>::notifyHandlersForTermination(info);
             }
         };
@@ -1552,9 +1552,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             virtual bool isThreaded() const override final {return false;}
             virtual bool isOneTimeOnly() const override final {return false;}
-            virtual void setIdleWorker(std::function<void(void *)> worker) override final {}
-            virtual void setStartWaiter(std::function<void()> waiter) override final {}
-            virtual void handle(InnerData<T> &&data) override final {}
+            virtual void setIdleWorker(std::function<void(void *)> /*worker*/) override final {}
+            virtual void setStartWaiter(std::function<void()> /*waiter*/) override final {}
+            virtual void handle(InnerData<T> &&/*data*/) override final {}
         
             PassThroughAction() = default;
             virtual ~PassThroughAction() = default;
@@ -2058,7 +2058,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     public:
         template <class T, class F>
-        static std::shared_ptr<Importer<T>> uniformSimpleImporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        static std::shared_ptr<Importer<T>> uniformSimpleImporter(F &&f, LiftParameters<TimePoint> const &/*liftParam*/ = LiftParameters<TimePoint>()) {
             return std::make_shared<Importer<T>>(std::make_unique<UniformSimpleImporter<T,F>>(std::move(f)));
         }
         template <class T>
@@ -2881,12 +2881,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         template <class T>
-        Source<T> importerAsSource(StateT *env, Importer<T> &importer) {
+        Source<T> importerAsSource(StateT */*env*/, Importer<T> &importer) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(importer.core_.get()), 2);
             return {dynamic_cast<Producer<T> *>(importer.core_.get())};
         }
         template <class A, class B>
-        Source<B> actionAsSource(StateT *env, Action<A,B> &action) {
+        Source<B> actionAsSource(StateT */*env*/, Action<A,B> &action) {
             return {dynamic_cast<Producer<B> *>(action.core_.get())};
         }
         template <class A, class B>

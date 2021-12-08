@@ -105,7 +105,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class TraceNodesComponentWrapper<Env, BaseClass, false> {
     public:
         template <class T>
-        TraceNodesComponentWrapper(Env *env, T *p, std::string const &suffix="") {}
+        TraceNodesComponentWrapper(Env */*env*/, T */*p*/, std::string const &/*suffix*/="") {}
         ~TraceNodesComponentWrapper() {}
     };
 
