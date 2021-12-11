@@ -307,7 +307,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         OneDeclarativeGraphItem(std::string const &sourceName, typename R::template FacilitioidConnector<A,B> const &facilitioid, std::string const &sinkName) {
 #endif
-            registration_ = [sourceName,facilitioid,sinkName](R &r, std::string const &prefix) {
+            registration_ = [sourceName,facilitioid,sinkName](R &r, std::string const &/*prefix*/) {
                 facilitioid(
                     r 
                     , r.template sourceByName<typename R::AppType::template Key<A>>(sourceName)
@@ -317,7 +317,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(typename R::template Sourceoid<T> const &sourceoid, std::string const &sinkName) {
-            registration_ = [sourceoid,sinkName](R &r, std::string const &prefix) {
+            registration_ = [sourceoid,sinkName](R &r, std::string const &/*prefix*/) {
                 sourceoid(
                     r 
                     , r.template sinkByName<T>(sinkName)
@@ -326,7 +326,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class T>
         OneDeclarativeGraphItem(std::string const &sourceName, typename R::template Sinkoid<T> const &sinkoid) {
-            registration_ = [sourceName,sinkoid](R &r, std::string const &prefix) {
+            registration_ = [sourceName,sinkoid](R &r, std::string const &/*prefix*/) {
                 sinkoid(
                     r 
                     , r.template sourceByName<T>(sourceName)
