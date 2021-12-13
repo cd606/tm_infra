@@ -39,6 +39,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -86,6 +89,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -185,6 +191,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -232,6 +241,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -689,6 +701,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -736,6 +751,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -783,6 +801,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -888,6 +909,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -935,6 +959,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -982,6 +1009,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -1445,6 +1475,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -1492,6 +1525,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -1539,6 +1575,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -1586,6 +1625,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -1697,6 +1739,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -1744,6 +1789,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -1791,6 +1839,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -1838,6 +1889,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -2307,6 +2361,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -2354,6 +2411,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -2401,6 +2461,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -2448,6 +2511,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -2495,6 +2561,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -2612,6 +2681,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -2659,6 +2731,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -2706,6 +2781,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -2753,6 +2831,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -2800,6 +2881,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -3275,6 +3359,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -3322,6 +3409,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -3369,6 +3459,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -3416,6 +3509,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -3463,6 +3559,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -3510,6 +3609,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -3633,6 +3735,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -3680,6 +3785,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -3727,6 +3835,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -3774,6 +3885,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -3821,6 +3935,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -3868,6 +3985,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -4349,6 +4469,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -4396,6 +4519,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -4443,6 +4569,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -4490,6 +4619,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -4537,6 +4669,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -4584,6 +4719,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -4631,6 +4769,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -4760,6 +4901,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -4807,6 +4951,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -4854,6 +5001,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -4901,6 +5051,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -4948,6 +5101,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -4995,6 +5151,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -5042,6 +5201,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -5529,6 +5691,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -5576,6 +5741,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -5623,6 +5791,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -5670,6 +5841,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -5717,6 +5891,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -5764,6 +5941,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -5811,6 +5991,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -5858,6 +6041,9 @@ protected:
                     if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
                         tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
@@ -5993,6 +6179,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -6040,6 +6229,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -6087,6 +6279,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -6134,6 +6329,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -6181,6 +6379,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -6228,6 +6429,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -6275,6 +6479,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -6322,6 +6529,9 @@ protected:
                     if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
                         tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+                        );
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
@@ -6815,6 +7025,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -6862,6 +7075,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -6909,6 +7125,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -6956,6 +7175,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -7003,6 +7225,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -7050,6 +7275,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -7097,6 +7325,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -7144,6 +7375,9 @@ protected:
                     if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
                         tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
@@ -7191,6 +7425,9 @@ protected:
                     if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
                         tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
@@ -7332,6 +7569,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -7379,6 +7619,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -7426,6 +7669,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -7473,6 +7719,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -7520,6 +7769,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -7567,6 +7819,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -7614,6 +7869,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -7661,6 +7919,9 @@ protected:
                     if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
                         tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
@@ -7708,6 +7969,9 @@ protected:
                     if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
                         tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+                        );
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
@@ -8207,6 +8471,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -8254,6 +8521,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -8301,6 +8571,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -8348,6 +8621,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -8395,6 +8671,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -8442,6 +8721,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -8489,6 +8771,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -8536,6 +8821,9 @@ protected:
                     if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
                         tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
@@ -8583,6 +8871,9 @@ protected:
                     if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
                         tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
@@ -8630,6 +8921,9 @@ protected:
                     if (!StateT::CheckTime || !tp9_ || x9->timedData.timePoint >= *tp9_) {
                         tp9_ = x9->timedData.timePoint;
                         StateT *env = x9->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x9->timedData.finalFlag) {
                             finalMask_.set(9);
                         }
@@ -8777,6 +9071,9 @@ protected:
                     if (!StateT::CheckTime || !tp0_ || x0->timedData.timePoint >= *tp0_) {
                         tp0_ = x0->timedData.timePoint;
                         StateT *env = x0->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x0->timedData.finalFlag) {
                             finalMask_.set(0);
                         }
@@ -8824,6 +9121,9 @@ protected:
                     if (!StateT::CheckTime || !tp1_ || x1->timedData.timePoint >= *tp1_) {
                         tp1_ = x1->timedData.timePoint;
                         StateT *env = x1->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x1->timedData.finalFlag) {
                             finalMask_.set(1);
                         }
@@ -8871,6 +9171,9 @@ protected:
                     if (!StateT::CheckTime || !tp2_ || x2->timedData.timePoint >= *tp2_) {
                         tp2_ = x2->timedData.timePoint;
                         StateT *env = x2->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x2->timedData.finalFlag) {
                             finalMask_.set(2);
                         }
@@ -8918,6 +9221,9 @@ protected:
                     if (!StateT::CheckTime || !tp3_ || x3->timedData.timePoint >= *tp3_) {
                         tp3_ = x3->timedData.timePoint;
                         StateT *env = x3->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x3->timedData.finalFlag) {
                             finalMask_.set(3);
                         }
@@ -8965,6 +9271,9 @@ protected:
                     if (!StateT::CheckTime || !tp4_ || x4->timedData.timePoint >= *tp4_) {
                         tp4_ = x4->timedData.timePoint;
                         StateT *env = x4->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x4->timedData.finalFlag) {
                             finalMask_.set(4);
                         }
@@ -9012,6 +9321,9 @@ protected:
                     if (!StateT::CheckTime || !tp5_ || x5->timedData.timePoint >= *tp5_) {
                         tp5_ = x5->timedData.timePoint;
                         StateT *env = x5->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x5->timedData.finalFlag) {
                             finalMask_.set(5);
                         }
@@ -9059,6 +9371,9 @@ protected:
                     if (!StateT::CheckTime || !tp6_ || x6->timedData.timePoint >= *tp6_) {
                         tp6_ = x6->timedData.timePoint;
                         StateT *env = x6->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x6->timedData.finalFlag) {
                             finalMask_.set(6);
                         }
@@ -9106,6 +9421,9 @@ protected:
                     if (!StateT::CheckTime || !tp7_ || x7->timedData.timePoint >= *tp7_) {
                         tp7_ = x7->timedData.timePoint;
                         StateT *env = x7->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x7->timedData.finalFlag) {
                             finalMask_.set(7);
                         }
@@ -9153,6 +9471,9 @@ protected:
                     if (!StateT::CheckTime || !tp8_ || x8->timedData.timePoint >= *tp8_) {
                         tp8_ = x8->timedData.timePoint;
                         StateT *env = x8->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x8->timedData.finalFlag) {
                             finalMask_.set(8);
                         }
@@ -9200,6 +9521,9 @@ protected:
                     if (!StateT::CheckTime || !tp9_ || x9->timedData.timePoint >= *tp9_) {
                         tp9_ = x9->timedData.timePoint;
                         StateT *env = x9->environment;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            env, static_cast<AbstractActionCore<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+                        );
                         if (x9->timedData.finalFlag) {
                             finalMask_.set(9);
                         }

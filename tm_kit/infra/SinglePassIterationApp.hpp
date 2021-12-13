@@ -5,6 +5,7 @@
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
 #include <tm_kit/infra/StoppableProducer.hpp>
+#include <tm_kit/infra/GraphStructureBasedResourceHolderComponent.hpp>
 
 #include <deque>
 #include <queue>
@@ -800,6 +801,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
                         hasA_ = true;
                         aTime_ = tp;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            input->environment, static_cast<AbstractActionCore<A,B> *>(this)
+                        );
                         TraceNodesComponentWrapper<StateT,AbstractActionCore<A,B>> tracer(
                             input->environment 
                             , this
@@ -946,6 +950,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!StateT::CheckTime || !hasA_ || tp >= aTime_) {
                         hasA_ = true;
                         aTime_ = tp;
+                        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                            input->environment, static_cast<AbstractActionCore<A,B> *>(this)
+                        );
                         TraceNodesComponentWrapper<StateT,AbstractActionCore<A,B>> tracer(
                             input->environment 
                             , this
@@ -1659,6 +1666,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~PureOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 auto resp = *applyDelaySimulator<Key<B>>(0, pureInnerDataLift([this](Key<A> &&k) {
                     return withtime_utils::apply(f_, std::move(k));
                 }, std::move(input)), delaySimulator_);
@@ -1676,6 +1686,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~MaybeOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 typename StateT::IDType id = input.timedData.value.id();
                 std::optional<B> x = f_(std::move(input.timedData.value.key()));
                 if (x) {
@@ -1693,6 +1706,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~EnhancedMaybeOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 typename StateT::IDType id = input.timedData.value.id();
                 std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
                 if (x) {
@@ -1710,6 +1726,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~KleisliOnOrderFacilityCore() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 typename StateT::IDType id = input.timedData.value.id();
                 InnerData<A> x = pureInnerDataLift([](Key<A> &&k) -> A {
                     return k.key();
@@ -1735,6 +1754,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~PureOnOrderFacilityCoreWithStart() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 auto resp = *applyDelaySimulator<Key<B>>(0, pureInnerDataLift([this](Key<A> &&k) {
                     return withtime_utils::apply(f_, std::move(k));
                 }, std::move(input)), delaySimulator_);
@@ -1756,6 +1778,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~MaybeOnOrderFacilityCoreWithStart() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 typename StateT::IDType id = input.timedData.value.id();
                 std::optional<B> x = f_(std::move(input.timedData.value.key()));
                 if (x) {
@@ -1777,6 +1802,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~EnhancedMaybeOnOrderFacilityCoreWithStart() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 typename StateT::IDType id = input.timedData.value.id();
                 std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
                 if (x) {
@@ -1798,6 +1826,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~KleisliOnOrderFacilityCoreWithStart() {}
             virtual void handle(InnerData<Key<A>> &&input) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    input.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                );
                 typename StateT::IDType id = input.timedData.value.id();
                 InnerData<A> x = pureInnerDataLift([](Key<A> &&k) -> A {
                     return k.key();
@@ -1961,6 +1992,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 environment_ = environment;
             }
             virtual Data<T> generate(T const *notUsed=nullptr) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    environment_, static_cast<AbstractImporter<T> *>(this)
+                );
                 auto x = f_(environment_);
                 if (x) {
                     return *applyDelaySimulator<T>(0, std::move(*x), delaySimulator_);
@@ -2227,6 +2261,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             SimpleExporter(F &&f) : AbstractExporterCore<T>(), f_(std::move(f)) {}
             virtual void start(StateT *environment) override final {}
             virtual void handle(InnerData<T> &&data) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    data.environment, static_cast<AbstractExporter<T> *>(this)
+                );
                 single_pass_iteration_app_utils::TimePreserver<StateT> _timePreserver(data.environment, data.timedData.timePoint);
                 f_(std::move(data));
             }

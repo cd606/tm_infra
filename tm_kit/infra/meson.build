@@ -75,6 +75,7 @@ tm_infra_headers = [
     , 'KleisliSequence.hpp'
     , 'SynchronousRunner.hpp'
     , 'AppClassifier.hpp'
+    , 'GraphStructureBasedResourceHolderComponent.hpp'
     ]
   
 install_headers(tm_infra_headers, subdir : 'tm_kit/infra')

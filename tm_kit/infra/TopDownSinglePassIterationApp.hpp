@@ -6,6 +6,7 @@
 #include <tm_kit/infra/ObservableNode.hpp>
 #include <tm_kit/infra/StoppableProducer.hpp>
 #include <tm_kit/infra/Environments.hpp>
+#include <tm_kit/infra/GraphStructureBasedResourceHolderComponent.hpp>
 
 #include <vector>
 #include <list>
@@ -968,6 +969,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
+                    GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                        data.environment, static_cast<AbstractAction<A,B> *>(this)
+                    );
                     TraceNodesComponentWrapper<StateT,AbstractAction<A,B>> tracer(
                         data.environment 
                         , this
@@ -1072,6 +1076,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 if (timeChecker_(data)) {
+                    GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                        data.environment, static_cast<AbstractAction<A,B> *>(this)
+                    );
+                    TraceNodesComponentWrapper<StateT,AbstractAction<A,B>> tracer(
+                        data.environment 
+                        , this
+                    );
                     auto res = t_.action(data.environment, std::move(data.timedData));
                     if (res && !res->timedData.value.empty()) {
                         if constexpr (FireOnceOnly) {
@@ -1210,6 +1221,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual void handle(InnerData<Key<A>> &&data) override final {
                 if (timeChecker_(data)) {
+                    GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                        data.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                    );
                     TM_INFRA_FACILITY_TRACER(data.environment);
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
@@ -1243,6 +1257,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual void handle(InnerData<Key<A>> &&data) override final {
                 if (timeChecker_(data)) {
+                    GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                        data.environment, static_cast<AbstractOnOrderFacility<A,B> *>(this)
+                    );
                     TM_INFRA_FACILITY_TRACER(data.environment);
                     auto id = data.timedData.value.id();
                     WithTime<A,TimePoint> a {data.timedData.timePoint, data.timedData.value.key()};
@@ -1509,6 +1526,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             DelaySimulator delaySimulator_;
             StateT *env_;
             std::tuple<bool, Data<T>> generate(T const *) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    env_, static_cast<AbstractImporter<T> *>(this)
+                );
                 if constexpr(std::is_same_v<
                     decltype((* ((F *) nullptr))((StateT *) nullptr))
                     , std::tuple<bool, Data<T>>
@@ -1741,6 +1761,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~SimpleExporter() {}
             virtual void handle(InnerData<T> &&d) override final {
                 if (timeChecker_(d)) {
+                    GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                        d.environment, static_cast<AbstractExporter<T> *>(this)
+                    );
                     TM_INFRA_EXPORTER_TRACER(d.environment);
                     f_(std::move(d));
                 }

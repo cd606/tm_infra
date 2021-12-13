@@ -18,6 +18,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>> tracer(
             data.environment
             , this
@@ -84,6 +87,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1>,B>> tracer(
                 data.environment
                 , this
@@ -151,6 +157,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>> tracer(
             data.environment
             , this
@@ -217,6 +226,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2>,B>> tracer(
                 data.environment
                 , this
@@ -290,6 +302,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>> tracer(
             data.environment
             , this
@@ -356,6 +371,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3>,B>> tracer(
                 data.environment
                 , this
@@ -435,6 +453,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
             data.environment
             , this
@@ -501,6 +522,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4>,B>> tracer(
                 data.environment
                 , this
@@ -586,6 +610,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
             data.environment
             , this
@@ -652,6 +679,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B>> tracer(
                 data.environment
                 , this
@@ -743,6 +773,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
             data.environment
             , this
@@ -809,6 +842,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B>> tracer(
                 data.environment
                 , this
@@ -906,6 +942,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
             data.environment
             , this
@@ -972,6 +1011,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B>> tracer(
                 data.environment
                 , this
@@ -1075,6 +1117,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
             data.environment
             , this
@@ -1141,6 +1186,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B>> tracer(
                 data.environment
                 , this
@@ -1250,6 +1298,9 @@ public:
         if (!this->timeCheckGood(data)) {
             return;
         }
+        GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+            data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+        );
         TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
             data.environment
             , this
@@ -1316,6 +1367,9 @@ public:
             }
         }
         if (timeChecker_(data)) {
+            GraphStructureBasedResourceHolderComponent_CurrentNodeSetter ns(
+                data.environment, static_cast<AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> *>(this)
+            );
             TraceNodesComponentWrapper<StateT,typename RealTimeAppComponents<StateT>::template AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B>> tracer(
                 data.environment
                 , this

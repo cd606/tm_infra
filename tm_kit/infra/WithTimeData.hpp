@@ -38,6 +38,7 @@
 #include <tm_kit/infra/TraceNodesComponent.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
+#include <tm_kit/infra/GraphStructureBasedResourceHolderComponent.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -2757,6 +2758,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         void finalizeBegin() {
+            if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                for (auto const &item : underlyingPointerNameMap_) {
+                    env_->GraphStructureBasedResourceHolderComponent::addNodeNameRegistration(item.first, item.second);
+                }
+                env_->GraphStructureBasedResourceHolderComponent::resolveAllResources();
+            }
             env_->EnvironmentType::finalizeEnvironment();
             doTouchups();
             {
