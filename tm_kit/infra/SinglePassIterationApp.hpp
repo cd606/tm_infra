@@ -1492,6 +1492,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 : x_(std::move(x)), y_(std::move(y))
             {
                 y_->connectToSource(x_.get());
+                if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(x_.get(), static_cast<AbstractActionCore<A,C> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(y_.get(), static_cast<AbstractActionCore<A,C> *>(this));
+                }
             }
             virtual void connectToSource(Provider<A> *source) override final {
                 x_->connectToSource(source);
@@ -2300,6 +2304,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     : orig_(std::move(orig)), post_(std::move(post))
                 {
                     post_.core_->connectToSource(orig_.core_.get());
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(orig_.core_.get(), static_cast<AbstractImporterCore<T2> *>(this));
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(post_.core_.get(), static_cast<AbstractImporterCore<T2> *>(this));
+                    }
                 }
                 virtual void start(StateT *environment) override final {
                     orig_.core_->start(environment);
@@ -2327,6 +2335,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     : pre_(std::move(pre)), orig_(std::move(orig)), fillable_()
                 {
                     pre_.core_->connectToSource(&fillable_);
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(pre_.core_.get(), static_cast<AbstractExporterCore<T1> *>(this));
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(orig_.core_.get(), static_cast<AbstractExporterCore<T1> *>(this));
+                    }
                 }
                 virtual void start(StateT *environment) override final {
                     orig_.core_->start(environment);
@@ -2354,6 +2366,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 LocalA(Importer<T2> &&importer) 
                     : importer_(std::move(importer)), started_(false)
                 {
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(importer_.core_.get(), static_cast<AbstractActionCore<T1,T2> *>(this));
+                    }
                 }
                 virtual bool isOneTimeOnly() const override final {
                     return true;
@@ -2445,6 +2460,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     : action_(std::move(action)), fillable_()
                 {
                     action_.core_->connectToSource(&fillable_);
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(action_.core_.get(), static_cast<AbstractExporterCore<T1> *>(this));
+                    }
                 }
                 virtual void start(StateT *environment) override final {
                 }
@@ -2516,6 +2534,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 c2_.connectToSource(inputT_.core_.get());
                 outputT_.core_->connectToSource(&c3_);
                 c4_.connectToSource(outputT_.core_.get());
+                if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(toWrap_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(inputT_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(outputT_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                }
             }
             virtual void start(StateT *env) override final {
                 auto *p = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());

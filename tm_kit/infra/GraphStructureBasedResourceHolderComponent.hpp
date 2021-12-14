@@ -20,6 +20,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class GraphStructureBasedResourceHolderComponent {
     private:
         static thread_local std::unordered_map<GraphStructureBasedResourceHolderComponent *, void *> currentNodes_;
+        static std::unordered_map<void *, void *> parentMap_;
+        static std::mutex parentMapMutex_;
         std::unordered_map<void *, std::string> nodeNameMap_;
         std::unordered_map<std::string, std::unordered_map<std::size_t, std::any>> resourceMap_;
         std::unordered_map<void *, std::unordered_map<std::size_t, std::any>> resolvedResourceMap_;
@@ -33,6 +35,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         void setCurrentNode(void *node) {
             currentNodes_[this] = node;
         }
+        static void registerParentNode(void *childNode, void *parentNode);
     private:
         void *currentNode() {
             auto iter = currentNodes_.find(this);

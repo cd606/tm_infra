@@ -1406,6 +1406,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 c3_(this), c2_(outputT_.core_.get()), c1_(toWrap_.core_.get(), &c2_) {
                 outputT_.core_->addHandler(&c3_);
                 inputT_.core_->addHandler(&c1_);
+                if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(toWrap_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(inputT_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(outputT_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                }
             }
             virtual void start(StateT *env) override final {
                 auto *p = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
@@ -1454,6 +1459,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Compose(std::unique_ptr<AbstractAction<A,B>> &&f, std::unique_ptr<AbstractAction<B,C>> &&g) : f_(std::move(f)), g_(std::move(g)), innerHandler_(this) {
                 f_->addHandler(g_.get());
                 g_->addHandler(&innerHandler_);
+                if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(f_.get(), static_cast<AbstractAction<A,C> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(g_.get(), static_cast<AbstractAction<A,C> *>(this));
+                }
             }
             virtual bool isOneTimeOnly() const override final {
                 return f_->isOneTimeOnly() || g_->isOneTimeOnly();
@@ -1838,6 +1847,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 {
                     orig_.core_->addHandler(post_.core_.get());
                     post_.core_->addHandler(&localH_);
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(orig_.core_.get(), static_cast<AbstractImporter<T2> *>(this));
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(post_.core_.get(), static_cast<AbstractImporter<T2> *>(this));
+                    }
                 }
                 virtual ~LocalI() {}
                 virtual void start(StateT *env) override final {
@@ -1861,6 +1874,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     : pre_(std::move(pre)), orig_(std::move(orig))
                 {
                     pre_.core_->addHandler(orig_.core_.get());
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(pre_.core_.get(), static_cast<AbstractExporter<T1> *>(this));
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(orig_.core_.get(), static_cast<AbstractExporter<T1> *>(this));
+                    }
                 }
                 virtual ~LocalE() {}
                 virtual void start(StateT *env) override final {
@@ -1886,6 +1903,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 LocalA(Importer<T2> &&importer)
                     : importer_(std::move(importer)), started_(false)
                 {
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(importer_.core_.get(), static_cast<AbstractAction<T1,T2> *>(this));
+                    }
                 }
                 virtual ~LocalA() {}
                 virtual void handle(InnerData<T1> &&d) override final {
@@ -1950,6 +1970,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 LocalE(Action<T1,T2> &&action)
                     : action_(std::move(action))
                 {
+                    if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                        GraphStructureBasedResourceHolderComponent::registerParentNode(action_.core_.get(), static_cast<AbstractExporter<T1> *>(this));
+                    }
                 }
                 virtual ~LocalE() {}
                 virtual void start(StateT *env) override final {
