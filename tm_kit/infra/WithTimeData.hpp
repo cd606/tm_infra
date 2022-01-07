@@ -178,6 +178,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class T>
     inline constexpr bool is_keyed_data_v = IsKeyedData<T>::value;
 
+    template <class T>
+    struct IsMonoStateKeyedData {
+        enum {value=false};
+    };
+    template <class B, class Env>
+    struct IsMonoStateKeyedData<KeyedData<std::monostate,B,Env>> {
+        enum {value=true};
+    };
+    template <class T>
+    inline constexpr bool is_monostate_keyed_data_v = IsMonoStateKeyedData<T>::value;
+
     template <class A, class B, class Env>
     inline std::ostream &operator<<(std::ostream &os, KeyedData<A,B,Env> const &x) {
         os << "{key=" << x.key << ",data=" << x.data << "}";

@@ -173,7 +173,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         template <class X>
         struct IsImporterImpl<X, true> {
-            static constexpr bool Value = IsImporterImpl2<X, !is_keyed_data_v<typename X::DataType>>::Value;
+            static constexpr bool Value = IsImporterImpl2<X, (!is_keyed_data_v<typename X::DataType> || is_monostate_keyed_data_v<typename X::DataType>）>::Value;
         };
         template <class X>
         struct IsImporterImpl<X, false> {
@@ -236,7 +236,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static constexpr bool Value = IsActionImpl2<
                 X, 
                 !(
-                    is_key_v<typename X::InputType> && is_keyed_data_v<typename X::OutputType>
+                    is_key_v<typename X::InputType> && is_keyed_data_v<typename X::OutputType> && !is_monostate_keyed_data_v<typename X::OutputType>
                 )
             >::Value;
         };
@@ -322,7 +322,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct IsOnOrderFacilityWithExternalEffectsImpl<X, true> {
             static constexpr bool Value = IsOnOrderFacilityWithExternalEffectsImpl2<
                 X, 
-                !is_keyed_data_v<typename X::DataType>
+                (!is_keyed_data_v<typename X::DataType> || is_monostate_keyed_data_v<typename X::DataType>)
             >::Value;
         };
         template <class X>
@@ -357,7 +357,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 X, 
                 (
                     !withtime_utils::IsVariant<typename X::ExtraInputType>::Value
-                    && !is_keyed_data_v<typename X::ExtraOutputType>
+                    && (!is_keyed_data_v<typename X::ExtraOutputType> || is_monostate_keyed_data_v<typename X::ExtraOutputType>)
                 )
             >::Value;
         };

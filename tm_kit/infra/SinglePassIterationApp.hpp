@@ -1182,10 +1182,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
     public:
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>,int> = 0 >
         using AbstractAction = AbstractActionCore<A,B>;
 
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>,int> = 0 >
         using Action = TwoWayHolder<AbstractActionCore<A,B>,A,B>;
 
         template <class A, class B>
@@ -1930,7 +1930,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     public:
         //We don't allow importer to manufacture keyed data "out of the blue"
-        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
+        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T> || is_monostate_keyed_data_v<T>>>
         class AbstractImporterCore : public virtual IExternalComponent, public virtual BufferedProvider<T> {
         protected:
             virtual typename BufferedProvider<T>::CheckAndProduceResult checkAndProduce() override final {

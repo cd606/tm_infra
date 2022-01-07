@@ -475,7 +475,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         class AbstractAction : public virtual IHandler<A>, public Producer<B>, public virtual IControllableNode<StateT>, public virtual IObservableNode<StateT> {
         public:
-            static_assert((!is_keyed_data_v<B> || is_keyed_data_v<A>), "action cannot manufacture keyed data");
+            static_assert((!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>), "action cannot manufacture keyed data");
             virtual bool isOneTimeOnly() const = 0;
             void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
@@ -511,7 +511,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class UnregisteredImporterIterator;
 
         //We don't allow importer to manufacture keyed data "out of the blue"
-        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
+        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T> || is_monostate_keyed_data_v<T>>>
         class AbstractImporter : public virtual AbstractImporterBase, public Producer<T,true> {
         protected:
             friend class UnregisteredImporterIterator<T>;
@@ -1005,7 +1005,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/TopDownSinglePassIterationApp_ActionCore_Piece.hpp>
 
     public:
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>, int> = 0>
         using Action = TwoWayHolder<AbstractAction<A,B>,A,B>;
 
         template <class A, class B>

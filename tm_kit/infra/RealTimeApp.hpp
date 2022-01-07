@@ -504,7 +504,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/RealTimeApp_AbstractAction_Piece.hpp>
 
         //We don't allow importer to manufacture keyed data "out of the blue"
-        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
+        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T> || is_monostate_keyed_data_v<T>>>
         class AbstractImporter : public virtual IExternalComponent, public Producer<T> {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
@@ -1136,12 +1136,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //We don't allow any action to manufacture KeyedData "out of the blue"
         //, but it is ok to manipulate Keys, so the check is one-sided
         //Moreover, we allow manipulation of KeyedData
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>, int> = 0>
         using AbstractAction = typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>;
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>, int> = 0>
         using SingleEntryAbstractAction = typename RealTimeAppComponents<StateT>::template SingleEntryAbstractAction<A,B>;
 
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>, int> = 0>
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>, int> = 0>
         using Action = TwoWayHolder<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>,A,B>;
 
         template <class A, class B>

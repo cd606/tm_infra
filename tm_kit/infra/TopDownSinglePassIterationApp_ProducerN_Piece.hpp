@@ -5,9 +5,9 @@ private:
     std::unordered_set<IHandler<A0> *> handlerSet0_;
     std::vector<IHandler<A1> *> handlers1_;
     std::unordered_set<IHandler<A1> *> handlerSet1_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -184,9 +184,9 @@ private:
     std::unordered_set<IHandler<A1> *> handlerSet1_;
     std::vector<IHandler<A2> *> handlers2_;
     std::unordered_set<IHandler<A2> *> handlerSet2_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -421,9 +421,9 @@ private:
     std::unordered_set<IHandler<A2> *> handlerSet2_;
     std::vector<IHandler<A3> *> handlers3_;
     std::unordered_set<IHandler<A3> *> handlerSet3_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -716,9 +716,9 @@ private:
     std::unordered_set<IHandler<A3> *> handlerSet3_;
     std::vector<IHandler<A4> *> handlers4_;
     std::unordered_set<IHandler<A4> *> handlerSet4_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -1069,9 +1069,9 @@ private:
     std::unordered_set<IHandler<A4> *> handlerSet4_;
     std::vector<IHandler<A5> *> handlers5_;
     std::unordered_set<IHandler<A5> *> handlerSet5_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -1480,9 +1480,9 @@ private:
     std::unordered_set<IHandler<A5> *> handlerSet5_;
     std::vector<IHandler<A6> *> handlers6_;
     std::unordered_set<IHandler<A6> *> handlerSet6_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -1949,9 +1949,9 @@ private:
     std::unordered_set<IHandler<A6> *> handlerSet6_;
     std::vector<IHandler<A7> *> handlers7_;
     std::unordered_set<IHandler<A7> *> handlerSet7_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -2476,9 +2476,9 @@ private:
     std::unordered_set<IHandler<A7> *> handlerSet7_;
     std::vector<IHandler<A8> *> handlers8_;
     std::unordered_set<IHandler<A8> *> handlerSet8_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }
@@ -3061,9 +3061,9 @@ private:
     std::unordered_set<IHandler<A8> *> handlerSet8_;
     std::vector<IHandler<A9> *> handlers9_;
     std::unordered_set<IHandler<A9> *> handlerSet9_;
-    
+
     friend class TopDownSinglePassIterationApp;
-    
+
     TopDownSinglePassIterationApp *parent_ = nullptr;
     virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
     }

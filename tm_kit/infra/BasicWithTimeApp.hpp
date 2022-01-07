@@ -66,7 +66,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         using MultiData = TimedAppMultiData<T,StateT>;
 
-        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A>,int> = 0 >
+        template <class A, class B, std::enable_if_t<!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>,int> = 0 >
         struct Action {
             using InputType = A;
             using OutputType = B;
@@ -261,7 +261,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/BasicWithTimeApp_Pure_Maybe_Kleisli_Piece.hpp>
 
         //We don't allow importer to manufacture keyed data "out of the blue"
-        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T>>>
+        template <class T, typename=std::enable_if_t<!is_keyed_data_v<T> || is_monostate_keyed_data_v<T>>>
         class AbstractImporter : public virtual IExternalComponent {
         protected:
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
