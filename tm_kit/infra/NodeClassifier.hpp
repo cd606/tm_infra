@@ -173,7 +173,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
         template <class X>
         struct IsImporterImpl<X, true> {
-            static constexpr bool Value = IsImporterImpl2<X, (!is_keyed_data_v<typename X::DataType> || is_monostate_keyed_data_v<typename X::DataType>）>::Value;
+            static constexpr bool Value = IsImporterImpl2<X, (!is_keyed_data_v<typename X::DataType> || is_monostate_keyed_data_v<typename X::DataType>)>::Value;
         };
         template <class X>
         struct IsImporterImpl<X, false> {
