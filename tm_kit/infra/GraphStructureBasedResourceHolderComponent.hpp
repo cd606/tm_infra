@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <typeinfo>
+#include <typeindex>
 #include <any>
 #include <mutex>
 #include <vector>
@@ -23,8 +24,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::unordered_map<void *, void *> parentMap_;
         static std::mutex parentMapMutex_;
         std::unordered_map<void *, std::string> nodeNameMap_;
-        std::unordered_map<std::string, std::unordered_map<std::size_t, std::any>> resourceMap_;
-        std::unordered_map<void *, std::unordered_map<std::size_t, std::any>> resolvedResourceMap_;
+        std::unordered_map<std::string, std::unordered_map<std::type_index, std::any>> resourceMap_;
+        std::unordered_map<void *, std::unordered_map<std::type_index, std::any>> resolvedResourceMap_;
         std::mutex mutex_;
         static std::vector<std::string> splitNodeName(std::string const &s);
         static std::string joinNodeName(std::vector<std::string> const &v);
@@ -52,7 +53,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             std::lock_guard<std::mutex> _(mutex_);
             auto regularizedName = joinNodeName(splitNodeName(scopeName));
-            resourceMap_[regularizedName][typeid(std::decay_t<T>).hash_code()] = std::any {resource};
+            resourceMap_[regularizedName][std::type_index(typeid(std::decay_t<T>))] = std::any {resource};
         }
     private:
         template <class M>
@@ -76,7 +77,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (iter == resolvedResourceMap_.end()) {
                 return std::nullopt;
             }
-            auto innerIter = iter->second.find(typeid(std::decay_t<T>).hash_code());
+            auto innerIter = iter->second.find(std::type_index(typeid(std::decay_t<T>)));
             if (innerIter == iter->second.end()) {
                 return std::nullopt;
             }
