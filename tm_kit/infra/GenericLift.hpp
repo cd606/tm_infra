@@ -15,6 +15,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class LazyImporter {};
     class CurtailAction {};
 
+    template <class F>
+    std::tuple<LiftAsMulti, F> liftAsMultiWrapper(F &&f) {
+        return std::tuple<LiftAsMulti, F> {LiftAsMulti{}, std::move(f)};
+    }
+
     template <class M>
     class GenericLift {
     private:
@@ -374,6 +379,37 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     #endif
             }
         };
+        template <class A, class B, bool IsID=IsInnerData<A>::Value>
+        class GenericLiftKUMultiImpl {};
+
+        template <class A, class B>
+        class GenericLiftKUMultiImpl<A, std::vector<B>, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template liftMulti<A>(std::move(f));
+            }
+        };
+        template <class A, class B>
+        class GenericLiftKUMultiImpl<std::tuple<typename M::TimePoint, A>, std::vector<B>, false> {
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template enhancedMulti<A>(std::move(f));
+            }
+        };
+        template <class A, class B>
+    #if _MSC_VER
+        class GenericLiftKUMultiImpl<TimedDataWithEnvironment<A, typename M::StateType, typename M::TimePoint>, std::optional<TimedDataWithEnvironment<std::vector<B>, typename M::StateType, typename M::TimePoint>>, true> {
+    #else
+        class GenericLiftKUMultiImpl<typename M::template InnerData<A>, typename M::template Data<std::vector<B>>, true> {
+    #endif
+        public:
+            template <class F>
+            static auto lift(F &&f) {
+                return KleisliUtils<M>::template kleisliMulti<A>(std::move(f));
+            }
+        };
     public:
         template <class F>
         static auto lift(F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
@@ -434,6 +470,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         typename GenericLiftTypeFinder<F>::InputType
                         , typename GenericLiftTypeFinder<F>::OutputType
                     >::template lift<F>(std::move(f));
+                }
+#ifdef _MSC_VER
+            }
+#endif
+        }
+        template <class F>
+        static auto liftKU(std::tuple<LiftAsMulti, F> &&f) {
+#ifdef _MSC_VER            
+            if constexpr (GenericLiftTypeFinder<F>::IsBareFunction) {
+                return liftKU<std::tuple<LiftAsMulti, F*>>(std::tuple<LiftAsMulti, F*> {LiftAsMulti{}, &f});
+            } else {
+#endif
+                if constexpr (KleisliUtils<M>::template IsAlreadyWrapped<std::decay_t<F>>::value) {
+                    return std::move(f);
+                } else {
+                    return GenericLiftKUMultiImpl<
+                        typename GenericLiftTypeFinder<F>::InputType
+                        , typename GenericLiftTypeFinder<F>::OutputType
+                    >::template lift<F>(std::move(std::get<1>(f)));
                 }
 #ifdef _MSC_VER
             }
