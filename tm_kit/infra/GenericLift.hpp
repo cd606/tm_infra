@@ -479,7 +479,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto liftKU(std::tuple<LiftAsMulti, F> &&f) {
 #ifdef _MSC_VER            
             if constexpr (GenericLiftTypeFinder<F>::IsBareFunction) {
-                return liftKU<std::tuple<LiftAsMulti, F*>>(std::tuple<LiftAsMulti, F*> {LiftAsMulti{}, &f});
+                return liftKU<std::tuple<LiftAsMulti, F*>>(std::tuple<LiftAsMulti, F*> {LiftAsMulti{}, &(std::get<1>(f))});
             } else {
 #endif
                 if constexpr (KleisliUtils<M>::template IsAlreadyWrapped<std::decay_t<F>>::value) {
@@ -497,6 +497,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class F>
         static auto lift(LiftAsMulti &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
             return liftMulti<F>(std::move(f), liftParam);
+        }
+        template <class F>
+        static auto lift(std::tuple<LiftAsMulti, F> &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
+            return liftMulti<F>(std::move(std::get<1>(f)), liftParam);
         }
         template <class F>
         static auto lift(LiftAsFacility &&, F &&f, LiftParameters<typename M::TimePoint> const &liftParam = LiftParameters<typename M::TimePoint> {}) {
