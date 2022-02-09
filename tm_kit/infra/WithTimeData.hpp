@@ -39,6 +39,7 @@
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
 #include <tm_kit/infra/GraphStructureBasedResourceHolderComponent.hpp>
+#include <tm_kit/infra/GraphCheckComponents.hpp>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
@@ -2767,6 +2768,53 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return std::nullopt;
         }
+        void detectOutgoingChainLengthForNode(std::tuple<void *, std::string> const &node, std::unordered_map<std::string, std::size_t> &chainLengths) {
+            auto iter = chainLengths.find(std::get<1>(node));
+            if (iter != chainLengths.end()) {
+                return;
+            }
+            auto outputNodeName = std::get<0>(nameMap_[std::get<0>(node)].outputConnectedTo.begin()->first);
+            auto outputNodeIter = reverseLookup_.find(outputNodeName);
+            if (outputNodeIter == reverseLookup_.end()) {
+                chainLengths[std::get<1>(node)] = 1;
+                return;
+            }
+            iter = chainLengths.find(outputNodeName);
+            if (iter == chainLengths.end()) {
+                detectOutgoingChainLengthForNode({outputNodeIter->second, outputNodeName}, chainLengths);
+                iter = chainLengths.find(outputNodeName);   
+            } 
+            if (iter == chainLengths.end()) {
+                chainLengths[std::get<1>(node)] = 1;
+            } else {
+                chainLengths[std::get<1>(node)] = iter->second+1;
+            }
+        }
+        void detectOutgoingChainLengths(std::unordered_map<std::string, std::size_t> &chainLengths) {
+            std::set<std::tuple<void *,std::string>> potentialNodes;
+            for (auto const &item : nameMap_) {
+                if (item.second.isImporter || item.second.isFacility) {
+                    chainLengths[item.second.name] = 0;
+                } else if (item.second.hasAltOutput || item.second.paramCount > 1) {
+                    chainLengths[item.second.name] = 0;
+                } else if (item.second.outputConnectedTo.size() > 1) {
+                    chainLengths[item.second.name] = 0;
+                } else if (item.second.paramConnectedFrom.size() != 1) {
+                    chainLengths[item.second.name] = 0;
+                } else if (item.second.paramConnectedFrom[0].size() > 1) {
+                    chainLengths[item.second.name] = 0;
+                } else if (item.second.isExporter) {
+                    chainLengths[item.second.name] = 1;
+                } else if (item.second.outputConnectedTo.size() == 0) {
+                    chainLengths[item.second.name] = 1;
+                } else {
+                    potentialNodes.insert({item.first, item.second.name});
+                }
+            }
+            for (auto const &node : potentialNodes) {
+                detectOutgoingChainLengthForNode(node, chainLengths);
+            }
+        }
     private:
         void finalizeBegin() {
             if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
@@ -2853,6 +2901,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     } else {
                         env_->log(LogLevel::Warning,
                             "There is a circle involving on-order facility starting from '" + (*cycleRet) + "'"
+                        );
+                    }
+                }
+                if constexpr (std::is_convertible_v<StateT *, graph_check_components::CheckActionChains *>) {
+                    std::unordered_map<std::string, std::size_t> chainLengths;
+                    detectOutgoingChainLengths(chainLengths);
+                    std::size_t maxChainLength = 0;
+                    std::string maxChainLengthStart = "";
+                    for (auto const &item: chainLengths) {
+                        if (item.second > maxChainLength) {
+                            maxChainLength = item.second;
+                            maxChainLengthStart = item.first;
+                        }
+                    } 
+                    if (maxChainLength >= 3) {
+                        env_->log(LogLevel::Info,
+                            "There is a chain of length "+std::to_string(maxChainLength)+" starting from '" + maxChainLengthStart + "', please check if you want to merge the nodes."
                         );
                     }
                 }
