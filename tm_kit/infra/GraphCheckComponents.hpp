@@ -5,6 +5,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         
     namespace graph_check_components {
         class CheckActionChains {};
+        class DontCheckCycles {};
+        class DontCheckConnections {};
     }
 
 } } } }
