@@ -43,7 +43,7 @@
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
 
-    constexpr std::size_t MAX_FAN_IN_BRANCH_COUNT = 10;   
+    constexpr std::size_t MAX_FAN_IN_BRANCH_COUNT = 20;   
 
     template <class T>
     struct LiftParameters {
@@ -862,6 +862,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             size_t outputLimit = std::numeric_limits<size_t>::max();
             size_t inputLimits[MAX_FAN_IN_BRANCH_COUNT] = {
                 std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
+                , std::numeric_limits<size_t>::max()
                 , std::numeric_limits<size_t>::max()
                 , std::numeric_limits<size_t>::max()
                 , std::numeric_limits<size_t>::max()
