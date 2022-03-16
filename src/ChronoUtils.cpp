@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <time.h>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     namespace withtime_utils {
@@ -79,6 +80,84 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto d = tp - std::chrono::system_clock::from_time_t(t);
             int micros = std::chrono::duration_cast<std::chrono::microseconds>(d).count();
             oss << '.' << std::setw(6) << std::setfill('0') << micros;
+            return oss.str();
+        }
+        std::chrono::system_clock::time_point parseUtcTime(int year, int month, int day, int hour, int minute, int second, int microseconds) {
+            std::tm m;
+            m.tm_year = year-1900;
+            m.tm_mon = month-1;
+            m.tm_mday = day;
+            m.tm_hour = hour;
+            m.tm_min = minute;
+            m.tm_sec = second;
+            m.tm_isdst = -1;
+#ifdef _MSC_VER
+            return std::chrono::system_clock::from_time_t(_mkgmtime(&m))+std::chrono::microseconds(microseconds);
+#else
+            return std::chrono::system_clock::from_time_t(timegm(&m))+std::chrono::microseconds(microseconds);
+#endif
+        }
+        //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmmZ" (the microsecond part can be omitted)
+        std::chrono::system_clock::time_point parseUtcTime(std::string_view const &s) {
+            if (s.empty()) {
+                return std::chrono::system_clock::time_point {};
+            }
+            if (s[s.length()-1] != 'Z') {
+                return std::chrono::system_clock::time_point {};
+            }
+            if (s.length() == 9) {
+                int year = (s[0]-'0')*1000+(s[1]-'0')*100+(s[2]-'0')*10+(s[3]-'0');
+                int mon = (s[4]-'0')*10+(s[5]-'0');
+                int day = (s[6]-'0')*10+(s[7]-'0');
+                return parseUtcTime(year, mon, day, 0, 0, 0, 0);
+            } else {
+                int year = (s[0]-'0')*1000+(s[1]-'0')*100+(s[2]-'0')*10+(s[3]-'0');
+                int mon = (s[5]-'0')*10+(s[6]-'0');
+                int day = (s[8]-'0')*10+(s[9]-'0');
+                int hour = 0;
+                int min = 0;
+                int sec = 0;
+                int microsec = 0;
+                if (s.length() >= 17) {
+                    hour = (s[11]-'0')*10+(s[12]-'0');
+                    min = (s[14]-'0')*10+(s[15]-'0');
+                    if (s.length() >= 19) {
+                        sec = (s[17]-'0')*10+(s[18]-'0');
+                    }
+                    if (s.length() > 21 && s[19] == '.') {
+                        int unit = 100000;
+                        for (std::size_t ii=0; ii<6; ++ii,unit/=10) {
+                            if (s.length() > (20+ii)) {
+                                microsec += (s[20+ii]-'0')*unit;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                return parseUtcTime(
+                    year, mon, day, hour, min, sec, microsec
+                );
+            }
+        }    
+        std::string utcTimeString(std::chrono::system_clock::time_point const &tp) {
+            auto t = std::chrono::system_clock::to_time_t(tp);
+            std::tm *m = std::gmtime(&t);
+            std::ostringstream oss;
+            oss << std::setw(4) << (m->tm_year+1900)
+                << '-'
+                << std::setw(2) << std::setfill('0') << (m->tm_mon+1)
+                << '-'
+                << std::setw(2) << std::setfill('0') << m->tm_mday
+                << 'T'
+                << std::setw(2) << std::setfill('0') << m->tm_hour
+                << ':'
+                << std::setw(2) << std::setfill('0') << m->tm_min
+                << ':'
+                << std::setw(2) << std::setfill('0') << m->tm_sec;
+            auto d = tp - std::chrono::system_clock::from_time_t(t);
+            int micros = std::chrono::duration_cast<std::chrono::microseconds>(d).count();
+            oss << '.' << std::setw(6) << std::setfill('0') << micros << 'Z';
             return oss.str();
         }    
     }
