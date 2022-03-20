@@ -409,8 +409,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<OnOrderFacility<I0,O0>> wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, Action<Key<I0>,Key<I1>> &&inputT, Action<Key<O1>,Key<O0>> &&outputT) {
             return std::make_shared<OnOrderFacility<I0,O0>>();
         };
-        template <class I0, class O0, class I1, class O1>
-        static std::shared_ptr<OnOrderFacility<I0,O0>> simpleWrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, std::function<I1(I0 &&)> const &inputT, std::function<O0(O1 &&)> const&outputT) {
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<OnOrderFacility<I0,O0>> simpleWrappedOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::InputType const &, typename Fac::OutputType &&)> const&outputT) {
             return std::make_shared<OnOrderFacility<I0,O0>>();
         };
 
@@ -488,7 +488,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class I0, class O0, class Fac>
         static std::shared_ptr<LocalOnOrderFacility<
-            I0, O0, typename Fac::DataType>> simpleWrappedLocalOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            I0, O0, typename Fac::DataType>> simpleWrappedLocalOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::InputType const &, typename Fac::OutputType &&)> const &outputT) {
             return std::make_shared<LocalOnOrderFacility<
                 I0, O0
                 , typename Fac::DataType>>(
@@ -572,7 +572,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class I0, class O0, class Fac>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<
             I0, O0
-            , typename Fac::DataType>> simpleWrappedOnOrderFacilityWithExternalEffects(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            , typename Fac::DataType>> simpleWrappedOnOrderFacilityWithExternalEffects(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::InputType const &, typename Fac::OutputType &&)> const &outputT) {
             return std::make_shared<OnOrderFacilityWithExternalEffects<
                 I0, O0
                 , typename Fac::DataType>>(
@@ -665,7 +665,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<VIEOnOrderFacility<
             I0, O0
             , typename Fac::ExtraInputType
-            , typename Fac::ExtraOutputType>> simpleWrappedVIEOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            , typename Fac::ExtraOutputType>> simpleWrappedVIEOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::InputType const &, typename Fac::OutputType &&)> const &outputT) {
             return std::make_shared<VIEOnOrderFacility<
                 I0, O0
                 , typename Fac::ExtraInputType
