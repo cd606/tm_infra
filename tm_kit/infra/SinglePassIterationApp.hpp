@@ -2564,6 +2564,115 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         };
 
+    private:
+        template <class I0, class O0, class I1, class O1>
+        class SimpleWrappedOnOrderFacility final : public IExternalComponent, public OnOrderFacilityCore<I0,O0> {
+        private:
+            OnOrderFacility<I1,O1> toWrap_;
+            
+            class Conduit2 final : public AbstractExporterCore<Key<I0>> {
+            private:
+                OnOrderFacilityCore<I1,O1> *toWrap_;
+                AbstractConsumer<KeyedData<I1,O1>> *consumer_;
+                std::function<I1(I0 &&)> inputT_;
+            public:
+                Conduit2(OnOrderFacilityCore<I1,O1> *toWrap, AbstractConsumer<KeyedData<I1,O1>> *consumer, std::function<I1(I0 &&)> const &inputT)
+                    : toWrap_(toWrap), consumer_(consumer), inputT_(inputT) {}
+                void handle(InnerData<Key<I0>> &&i0) override final {
+                    if constexpr (std::is_same_v<I0,I1>) {
+                        if (inputT_) {
+                            InnerData<Key<I1>> i1 = pureInnerDataLift([this](Key<I0> &&k) -> Key<I1> {
+                                return {k.id(), inputT_(std::move(k.key()))};
+                            }, std::move(i0));
+                            toWrap_->placeOrder(std::move(i1), consumer_);
+                        } else {
+                            toWrap_->placeOrder(std::move(i0), consumer_);
+                        }
+                    } else {
+                        if (inputT_) {
+                            InnerData<Key<I1>> i1 = pureInnerDataLift([this](Key<I0> &&k) -> Key<I1> {
+                                return {k.id(), inputT_(std::move(k.key()))};
+                            }, std::move(i0));
+                            toWrap_->placeOrder(std::move(i1), consumer_);
+                        }
+                    }
+                }
+                void start(StateT *) override final {}
+            }; 
+            class Conduit3 final : public AbstractExporterCore<KeyedData<I1,O1>> {
+            private:
+                SimpleWrappedOnOrderFacility *parent_;
+                std::function<O0(O1 &&)> outputT_;
+            public:
+                Conduit3(SimpleWrappedOnOrderFacility *parent, std::function<O0(O1 &&)> const &outputT)
+                    : parent_(parent), outputT_(outputT)
+                {}
+                virtual void handle(InnerData<KeyedData<I1,O1>> &&o1) override final {
+                    if constexpr (std::is_same_v<O0,O1>) {
+                        if (outputT_) {
+                            parent_->publishResponse(pureInnerDataLift([this](KeyedData<I1,O1> &&a) -> Key<O0> {
+                                return {a.key.id(), outputT_(std::move(a.data))};
+                            }, std::move(o1)));
+                        } else {
+                            parent_->publishResponse(pureInnerDataLift([](KeyedData<I1,O1> &&a) -> Key<O0> {
+                                return {a.key.id(), std::move(a.data)};
+                            }, std::move(o1)));
+                        }
+                    } else {
+                        if (outputT_) {
+                            parent_->publishResponse(pureInnerDataLift([this](KeyedData<I1,O1> &&a) -> Key<O0> {
+                                return {a.key.id(), outputT_(std::move(a.data))};
+                            }, std::move(o1)));
+                        }
+                    }
+                }
+                void start(StateT *) override final {}
+            };
+            Conduit3 c3_;   
+            Conduit2 c2_;
+            FillableProvider<Key<I0>> c1_;
+        public:
+            SimpleWrappedOnOrderFacility(
+                OnOrderFacility<I1,O1> &&toWrap,
+                std::function<I1(I0 &&)> const &inputT,
+                std::function<O0(O1 &&)> const &outputT
+            ) : toWrap_(std::move(toWrap)), 
+                c3_(this, outputT), c2_(toWrap_.core_.get(), &c3_, inputT), c1_() {
+                c2_.connectToSource(&c1_);
+                if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(toWrap_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(&c1_, static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(&c2_, static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(&c3_, static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                }
+            }
+            virtual void start(StateT *env) override final {
+                auto *p = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
+                if (p != nullptr) {
+                    p->start(env);
+                }
+            }
+            virtual void handle(InnerData<Key<I0>> &&i0) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    i0.environment, static_cast<AbstractOnOrderFacility<I0,O0> *>(this)
+                );
+                c1_.fill(std::move(i0));
+            }
+        private:
+            virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) override final {
+                output.push_back(&c3_);
+                output.push_back(&c2_);
+            } 
+        };
+
+    public:
+        template <class I0, class O0, class I1, class O1>
+        static std::shared_ptr<OnOrderFacility<I0,O0>> simpleWrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, std::function<I1(I0 &&)> const &inputT, std::function<O0(O1 &&)> const &outputT) {
+            return std::make_shared<OnOrderFacility<I0,O0>>(
+                new SimpleWrappedOnOrderFacility<I0,O0,I1,O1>(std::move(toWrap),inputT,outputT)
+            );
+        };
+
     public:
         //For the reason why LocalOnOrderFacility is essentially a tuple
         //and not directly based on AbstractIntegratedLocalOnOrderFacility,
@@ -2639,6 +2748,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
 
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<LocalOnOrderFacility<
+            I0, O0
+            , typename Fac::DataType>> simpleWrappedLocalOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            auto *t = toWrap.core1_;
+            auto *e = toWrap.core2_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = simpleWrappedOnOrderFacility<
+                I0, O0
+                , typename Fac::InputType
+                , typename Fac::OutputType
+            >(std::move(*fac), inputT, outputT);
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<LocalOnOrderFacility<
+                I0, O0
+                , typename Fac::DataType>>(
+                p, e
+            );
+        }
+
     public:
         //OnOrderFacilityWithExternalEffects is the dual of OnOrderFacilityWithExternalEffects
         template <class QueryKeyType, class QueryResultType, class DataInputType>
@@ -2709,6 +2840,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacilityWithExternalEffects<
                 typename Action1::InputType::KeyType
                 , typename Action2::OutputType::KeyType
+                , typename Fac::DataType>>(
+                p, i
+            );
+        }
+
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<
+            I0, O0
+            , typename Fac::DataType>> simpleWrappedOnOrderFacilityWithExternalEffects(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            auto *t = toWrap.core1_;
+            auto *i = toWrap.core2_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = simpleWrappedOnOrderFacility<
+                I0, O0
+                , typename Fac::InputType
+                , typename Fac::OutputType
+            >(std::move(*fac), inputT, outputT);
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<OnOrderFacilityWithExternalEffects<
+                I0, O0
                 , typename Fac::DataType>>(
                 p, i
             );
@@ -2800,6 +2953,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
 
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<VIEOnOrderFacility<
+            I0, O0
+            , typename Fac::ExtraInputType
+            , typename Fac::ExtraOutputType>> simpleWrappedVIEOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            auto *t = toWrap.core1_;
+            auto *i = toWrap.core2_;
+            auto *o = toWrap.core3_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = simpleWrappedOnOrderFacility<
+                I0, O0
+                , typename Fac::InputType
+                , typename Fac::OutputType
+            >(std::move(*fac), inputT, outputT);
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<VIEOnOrderFacility<
+                I0, O0
+                , typename Fac::ExtraInputType
+                , typename Fac::ExtraOutputType>>(
+                p, i, o
+            );
+        }
 
     public:
         template <class T>

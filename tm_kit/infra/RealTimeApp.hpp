@@ -1939,6 +1939,100 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         };
     private:
+        template <class I0, class O0, class I1, class O1>
+        class SimpleWrappedOnOrderFacility final : public IExternalComponent, public RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<I0,O0> {
+        private:
+            OnOrderFacility<I1,O1> toWrap_;
+            std::function<I1(I0 &&)> inputT_;
+
+            class OutputConduit final : public RealTimeAppComponents<StateT>::template IHandler<KeyedData<I1,O1>> {
+            private:
+                SimpleWrappedOnOrderFacility *parent_;
+                std::function<O1(O0 &&)> outputT_;
+            public:
+                OutputConduit(SimpleWrappedOnOrderFacility *parent, std::function<O1(O0 &&)> const &outputT)
+                    : parent_(parent), outputT_(outputT) {}
+                void handle(InnerData<KeyedData<I1,O1>> &&o1) override final {
+                    if constexpr (std::is_same_v<O0,O1>) {
+                        if (outputT_) {
+                            parent_->publish(pureInnerDataLift([this](KeyedData<I1,O1> &&a) -> Key<O0> {
+                                return {a.key.id(), outputT_(std::move(a.data))};
+                            }, std::move(o1)));
+                        } else {
+                            parent_->publish(pureInnerDataLift([](KeyedData<I1,O1> &&a) -> Key<O0> {
+                                return {a.key.id(), std::move(a.data)};
+                            }, std::move(o1)));
+                        }
+                    } else {
+                        if (outputT_) {
+                            parent_->publish(pureInnerDataLift([this](KeyedData<I1,O1> &&a) -> Key<O0> {
+                                return {a.key.id(), outputT_(std::move(a.data))};
+                            }, std::move(o1)));
+                        }
+                    }
+                }
+                void notifyForSourceTermination(std::any const &info, KeyedData<I1,O1> const *notUsed) override final {
+                    typename StateT::IDType const *pID = std::any_cast<typename StateT::IDType>(&info);
+                    if (pID) {
+                        parent_->markEndHandlingRequest(*pID);
+                    }
+                }
+            }; 
+            OutputConduit c_;
+        public:
+            SimpleWrappedOnOrderFacility(
+                OnOrderFacility<I1,O1> &&toWrap,
+                std::function<I1(I0 &&)> const &inputT,
+                std::function<O0(O1 &&)> const &outputT
+            ) : toWrap_(std::move(toWrap))
+                , inputT_(inputT)
+                , c_(this, outputT) 
+            {
+                if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(toWrap_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                    GraphStructureBasedResourceHolderComponent::registerParentNode(&c_, static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
+                }
+            }
+            virtual void start(StateT *env) override final {
+                auto *p = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
+                if (p != nullptr) {
+                    p->start(env);
+                }
+            }
+            virtual void handle(InnerData<Key<I0>> &&i0) override final {
+                GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
+                    i0.environment, static_cast<AbstractOnOrderFacility<I0,O0> *>(this)
+                );
+                if constexpr (std::is_same_v<I0,I1>) {
+                    if (inputT_) {
+                        InnerData<Key<I1>> i1 = pureInnerDataLift([this](Key<I0> &&k) -> Key<I1> {
+                            return {k.id(), inputT_(std::move(k.key()))};
+                        }, std::move(i0));
+                        toWrap_.core_->registerKeyHandler(i1.timedData.value, &c_);
+                        toWrap_.core_->handle(std::move(i1));
+                    } else {
+                        toWrap_.core_->registerKeyHandler(i0.timedData.value, &c_);
+                        toWrap_.core_->handle(std::move(i0));
+                    }
+                } else {
+                    if (inputT_) {
+                        InnerData<Key<I1>> i1 = pureInnerDataLift([this](Key<I0> &&k) -> Key<I1> {
+                            return {k.id(), inputT_(std::move(k.key()))};
+                        }, std::move(i0));
+                        toWrap_.core_->registerKeyHandler(i1.timedData.value, &c_);
+                        toWrap_.core_->handle(std::move(i1));
+                    }
+                }
+            }
+        };
+    public:
+        template <class I0, class O0, class I1, class O1>
+        static std::shared_ptr<OnOrderFacility<I0,O0>> simpleWrappedOnOrderFacility(OnOrderFacility<I1,O1> &&toWrap, std::function<I1(I0 &&)> const &inputT, std::function<O0(O1 &&)> const&outputT) {
+            return std::make_shared<OnOrderFacility<I0,O0>>(
+                new SimpleWrappedOnOrderFacility<I0,O0,I1,O1>(std::move(toWrap),inputT,outputT)
+            );
+        };
+    private:
         template <class A, class B, class C>
         class Compose final : public RealTimeAppComponents<StateT>::template AbstractAction<A,C> {
         private:
@@ -2657,6 +2751,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             );
         }
 
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<LocalOnOrderFacility<
+            I0, O0, typename Fac::DataType>> simpleWrappedLocalOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            auto *t = toWrap.core1_;
+            auto *e = toWrap.core2_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = simpleWrappedOnOrderFacility<
+                I0, O0
+                , typename Fac::InputType
+                , typename Fac::OutputType
+            >(std::move(*fac), inputT, outputT);
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<LocalOnOrderFacility<
+                I0, O0
+                , typename Fac::DataType>
+            >(
+                p, e
+            );
+        }
+
     public:
         //OnOrderFacilityWithExternalEffects is the dual of LocalOnOrderFacility
         //Basically, it is an importer and an on order facility glued
@@ -2733,6 +2849,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacilityWithExternalEffects<
                 typename Action1::InputType::KeyType
                 , typename Action2::OutputType::KeyType
+                , typename Fac::DataType>
+            >(
+                p, i
+            );
+        }
+
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<OnOrderFacilityWithExternalEffects<
+            I0, O0
+            , typename Fac::DataType>> simpleWrappedOnOrderFacilityWithExternalEffects(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            auto *t = toWrap.core1_;
+            auto *i = toWrap.core2_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = simpleWrappedOnOrderFacility<
+                I0, O0
+                , typename Fac::InputType
+                , typename Fac::OutputType
+            >(std::move(*fac), inputT, outputT);
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<OnOrderFacilityWithExternalEffects<
+                I0, O0
                 , typename Fac::DataType>
             >(
                 p, i
@@ -2827,6 +2966,33 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 p, i, o
             );
         }
+
+        template <class I0, class O0, class Fac>
+        static std::shared_ptr<VIEOnOrderFacility<
+            I0, O0
+            , typename Fac::ExtraInputType
+            , typename Fac::ExtraOutputType>> simpleWrappedVIEOnOrderFacility(Fac &&toWrap, std::function<typename Fac::InputType(I0 &&)> const &inputT, std::function<O0(typename Fac::OutputType &&)> const &outputT) {
+            auto *t = toWrap.core1_;
+            auto *i = toWrap.core2_;
+            auto *o = toWrap.core3_;
+            toWrap.release();
+            auto fac = fromAbstractOnOrderFacility(t);
+            auto fac1 = simpleWrappedOnOrderFacility<
+                I0, O0
+                , typename Fac::InputType
+                , typename Fac::OutputType
+            >(std::move(*fac), inputT, outputT);
+            auto *p = fac1->core_.get();
+            fac1->release();
+            return std::make_shared<VIEOnOrderFacility<
+                I0, O0
+                , typename Fac::ExtraInputType
+                , typename Fac::ExtraOutputType>
+            >(
+                p, i, o
+            );
+        }
+
     public:
         template<class T>
         static std::optional<std::thread::native_handle_type> threadHandle(
