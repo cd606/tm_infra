@@ -3094,6 +3094,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B>
         static void innerConnectFacility(Producer<Key<A>> *producer, typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *facility, IHandler<KeyedData<A,B>> *consumer) {
+            auto *passThroughHandlerCast = dynamic_cast<PassThroughAction<KeyedData<A,B>> *>(consumer);
+            auto *passThroughProducerCast = dynamic_cast<PassThroughAction<Key<A>> *>(producer);
+            if (passThroughHandlerCast != nullptr || passThroughProducerCast != nullptr) {
+                throw RealTimeAppException(
+                    "Cannot use pass-through node on either side of a facility"
+                );
+            }
+                
             class LocalC final : public virtual IHandler<Key<A>> {
             private:                    
                 typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *p_;

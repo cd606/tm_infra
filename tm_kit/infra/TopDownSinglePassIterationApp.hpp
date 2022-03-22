@@ -2509,6 +2509,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B>
         static void innerConnectFacility(ProducerBase<Key<A>> *producer, AbstractOnOrderFacility<A,B> *facility, IHandler<KeyedData<A,B>> *consumer) {
+            auto *passThroughHandlerCast = dynamic_cast<PassThroughAction<KeyedData<A,B>> *>(consumer);
+            auto *passThroughProducerCast = dynamic_cast<PassThroughAction<Key<A>> *>(producer);
+            if (passThroughHandlerCast != nullptr || passThroughProducerCast != nullptr) {
+                throw std::runtime_error(
+                    "Cannot use pass-through node on either side of a facility"
+                );
+            }
             class LocalC final : public virtual IHandler<Key<A>> {
             private:                    
                 AbstractOnOrderFacility<A,B> *p_;
