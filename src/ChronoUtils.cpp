@@ -127,7 +127,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (s.length() > 21 && s[19] == '.') {
                         int unit = 100000;
                         for (std::size_t ii=0; ii<6; ++ii,unit/=10) {
-                            if (s.length() > (20+ii)) {
+                            if (s.length() > (20+ii) && s[20+ii] != 'Z') {
                                 microsec += (s[20+ii]-'0')*unit;
                             } else {
                                 break;
@@ -138,6 +138,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return parseUtcTime(
                     year, mon, day, hour, min, sec, microsec
                 );
+            }
+        } 
+        //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmm+/-HH:mm" (the microsecond part can be omitted)
+        std::chrono::system_clock::time_point parseZonedTime(std::string_view const &s) {
+            if (s.empty()) {
+                return std::chrono::system_clock::time_point {};
+            }
+            if (s.length() < 6) {
+                return std::chrono::system_clock::time_point {};
+            }
+            bool add = false;
+            char c = s[s.length()-6];
+            if (c == '+') {
+                add = true;
+            } else if (c == '-') {
+                add = false;
+            } else {
+                return std::chrono::system_clock::time_point {};
+            }
+            if (s[s.length()-3] != ':') {
+                return std::chrono::system_clock::time_point {};
+            }
+            int offsetMinutes = 
+                (s[s.length()-5]-'0')*600
+                +(s[s.length()-4]-'0')*60
+                +(s[s.length()-2]-'0')*10
+                +(s[s.length()-1]-'0');
+            auto baseTime = parseUtcTime(std::string(s.substr(0,s.length()-6))+"Z");
+            if (add) {
+                return baseTime-std::chrono::minutes(offsetMinutes);
+            } else {
+                return baseTime+std::chrono::minutes(offsetMinutes);
             }
         }    
         std::string utcTimeString(std::chrono::system_clock::time_point const &tp) {

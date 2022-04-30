@@ -19,6 +19,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         extern std::chrono::system_clock::time_point parseUtcTime(int year, int month, int day, int hour, int minute, int second, int microseconds=0);
         //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmmZ" (the microsecond part can be omitted)
         extern std::chrono::system_clock::time_point parseUtcTime(std::string_view const &s);    
+        //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmm+/-HH:mm" (the microsecond part can be omitted)
+        extern std::chrono::system_clock::time_point parseZonedTime(std::string_view const &s); 
         extern std::string utcTimeString(std::chrono::system_clock::time_point const &tp);
         template <class TimeType>
         inline std::string genericLocalTimeString(TimeType const &t) {
