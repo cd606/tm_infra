@@ -164,6 +164,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto passThroughAction() {
             return liftPure<T>([](T &&t) {return std::move(t);});
         }
+        template <class... Ts>
+        static auto dispatchTupleAction() {
+            return std::make_shared<Action<std::tuple<Ts...>,std::variant<Ts...>>>();
+        }
 
         class IExternalComponent {
         public:

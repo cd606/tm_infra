@@ -1588,6 +1588,41 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto passThroughAction() {
             return std::make_shared<Action<T,T>>(new PassThroughAction<T>());
         }
+    private:
+        template <class... Ts>
+        class DispatchTupleAction final : public AbstractAction<std::tuple<Ts...>,std::variant<Ts...>> {
+        private:
+            template <std::size_t Idx>
+            void handle_internal(InnerData<std::tuple<Ts...>> &&data) {
+                if constexpr (Idx < sizeof...(Ts)) {
+                    this->publish(InnerData<std::variant<Ts...>> {
+                        data.environment
+                        , {
+                            data.environment->resolveTime(data.timedData.timePoint)
+                            , std::variant<Ts...> {std::in_place_index<Idx>, std::move(std::get<Idx>(data.timedData.value))}
+                            , data.timedData.finalFlag
+                        }
+                    });
+                    handle_internal<Idx+1>(std::move(data));
+                }
+            }
+        public:
+            virtual bool isThreaded() const override final {return false;}
+            virtual bool isOneTimeOnly() const override final {return false;}
+            virtual void setIdleWorker(std::function<void(void *)> /*worker*/) override final {}
+            virtual void setStartWaiter(std::function<void()> /*waiter*/) override final {}
+            virtual void handle(InnerData<std::tuple<Ts...>> &&data) override final {
+                handle_internal<0>(std::move(data));
+            }
+        
+            DispatchTupleAction() = default;
+            virtual ~DispatchTupleAction() = default;
+        };
+    public:
+        template <class... Ts>
+        static auto dispatchTupleAction() {
+            return std::make_shared<Action<std::tuple<Ts...>,std::variant<Ts...>>>(new DispatchTupleAction<Ts...>());
+        }
     public:
         template <class A, class B, bool Threaded, class T>
         class OnOrderFacilityCore {};

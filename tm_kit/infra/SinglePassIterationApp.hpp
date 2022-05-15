@@ -1526,6 +1526,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static auto passThroughAction() {
             return liftPure<T>([](T &&t) {return std::move(t);});
         }
+    private:
+        template <class... Ts>
+        class DispatchTupleActionF {
+        private:
+            template <std::size_t Idx>
+            void fillRes(std::vector<std::variant<Ts...>> &res, std::tuple<Ts...> &&data) {
+                if constexpr (Idx < sizeof...(Ts)) {
+                    res.push_back(std::variant<Ts...> {
+                        std::in_place_index<Idx>, std::move(std::get<Idx>(data))
+                    });
+                    fillRes<Idx+1>(res, std::move(data));
+                }
+            }
+        public:
+            std::vector<std::variant<Ts...>> operator()(std::tuple<Ts...> &&data) {
+                std::vector<std::variant<Ts...>> res;
+                fillRes<0>(res, std::move(data));
+                return std::move(res);
+            }
+        };
+    public:
+        template <class... Ts>
+        static auto dispatchTupleAction() {
+            return liftMulti<std::tuple<Ts...>>(DispatchTupleActionF<Ts...> {});
+        }
     public:
         class IExternalComponent {
         public:
