@@ -87,6 +87,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     //Currently this affects TopDown execution scheme, but it may
     //affect others in the future
     class HiddenTimeDependencyComponent {};
+
+    //this class is provided for template specialization purposes
+    template <class TimePoint>
+    class EmptyEnvironment final {
+    public:
+        using TimePointType = TimePoint;
+        static TimePoint resolve() {
+            if constexpr (std::is_same_v<TimePoint, std::chrono::system_clock::time_point>) {
+                return std::chrono::system_clock::now();
+            } else {
+                return TimePoint {};
+            }
+        }
+        static TimePoint resolve(TimePoint const &t) {
+            return t;
+        }
+        static TimePoint now() {
+            return resolve();
+        }
+    }; 
 } } } }
 
 #endif
