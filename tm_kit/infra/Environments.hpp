@@ -89,7 +89,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class HiddenTimeDependencyComponent {};
 
     //this class is provided for template specialization purposes
-    template <class TimePoint>
+    template <class TimePoint=std::chrono::system_clock::time_point>
     class EmptyEnvironment final {
     public:
         using TimePointType = TimePoint;
