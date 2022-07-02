@@ -3306,6 +3306,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         }
+        void sendStopToAllNodes(std::chrono::system_clock::duration const &waitTimeAfterwards) {
+            std::lock_guard<std::recursive_mutex> _(mutex_);
+            for (auto const &item : controllableNodeMap_) {
+                for (auto *p : item.second) {
+                    p->control(env_, "stop", {});
+                }
+            }
+            std::this_thread::sleep_for(waitTimeAfterwards);
+        }
         std::optional<std::string> findFirstControllableNodeAtOrAbove(std::string const &nodeName) {
             std::lock_guard<std::recursive_mutex> _(mutex_);
             std::unordered_set<std::string> seen;
