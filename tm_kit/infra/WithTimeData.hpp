@@ -1445,6 +1445,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         StateT *environment() const {
             return env_;
         }
+        template <class X>
+        void moveToAnotherRunner(X &x) {
+            x.takeOver(env_, std::move(m_));
+        }
 
         template <class Action>
         void registerAction(std::shared_ptr<Action> const &f, std::string const &name) {

@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <sstream>
 #include <any>
+#include <array>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class M>
@@ -3059,10 +3060,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };           
             
     private:  
-        std::list<IExternalComponent *> externalComponents_[3];
+        std::array<std::list<IExternalComponent *>,3> externalComponents_;
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         std::mutex mutex_;
         RealTimeApp() : externalComponents_(), externalComponentsSet_(), mutex_() {}
+        RealTimeApp(RealTimeApp &&other) : externalComponents_(std::move(other.externalComponents_)), externalComponentsSet_(std::move(externalComponentsSet_)), mutex_() {}
+        RealTimeApp &operator=(RealTimeApp &&other) {
+            if (this != &other) {
+                externalComponents_ = std::move(other.externalComponents_);
+                externalComponentsSet_ = std::move(externalComponentsSet_);
+            }
+            return *this;
+        }
         ~RealTimeApp() {}
 
         void registerExternalComponent(IExternalComponent *c, int idx) {

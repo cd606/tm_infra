@@ -40,6 +40,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         typename M::EnvironmentType *environment() const {
             return env_;
         }
+        void takeOver(typename M::EnvironmentType *env, M &&m) {
+            env_ = env;
+            app_ = std::move(m);
+        }
 
 #if !defined(_MSC_VER) && !defined(__llvm__) && defined(__GNUC__) && (__GNUC__ <= 10)
         template <class Im, typename=std::enable_if_t<NodeClassifier<M>::template IsImporter<Im>::Value && !withtime_utils::IsVariant<typename Im::DataType>::Value>>

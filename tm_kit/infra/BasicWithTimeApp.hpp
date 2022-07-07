@@ -696,6 +696,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     private:
         BasicWithTimeApp() {}
+        BasicWithTimeApp(BasicWithTimeApp &&) = default;
+        BasicWithTimeApp &operator=(BasicWithTimeApp &&) = default;
         ~BasicWithTimeApp() {}
 
         void registerExternalComponent(IExternalComponent *c) {

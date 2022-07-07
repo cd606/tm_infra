@@ -21,6 +21,7 @@
 #include <sstream>
 #include <any>
 #include <iterator>
+#include <array>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     template <class M>
@@ -2459,13 +2460,35 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };           
             
     private:  
-        std::list<IExternalComponent *> externalComponents_[3];
+        std::array<std::list<IExternalComponent *>,3> externalComponents_;
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         std::list<AbstractImporterBase *> importers_;
         std::unordered_set<AbstractImporterBase *> importerSet_;
         std::unordered_map<AbstractImporterBase *, std::size_t> importerInQueueMap_;
         std::mutex mutex_;
         TopDownSinglePassIterationApp() : idCounter_(0), taskQueue_(), externalComponents_(), externalComponentsSet_(), importers_(), importerSet_(), importerInQueueMap_(), mutex_() {}
+        TopDownSinglePassIterationApp(TopDownSinglePassIterationApp &&other)
+            : idCounter_(std::move(other.idCounter_))
+            , taskQueue_(std::move(other.taskQueue_))
+            , externalComponents_(std::move(other.externalComponents_))
+            , externalComponentsSet_(std::move(other.externalComponentsSet_))
+            , importers_(std::move(other.importers_))
+            , importerSet_(std::move(other.importerSet_))
+            , importerInQueueMap_(std::move(other.importerInQueueMap_))
+            , mutex_() 
+        {}
+        TopDownSinglePassIterationApp &operator=(TopDownSinglePassIterationApp &&other) {
+            if (this != &other) {
+                idCounter_ = std::move(other.idCounter_);
+                taskQueue_ = std::move(other.taskQueue_);
+                externalComponents_ = std::move(other.externalComponents_);
+                externalComponentsSet_ = std::move(other.externalComponentsSet_);
+                importers_ = std::move(other.importers_);
+                importerSet_ = std::move(other.importerSet_);
+                importerInQueueMap_ = std::move(other.importerInQueueMap_);
+            }
+            return *this;
+        }
         ~TopDownSinglePassIterationApp() = default;
 
         void registerExternalComponent(IExternalComponent *c, int idx) {

@@ -3027,6 +3027,25 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<std::size_t, std::unordered_map<ProviderBase *, std::unordered_set<ConsumerBase *>>> connectionMap_;
 
         SinglePassIterationApp() : externalComponents_(), externalComponentsSet_(), joinedSource_(), joinedSpecialSource_(), outputMultiplexerMap_(), connectionMap_() {}
+        SinglePassIterationApp(SinglePassIterationApp &&other) : 
+            externalComponents_(std::move(other.externalComponents_))
+            , externalComponentsSet_(std::move(other.externalComponentsSet_))
+            , joinedSource_(std::move(other.joinedSource_))
+            , joinedSpecialSource_(std::move(other.joinedSpecialSource_))
+            , outputMultiplexerMap_(std::move(other.outputMultiplexerMap_))
+            , connectionMap_(std::move(other.connectionMap_)) 
+        {}
+        SinglePassIterationApp &operator=(SinglePassIterationApp &&other) {
+            if (this != &other) {
+                externalComponents_ = std::move(other.externalComponents_);
+                externalComponentsSet_ = std::move(other.externalComponentsSet_);
+                joinedSource_ = std::move(other.joinedSource_);
+                joinedSpecialSource_ = std::move(other.joinedSpecialSource_);
+                outputMultiplexerMap_ = std::move(other.outputMultiplexerMap_);
+                connectionMap_ = std::move(other.connectionMap_);
+            }
+            return *this;
+        }
         ~SinglePassIterationApp() {}
 
         void registerExternalComponent(IExternalComponent *c) {
