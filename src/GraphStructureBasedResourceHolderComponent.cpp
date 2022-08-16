@@ -9,7 +9,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
     std::vector<std::string> GraphStructureBasedResourceHolderComponent::splitNodeName(std::string const &s) {
         auto l = s.length();
-        auto x = 0;
+        std::size_t x = 0;
         auto y = s.find_first_of('/');
         std::vector<std::string> ret;
         while (x < l) {
