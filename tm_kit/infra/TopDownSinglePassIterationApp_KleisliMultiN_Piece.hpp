@@ -12,7 +12,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -46,7 +46,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -80,7 +80,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -114,7 +114,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -148,7 +148,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -182,7 +182,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -216,7 +216,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -250,7 +250,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -284,7 +284,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -318,7 +318,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -352,7 +352,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -386,7 +386,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -420,7 +420,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -454,7 +454,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -488,7 +488,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -522,7 +522,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -556,7 +556,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -590,7 +590,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }
@@ -624,7 +624,7 @@ private:
                 if (ret) {
                     ret->timedData.timePoint += (*delaySimulator_)(index, ret->timedData.timePoint);
                 }
-                return std::move(ret);
+                return ret;
             } else {
                 return f_(std::move(data));
             }

@@ -689,7 +689,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         auto delay = (*delaySimulator_)(0, ret->timedData.timePoint);
                         ret->timedData.timePoint += delay;
                     }
-                    return std::move(ret);
+                    return ret;
                 }               
             }
             DirectOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
@@ -1671,7 +1671,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             std::get<1>(ret)->timedData.timePoint += (*delaySimulator_)(0, std::get<1>(ret)->timedData.timePoint);
                         }
                     }
-                    return std::move(ret);
+                    return ret;
                 } else {
                     auto ret = f_(env_);
                     if (ret) {

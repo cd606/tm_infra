@@ -816,7 +816,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                     tp1 += (*delaySimulator_)(0, tp);
                                     r->overrideTime(tp1);
                                 }
-                                return std::move(r);
+                                return r;
                             } else {
                                 return realHandle(std::move(*input));
                             }
@@ -840,7 +840,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (this->producerIsStopped(outputIndex<B>(ret->timedData.value))) {
                         return std::nullopt;
                     } else {
-                        return std::move(ret);
+                        return ret;
                     }
                 } else {
                     return std::nullopt;
@@ -965,7 +965,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                                     tp1 += (*delaySimulator_)(0, tp);
                                     r->overrideTime(tp1);
                                 }
-                                return std::move(r);
+                                return r;
                             } else {
                                 return realHandle(std::move(*input));
                             }
@@ -996,7 +996,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         return std::nullopt;
                     } else {
                         ret->timedData.value = std::move(filtered);
-                        return std::move(ret);
+                        return ret;
                     }
                 } else {
                     return std::nullopt;
@@ -1380,7 +1380,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                     res_ = std::get<0>(ret);
-                    return std::move(std::get<1>(ret));
+                    return std::get<1>(ret);
                 } else {
                     return std::nullopt;
                 }
@@ -1543,7 +1543,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<std::variant<Ts...>> operator()(std::tuple<Ts...> &&data) {
                 std::vector<std::variant<Ts...>> res;
                 fillRes<0>(res, std::move(data));
-                return std::move(res);
+                return res;
             }
         };
     public:

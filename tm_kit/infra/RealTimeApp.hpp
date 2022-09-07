@@ -3460,7 +3460,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::lock_guard<std::mutex> _(mutex_);
                 std::future<InnerData<T>> f = std::move(theList_.front());
                 theList_.pop_front();
-                return std::move(f);
+                return f;
             }
             std::future<InnerData<T>> consumeUntilLastFuture() {
                 auto p = std::make_shared<std::promise<InnerData<T>>>();
