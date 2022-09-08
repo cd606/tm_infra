@@ -358,7 +358,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             inline static std::tuple<As...> copy(std::tuple<As...> const &x) {
                 std::tuple<As...> output;
                 copy_internal<sizeof...(As),0,std::tuple<As...>,As...>(output, x);
-                return std::move(output);
+                return output;
             }
         };
         template <class... As>
