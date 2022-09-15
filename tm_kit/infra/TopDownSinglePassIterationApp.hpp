@@ -68,7 +68,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class Env, bool DontUseSetTime>
         class TimeSetter<Env, DontUseSetTime, false> {
         public:
-            TimeSetter(Env *env, typename Env::TimePointType const &tp, bool fromImporter) {
+            TimeSetter(Env *env, typename Env::TimePointType const &tp, bool ) {
                 env->resolveTime(tp);
             }
             ~TimeSetter() {}
@@ -278,7 +278,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             friend class TopDownSinglePassIterationApp;
 
             TopDownSinglePassIterationApp *parent_ = nullptr;
-            virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+            virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
             }
             TopDownSinglePassIterationApp *parent() const {
                 return parent_;
@@ -396,7 +396,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
             TopDownSinglePassIterationApp *parent_ = nullptr;
             std::unordered_map<typename StateT::IDType, std::tuple<Key<A>, IHandler<KeyedData<A,B>> *>, typename StateT::IDHash> theMap_;
-            virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+            virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
             }
             bool synchronousRunnerMode_;
             void enableSynchronousRunnerMode() {
@@ -478,7 +478,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         public:
             static_assert((!is_keyed_data_v<B> || is_keyed_data_v<A> || is_monostate_keyed_data_v<B>), "action cannot manufacture keyed data");
             virtual bool isOneTimeOnly() const = 0;
-            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+            void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
                     if (params.empty()) {
                         this->stopProducer();
@@ -493,7 +493,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
             }
-            std::vector<std::string> observe(StateT *env) const override final {
+            std::vector<std::string> observe(StateT *) const override final {
                 return this->producerStoppedStatus();
             }
         };
@@ -532,7 +532,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
-            virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+            virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
             }
         public:
             virtual bool isTrivialExporter() const {return false;}
@@ -1010,7 +1010,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         using Action = TwoWayHolder<AbstractAction<A,B>,A,B>;
 
         template <class A, class B>
-        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &a) {
+        static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &) {
             return false;
         }
         template <class A, class B>
@@ -1592,7 +1592,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::list<IHandler<T> *> handlers_;
         public:
             virtual bool isOneTimeOnly() const override final {return false;}
-            virtual void handle(InnerData<T> &&data) override final {}
+            virtual void handle(InnerData<T> &&) override final {}
         
             PassThroughAction() = default;
             virtual ~PassThroughAction() = default;
@@ -1703,7 +1703,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return {false, std::nullopt};
                 }
             public:
-                void start(StateT *env) override final {
+                void start(StateT *) override final {
                 }
             };
             return std::make_shared<Importer<T>>(new LocalI());
@@ -1911,7 +1911,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<Exporter<T>>(p);
         }
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const & = LiftParameters<TimePoint>()) {
             return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F>>(std::move(f)));            
         }
         template <class T, class F>
@@ -2098,7 +2098,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 virtual ~LocalE() {}
-                virtual void start(StateT *env) override final {
+                virtual void start(StateT *) override final {
                 }
                 virtual void handle(InnerData<T1> &&d) override final {
                     action_.core_->handle(std::move(d));
@@ -2585,13 +2585,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         template <class T>
-        Source<T> importerAsSource(StateT *env, Importer<T> &importer) {
+        Source<T> importerAsSource(StateT *, Importer<T> &importer) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(importer.core_.get()), 2);
             registerImporter(dynamic_cast<AbstractImporterBase *>(importer.core_.get()));
             return {dynamic_cast<ProducerBase<T> *>(importer.core_.get()), this};
         }
         template <class A, class B>
-        Source<B> actionAsSource(StateT *env, Action<A,B> &action) {
+        Source<B> actionAsSource(StateT *, Action<A,B> &action) {
             return {dynamic_cast<ProducerBase<B> *>(action.core_.get()), this};
         }
         template <class A, class B>
@@ -3013,7 +3013,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             exporter->core_->start(env);
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
+        static void runStartedExporterSynchronously(StateT *, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
             exporter->core_->handle(std::move(data));
         }
 
@@ -3116,11 +3116,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return UnregisteredImporterIterator<T>::endIter();
         }
         template <class T>
-        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &importer) {
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &) {
             return UnregisteredImporterIterator<T>::endIter();
         }
         template <class T>
-        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &importer) {
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &) {
             return UnregisteredImporterIterator<T>::endIter();
         }
 

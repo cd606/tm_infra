@@ -132,9 +132,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class B, bool FireOnceOnly, class T>
@@ -277,9 +277,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class B, bool FireOnceOnly, class T>
@@ -428,9 +428,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class B, bool FireOnceOnly, class T>
@@ -585,9 +585,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class B, bool FireOnceOnly, class T>
@@ -748,9 +748,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class B, bool FireOnceOnly, class T>
@@ -917,9 +917,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class B, bool FireOnceOnly, class T>
@@ -1092,9 +1092,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class B, bool FireOnceOnly, class T>
@@ -1273,9 +1273,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class B, bool FireOnceOnly, class T>
@@ -1460,9 +1460,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class B, bool FireOnceOnly, class T>
@@ -1653,9 +1653,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class B, bool FireOnceOnly, class T>
@@ -1852,9 +1852,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class B, bool FireOnceOnly, class T>
@@ -2057,9 +2057,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class B, bool FireOnceOnly, class T>
@@ -2268,9 +2268,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class B, bool FireOnceOnly, class T>
@@ -2485,9 +2485,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class B, bool FireOnceOnly, class T>
@@ -2708,9 +2708,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class B, bool FireOnceOnly, class T>
@@ -2937,9 +2937,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class A17, class B, bool FireOnceOnly, class T>
@@ -3172,9 +3172,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class A17, class A18, class B, bool FireOnceOnly, class T>
@@ -3413,9 +3413,9 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class A17, class A18, class A19, class B, bool FireOnceOnly, class T>
@@ -3660,8 +3660,8 @@ public:
     virtual bool isOneTimeOnly() const override final {
         return FireOnceOnly;
     }
-    virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+    virtual void setIdleWorker(std::function<void(void *)>) override final {
     }
-    virtual void setStartWaiter(std::function<void()> waiter) override final {
+    virtual void setStartWaiter(std::function<void()>) override final {
     }
 };

@@ -38,7 +38,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT2(std::bitset<2> const &requireMask=std::bitset<2> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT2(std::bitset<2> const &requireMask=std::bitset<2> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT2(MergeT2 &&) = default;
         ~MergeT2() {}
     };
@@ -106,7 +106,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT3(std::bitset<3> const &requireMask=std::bitset<3> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT3(std::bitset<3> const &requireMask=std::bitset<3> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT3(MergeT3 &&) = default;
         ~MergeT3() {}
     };
@@ -187,7 +187,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT4(std::bitset<4> const &requireMask=std::bitset<4> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT4(std::bitset<4> const &requireMask=std::bitset<4> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT4(MergeT4 &&) = default;
         ~MergeT4() {}
     };
@@ -281,7 +281,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT5(std::bitset<5> const &requireMask=std::bitset<5> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT5(std::bitset<5> const &requireMask=std::bitset<5> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT5(MergeT5 &&) = default;
         ~MergeT5() {}
     };
@@ -388,7 +388,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT6(std::bitset<6> const &requireMask=std::bitset<6> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT6(std::bitset<6> const &requireMask=std::bitset<6> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT6(MergeT6 &&) = default;
         ~MergeT6() {}
     };
@@ -508,7 +508,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT7(std::bitset<7> const &requireMask=std::bitset<7> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT7(std::bitset<7> const &requireMask=std::bitset<7> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT7(MergeT7 &&) = default;
         ~MergeT7() {}
     };
@@ -641,7 +641,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT8(std::bitset<8> const &requireMask=std::bitset<8> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT8(std::bitset<8> const &requireMask=std::bitset<8> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT8(MergeT8 &&) = default;
         ~MergeT8() {}
     };
@@ -787,7 +787,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT9(std::bitset<9> const &requireMask=std::bitset<9> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT9(std::bitset<9> const &requireMask=std::bitset<9> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT9(MergeT9 &&) = default;
         ~MergeT9() {}
     };
@@ -946,7 +946,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT10(std::bitset<10> const &requireMask=std::bitset<10> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT10(std::bitset<10> const &requireMask=std::bitset<10> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT10(MergeT10 &&) = default;
         ~MergeT10() {}
     };
@@ -1118,7 +1118,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT11(std::bitset<11> const &requireMask=std::bitset<11> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT11(std::bitset<11> const &requireMask=std::bitset<11> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT11(MergeT11 &&) = default;
         ~MergeT11() {}
     };
@@ -1303,7 +1303,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT12(std::bitset<12> const &requireMask=std::bitset<12> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT12(std::bitset<12> const &requireMask=std::bitset<12> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT12(MergeT12 &&) = default;
         ~MergeT12() {}
     };
@@ -1501,7 +1501,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT13(std::bitset<13> const &requireMask=std::bitset<13> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT13(std::bitset<13> const &requireMask=std::bitset<13> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT13(MergeT13 &&) = default;
         ~MergeT13() {}
     };
@@ -1712,7 +1712,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT14(std::bitset<14> const &requireMask=std::bitset<14> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT14(std::bitset<14> const &requireMask=std::bitset<14> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT14(MergeT14 &&) = default;
         ~MergeT14() {}
     };
@@ -1936,7 +1936,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT15(std::bitset<15> const &requireMask=std::bitset<15> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT15(std::bitset<15> const &requireMask=std::bitset<15> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT15(MergeT15 &&) = default;
         ~MergeT15() {}
     };
@@ -2173,7 +2173,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT16(std::bitset<16> const &requireMask=std::bitset<16> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT16(std::bitset<16> const &requireMask=std::bitset<16> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT16(MergeT16 &&) = default;
         ~MergeT16() {}
     };
@@ -2423,7 +2423,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT17(std::bitset<17> const &requireMask=std::bitset<17> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT17(std::bitset<17> const &requireMask=std::bitset<17> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT17(MergeT17 &&) = default;
         ~MergeT17() {}
     };
@@ -2686,7 +2686,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT18(std::bitset<18> const &requireMask=std::bitset<18> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT18(std::bitset<18> const &requireMask=std::bitset<18> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT18(MergeT18 &&) = default;
         ~MergeT18() {}
     };
@@ -2962,7 +2962,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT19(std::bitset<19> const &requireMask=std::bitset<19> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT19(std::bitset<19> const &requireMask=std::bitset<19> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT19(MergeT19 &&) = default;
         ~MergeT19() {}
     };
@@ -3251,7 +3251,7 @@ private:
                 return std::nullopt;
             }
         }
-        MergeT20(std::bitset<20> const &requireMask=std::bitset<20> {}, DelaySimulator const &delaySimulator=std::nullopt) : delaySimulator_(delaySimulator), val_() {}
+        MergeT20(std::bitset<20> const &requireMask=std::bitset<20> {}, DelaySimulator const &delaySimulator=std::nullopt) : mask_(), requireMask_(requireMask), delaySimulator_(delaySimulator), val_() {}
         MergeT20(MergeT20 &&) = default;
         ~MergeT20() {}
     };

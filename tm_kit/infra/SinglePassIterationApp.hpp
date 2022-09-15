@@ -701,7 +701,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class AbstractActionCore : public virtual AbstractConsumer<A>, public virtual Provider<B>, public virtual IStoppableProducer<variantOutputNumber<B>()>, public virtual IControllableNode<StateT>, public virtual IObservableNode<StateT> {
         public:
             virtual bool isOneTimeOnly() const = 0;
-            void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+            void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
                 if (command == "stop") {
                     if (params.empty()) {
                         this->stopProducer();
@@ -716,7 +716,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
             }
-            std::vector<std::string> observe(StateT *env) const override final {
+            std::vector<std::string> observe(StateT *) const override final {
                 return this->producerStoppedStatus();
             }
         };
@@ -1672,7 +1672,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }   
             virtual void handle(InnerData<Key<A>> &&input) = 0;
         private:
-            virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) {
+            virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &) {
                 //by default do nothing
             } 
             friend class SinglePassIterationApp;       
@@ -1979,7 +1979,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::deque<InnerData<T>> q_;
         public:
             ConcreteImporterCore() : q_() {}
-            virtual Data<T> generate(T const *notUsed=nullptr) override final {
+            virtual Data<T> generate(T const * =nullptr) override final {
                 if (q_.empty()) {
                     return std::nullopt;
                 }
@@ -2016,11 +2016,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             DelaySimulatorType delaySimulator_;
             StateT *environment_;
         public:
-            SimpleImporter(F &&f, DelaySimulatorType const &delaySimulator) : AbstractImporterCore<T>(), f_(std::move(f)), environment_(nullptr) {}
+            SimpleImporter(F &&f, DelaySimulatorType const &delaySimulator) : AbstractImporterCore<T>(), f_(std::move(f)), delaySimulator_(delaySimulator), environment_(nullptr) {}
             virtual void start(StateT *environment) override final {
                 environment_ = environment;
             }
-            virtual Data<T> generate(T const *notUsed=nullptr) override final {
+            virtual Data<T> generate(T const * =nullptr) override final {
                 GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
                     environment_, static_cast<AbstractImporter<T> *>(this)
                 );
@@ -2038,9 +2038,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> vacuousImporter() {
             class LocalI final : public AbstractImporterCore<T> {
             public:
-                virtual void start(StateT *environment) override final {
+                virtual void start(StateT *) override final {
                 }
-                virtual Data<T> generate(T const *notUsed=nullptr) override final {
+                virtual Data<T> generate(T const * =nullptr) override final {
                     return std::nullopt;
                 }
             };
@@ -2114,12 +2114,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 StateT *env_;
                 Data<T> toPublish_;
             public:           
-                virtual Data<T> generate(T const *notUsed=nullptr) {
+                virtual Data<T> generate(T const * =nullptr) {
                     Data<T> ret {std::move(toPublish_)};
                     toPublish_ = std::nullopt;
                     return ret;
                 }
-                LocalI(T &&t) : AbstractImporterCore<T>(), t_(), env_(nullptr), toPublish_(std::nullopt) {}
+                LocalI(T &&t) : AbstractImporterCore<T>(), t_(std::move(t)), env_(nullptr), toPublish_(std::nullopt) {}
                 virtual void start(StateT *env) override final {
                     env_ = env;
                 }
@@ -2153,7 +2153,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::deque<T> q_;
                 StateT *env_;
             public:           
-                virtual Data<T> generate(T const *notUsed=nullptr) {
+                virtual Data<T> generate(T const * =nullptr) {
                     if (q_.empty()) {
                         return std::nullopt;
                     }
@@ -2191,7 +2191,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::deque<WithTime<T,TimePoint>> q_;
                 StateT *env_;
             public:           
-                virtual Data<T> generate(T const *notUsed=nullptr) {
+                virtual Data<T> generate(T const * =nullptr) {
                     if (q_.empty()) {
                         return std::nullopt;
                     }
@@ -2288,7 +2288,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             F f_;
         public:
             SimpleExporter(F &&f) : AbstractExporterCore<T>(), f_(std::move(f)) {}
-            virtual void start(StateT *environment) override final {}
+            virtual void start(StateT *) override final {}
             virtual void handle(InnerData<T> &&data) override final {
                 GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
                     data.environment, static_cast<AbstractExporter<T> *>(this)
@@ -2302,7 +2302,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //We ignore the liftParam for exporters because the time point is actually being destroyed
         //by the exporting action and we don't need to apply any delay
         template <class T, class F>
-        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
+        static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const & = LiftParameters<TimePoint>()) {
             return std::make_shared<Exporter<T>>(new SimpleExporter<T,F>(std::move(f)));
         }
         template <class T, class F>
@@ -2337,7 +2337,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 virtual void start(StateT *environment) override final {
                     orig_.core_->start(environment);
                 }
-                virtual Data<T2> generate(T2 const *notUsed=nullptr) override final {
+                virtual Data<T2> generate(T2 const * =nullptr) override final {
                     Certificate<T2> cert = post_.core_->poll();
                     if (cert.check()) {
                         return post_.core_->next(std::move(cert));
@@ -2489,7 +2489,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         GraphStructureBasedResourceHolderComponent::registerParentNode(action_.core_.get(), static_cast<AbstractExporterCore<T1> *>(this));
                     }
                 }
-                virtual void start(StateT *environment) override final {
+                virtual void start(StateT *) override final {
                 }
                 virtual void handle(InnerData<T1> &&data) override final {
                     fillable_.fill(std::move(data));
@@ -3133,7 +3133,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 AbstractConsumer<KeyedData<A,B>> *consumer_;              
             public:
                 LocalE(OnOrderFacilityCore<A,B> *p, AbstractConsumer<KeyedData<A,B>> *h) : AbstractExporterCore<Key<A>>(), facility_(p), consumer_(h) {}
-                virtual void start(StateT *environment) override final {}
+                virtual void start(StateT *) override final {}
                 virtual void handle(InnerData<Key<A>> &&k) override final {
                     facility_->placeOrder(std::move(k), consumer_);
                 }
@@ -3148,12 +3148,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         template <class T>
-        Source<T> importerAsSource(StateT *env, Importer<T> &importer) {
+        Source<T> importerAsSource(StateT *, Importer<T> &importer) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(importer.core_.get()));
             return {dynamic_cast<Provider<T> *>(importer.core_.get())};
         }
         template <class A, class B>
-        Source<B> actionAsSource(StateT *env, Action<A,B> &action) {
+        Source<B> actionAsSource(StateT *, Action<A,B> &action) {
             return {dynamic_cast<Provider<B> *>(action.core_.get())};
         }
         template <class A, class B>
@@ -3328,7 +3328,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 InputMultiplexer<SpecialOutputDataTypeForExporters> s = std::move(joinedSourceCopy);
                 InputMultiplexer<SpecialOutputDataTypeForExporters> s1 = std::move(joinedSpecialSourceCopy);
                 if (!s.hasSource() && !s1.hasSource()) {
-                    return [](StateT *stepEnv) {
+                    return [](StateT *) {
                         return false;
                     };
                 }
@@ -3440,7 +3440,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class T1, class T2>
-        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
+        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
             std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> res = std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
             auto action = liftPure<KeyedData<T1,T2>>(
                 [](KeyedData<T1,T2> &&d) -> KeyedData<T1,T2> {
@@ -3467,7 +3467,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return res;
         }
         template <class T1, class T2>
-        static void streamToStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
+        static void streamToStartedFacilitySynchronously(StateT *, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
             if (output) {
                 auto action = liftPure<KeyedData<T1,T2>>(
                     [](KeyedData<T1,T2> &&d) -> KeyedData<T1,T2> {
@@ -3500,7 +3500,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             exporter->core_->start(env);
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
+        static void runStartedExporterSynchronously(StateT *, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
             exporter->core_->handle(std::move(data));
         }
     
@@ -3602,11 +3602,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return UnregisteredImporterIterator<T>::endIter();
         }
         template <class T>
-        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &importer) {
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &) {
             return UnregisteredImporterIterator<T>::endIter();
         }
         template <class T>
-        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &importer) {
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &) {
             return UnregisteredImporterIterator<T>::endIter();
         }
 

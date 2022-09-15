@@ -9,7 +9,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -188,7 +188,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -425,7 +425,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -720,7 +720,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -1073,7 +1073,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -1484,7 +1484,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -1953,7 +1953,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -2480,7 +2480,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -3065,7 +3065,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -3708,7 +3708,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -4409,7 +4409,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -5168,7 +5168,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -5985,7 +5985,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -6860,7 +6860,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -7793,7 +7793,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -8784,7 +8784,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -9833,7 +9833,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -10940,7 +10940,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;
@@ -12105,7 +12105,7 @@ private:
     friend class TopDownSinglePassIterationApp;
 
     TopDownSinglePassIterationApp *parent_ = nullptr;
-    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *parent) {
+    virtual void setParentAdditionalSteps(TopDownSinglePassIterationApp *) {
     }
 public:
     ProducerBase() = default;

@@ -3517,7 +3517,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 );
             }
             auto f = sourceIter->second[sourceIdx].theSourceoid_;
-            return [f](AppRunner &r, Sink<A> const &sink) {
+            return [f](AppRunner &, Sink<A> const &sink) {
                 f(std::any {sink});
             };
         }

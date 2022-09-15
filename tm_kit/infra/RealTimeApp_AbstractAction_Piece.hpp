@@ -5,7 +5,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -20,14 +20,14 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -64,7 +64,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -79,18 +79,18 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -137,7 +137,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -152,22 +152,22 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -224,7 +224,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -239,26 +239,26 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -325,7 +325,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -340,30 +340,30 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -440,7 +440,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -455,34 +455,34 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -569,7 +569,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -584,38 +584,38 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -712,7 +712,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -727,42 +727,42 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -869,7 +869,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -884,46 +884,46 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -1040,7 +1040,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1055,50 +1055,50 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -1225,7 +1225,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1240,54 +1240,54 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -1424,7 +1424,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1439,58 +1439,58 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -1637,7 +1637,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1652,62 +1652,62 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -1864,7 +1864,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1879,66 +1879,66 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A14 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A14 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {14, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -2105,7 +2105,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2120,70 +2120,70 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A14 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A14 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {14, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A15 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A15 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {15, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -2360,7 +2360,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2375,74 +2375,74 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A14 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A14 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {14, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A15 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A15 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {15, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A16 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A16 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {16, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -2629,7 +2629,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2644,78 +2644,78 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A14 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A14 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {14, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A15 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A15 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {15, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A16 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A16 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {16, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A17 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A17 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {17, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -2912,7 +2912,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2927,82 +2927,82 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A14 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A14 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {14, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A15 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A15 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {15, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A16 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A16 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {16, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A17 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A17 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {17, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A18 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A18 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {18, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
@@ -3209,7 +3209,7 @@ public:
     virtual bool isOneTimeOnly() const = 0;
     virtual void setIdleWorker(std::function<void(void *)> worker) = 0;
     virtual void setStartWaiter(std::function<void()> waiter) = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -3224,86 +3224,86 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
-    virtual void notifyForSourceTermination(std::any const &info, A0 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A0 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {0, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A1 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A1 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {1, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A2 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A2 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {2, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A3 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A3 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {3, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A4 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A4 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {4, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A5 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A5 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {5, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A6 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A6 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {6, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A7 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A7 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {7, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A8 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A8 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {8, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A9 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A9 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {9, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A10 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A10 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {10, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A11 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A11 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {11, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A12 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A12 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {12, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A13 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A13 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {13, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A14 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A14 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {14, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A15 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A15 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {15, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A16 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A16 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {16, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A17 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A17 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {17, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A18 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A18 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {18, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }
-    virtual void notifyForSourceTermination(std::any const &info, A19 const *notUsed) override {
+    virtual void notifyForSourceTermination(std::any const &info, A19 const *) override {
         std::tuple<std::size_t, std::any> wrappedAny {19, info};
         this->Producer<B>::notifyHandlersForTermination(std::any {wrappedAny});
     }

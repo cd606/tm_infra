@@ -1117,9 +1117,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+            virtual void setIdleWorker(std::function<void(void *)>) override final {
             }
-            virtual void setStartWaiter(std::function<void()> waiter) override final {
+            virtual void setStartWaiter(std::function<void()>) override final {
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
@@ -1390,9 +1390,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
-            virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+            virtual void setIdleWorker(std::function<void(void *)>) override final {
             }
-            virtual void setStartWaiter(std::function<void()> waiter) override final {
+            virtual void setStartWaiter(std::function<void()>) override final {
             }
         };
         template <class A, class B, class F, bool Threaded, bool FireOnceOnly>
@@ -1919,7 +1919,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }, std::move(o1));
                     outputT_->handle(std::move(x));
                 }
-                void notifyForSourceTermination(std::any const &info, KeyedData<I1,O1> const *notUsed) override final {
+                void notifyForSourceTermination(std::any const &info, KeyedData<I1,O1> const *) override final {
                     outputT_->notifyHandlersForTermination(info);
                 }
             }; 
@@ -1932,7 +1932,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 void handle(InnerData<Key<O0>> &&o0) override final {
                     parent_->publish(std::move(o0));
                 }
-                void notifyForSourceTermination(std::any const &info, Key<O0> const *notUsed) override final {
+                void notifyForSourceTermination(std::any const &info, Key<O0> const *) override final {
                     typename StateT::IDType const *pID = std::any_cast<typename StateT::IDType>(&info);
                     if (pID) {
                         parent_->markEndHandlingRequest(*pID);
@@ -2007,7 +2007,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     }
                 }
-                void notifyForSourceTermination(std::any const &info, KeyedData<I1,O1> const *notUsed) override final {
+                void notifyForSourceTermination(std::any const &info, KeyedData<I1,O1> const *) override final {
                     typename StateT::IDType const *pID = std::any_cast<typename StateT::IDType>(&info);
                     if (pID) {
                         parent_->markEndHandlingRequest(*pID);
@@ -2104,8 +2104,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return f_->isOneTimeOnly() || g_->isOneTimeOnly();
             }
-            virtual void setIdleWorker(std::function<void(void *)> worker) override final {}
-            virtual void setStartWaiter(std::function<void()> waiter) override final {}
+            virtual void setIdleWorker(std::function<void(void *)>) override final {}
+            virtual void setStartWaiter(std::function<void()>) override final {}
         };
     public:   
         template <class A, class B, class C>
@@ -2174,7 +2174,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<T>> vacuousImporter() {
             class LocalI final : public AbstractImporter<T> {
             public:
-                virtual void start(StateT *env) override final {
+                virtual void start(StateT *) override final {
                 }
             };
             return std::make_shared<Importer<T>>(new LocalI());
@@ -2636,9 +2636,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         importer_.core_->start(d.environment);
                     }
                 }
-                virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                virtual void setIdleWorker(std::function<void(void *)>) override final {
                 }
-                virtual void setStartWaiter(std::function<void()> waiter) override final {
+                virtual void setStartWaiter(std::function<void()>) override final {
                 }
             };
             return std::make_shared<Action<T1,T2>>(new LocalA(std::move(importer)));
@@ -2670,9 +2670,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         importer_->core_->start(d.environment);
                     }
                 }
-                virtual void setIdleWorker(std::function<void(void *)> worker) override final {
+                virtual void setIdleWorker(std::function<void(void *)>) override final {
                 }
-                virtual void setStartWaiter(std::function<void()> waiter) override final {
+                virtual void setStartWaiter(std::function<void()>) override final {
                 }
             };
             return std::make_shared<Action<T1,T2>>(new LocalA(importerFactory));
@@ -2691,7 +2691,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 virtual ~LocalE() {}
-                virtual void start(StateT *env) override final {
+                virtual void start(StateT *) override final {
                 }
                 virtual void handle(InnerData<T1> &&d) override final {
                     action_.core_->handle(std::move(d));
@@ -3323,7 +3323,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 for (auto c : aCopy) {
                     c->start(env);
                 }
-                return [](StateT *stepEnv) -> bool {
+                return [](StateT *) -> bool {
                     return false; //for real-time, the actions all happen on separate threads, so stepper can simply return false
                 };
             };        
@@ -3636,7 +3636,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
         template <class T1, class T2>
-        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
+        static std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> runStartedFacilitySynchronously(StateT *, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key) {
             std::unique_ptr<SynchronousRunResult<KeyedData<T1,T2>>> res = std::make_unique<SynchronousRunResult<KeyedData<T1,T2>>>();
             class LocalH final : public ITerminableHandler<KeyedData<T1,T2>> {
             private:
@@ -3656,7 +3656,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         delete this;
                     }
                 }
-                virtual void notifyForSourceTermination(std::any const &info, KeyedData<T1,T2> const *notUsed) override final {
+                virtual void notifyForSourceTermination(std::any const &info, KeyedData<T1,T2> const *) override final {
                     if (std::any_cast<typename StateT::IDType>(&info)) {
                         if (!terminated_) {
                             res_->noMoreResult();
@@ -3676,7 +3676,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return res;
         }
         template <class T1, class T2>
-        static void streamToStartedFacilitySynchronously(StateT *env, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *output) {
+        static void streamToStartedFacilitySynchronously(StateT *, std::shared_ptr<OnOrderFacility<T1,T2>> const &facility, InnerData<Key<T1>> &&key, SynchronousRunResult<KeyedData<T1,T2>> *) {
             //for real time mode, we DO NOT need to re-attach the handler
             //because the only way this private method is called now is through SynchronousRunner
             //which will make sure that it will only call when the handler is already in place
@@ -3687,7 +3687,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             exporter->core_->start(env);
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        static void runStartedExporterSynchronously(StateT *env, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
+        static void runStartedExporterSynchronously(StateT *, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
             exporter->core_->handle(std::move(data));
         }
 
@@ -3783,11 +3783,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return UnregisteredImporterIterator<T>();
         }
         template <class T>
-        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &importer) {
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(std::shared_ptr<Importer<T>> const &) {
             return UnregisteredImporterIterator<T>();
         }
         template <class T>
-        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &importer) {
+        static UnregisteredImporterIterator<T> endIterateUnregisteredImporter(EnvironmentType *, std::shared_ptr<Importer<T>> const &) {
             return UnregisteredImporterIterator<T>();
         }
 

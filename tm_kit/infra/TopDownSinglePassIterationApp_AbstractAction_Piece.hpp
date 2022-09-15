@@ -3,7 +3,7 @@ class AbstractAction<std::variant<A0,A1>,B> : public virtual IHandler<A0>, publi
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -18,7 +18,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -52,7 +52,7 @@ class AbstractAction<std::variant<A0,A1,A2>,B> : public virtual IHandler<A0>, pu
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -67,7 +67,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -111,7 +111,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3>,B> : public virtual IHandler<A0>,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -126,7 +126,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -180,7 +180,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4>,B> : public virtual IHandler<A
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -195,7 +195,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -259,7 +259,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5>,B> : public virtual IHandle
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -274,7 +274,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -348,7 +348,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6>,B> : public virtual IHan
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -363,7 +363,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -447,7 +447,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,B> : public virtual I
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -462,7 +462,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -556,7 +556,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,B> : public virtua
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -571,7 +571,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -675,7 +675,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,B> : public vir
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -690,7 +690,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -804,7 +804,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>,B> : public
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -819,7 +819,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -943,7 +943,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>,B> : pu
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -958,7 +958,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -1092,7 +1092,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>,B> 
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1107,7 +1107,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -1251,7 +1251,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1266,7 +1266,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -1420,7 +1420,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1435,7 +1435,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -1599,7 +1599,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1614,7 +1614,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -1788,7 +1788,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -1803,7 +1803,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -1987,7 +1987,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2002,7 +2002,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -2196,7 +2196,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2211,7 +2211,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
@@ -2415,7 +2415,7 @@ class AbstractAction<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,
 public:
     static_assert((!is_keyed_data_v<B> || is_monostate_keyed_data_v<B> || is_keyed_data_v<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>>), "action cannot manufacture keyed data");
     virtual bool isOneTimeOnly() const = 0;
-    void control(StateT *env, std::string const &command, std::vector<std::string> const &params) override final {
+    void control(StateT *, std::string const &command, std::vector<std::string> const &params) override final {
         if (command == "stop") {
             if (params.empty()) {
                 this->stopProducer();
@@ -2430,7 +2430,7 @@ public:
             }
         }
     }
-    std::vector<std::string> observe(StateT *env) const override final {
+    std::vector<std::string> observe(StateT *) const override final {
         return this->producerStoppedStatus();
     }
 };
