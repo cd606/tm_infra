@@ -1973,7 +1973,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<I0,O0>>(
                 new WrappedOnOrderFacility<I0,O0,I1,O1>(std::move(toWrap),std::move(inputT),std::move(outputT))
             );
-        };
+        }
     private:
         template <class I0, class O0, class I1, class O1>
         class SimpleWrappedOnOrderFacility final : public IExternalComponent, public RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<I0,O0> {
@@ -2067,7 +2067,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<I0,O0>>(
                 new SimpleWrappedOnOrderFacility<I0,O0,typename Fac::InputType,typename Fac::OutputType>(std::move(toWrap),inputT,outputT)
             );
-        };
+        }
     private:
         template <class A, class B, class C>
         class Compose final : public RealTimeAppComponents<StateT>::template AbstractAction<A,C> {

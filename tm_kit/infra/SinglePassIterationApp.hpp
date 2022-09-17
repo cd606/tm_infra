@@ -2587,7 +2587,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<I0,O0>>(
                 new WrappedOnOrderFacility<I0,O0,I1,O1>(std::move(toWrap),std::move(inputT),std::move(outputT))
             );
-        };
+        }
 
     private:
         template <class I0, class O0, class I1, class O1>
@@ -2696,7 +2696,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<I0,O0>>(
                 new SimpleWrappedOnOrderFacility<I0,O0,typename Fac::InputType,typename Fac::OutputType>(std::move(toWrap),inputT,outputT)
             );
-        };
+        }
 
     public:
         //For the reason why LocalOnOrderFacility is essentially a tuple

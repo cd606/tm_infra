@@ -412,11 +412,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class I0, class O0, class I1, class O1>
         static std::shared_ptr<OnOrderFacility<I0,O0>> wrappedOnOrderFacility(OnOrderFacility<I1,O1> &&, Action<Key<I0>,Key<I1>> &&, Action<Key<O1>,Key<O0>> &&) {
             return std::make_shared<OnOrderFacility<I0,O0>>();
-        };
+        }
         template <class I0, class O0, class Fac>
         static std::shared_ptr<OnOrderFacility<I0,O0>> simpleWrappedOnOrderFacility(Fac &&, std::function<typename Fac::InputType(I0 &&)> const &, std::function<O0(typename Fac::InputType const &, typename Fac::OutputType &&)> const&) {
             return std::make_shared<OnOrderFacility<I0,O0>>();
-        };
+        }
 
         template <class QueryKeyType, class QueryResultType, class DataInputType>
         struct LocalOnOrderFacility {
