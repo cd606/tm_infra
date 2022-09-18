@@ -277,12 +277,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class F>
         void enqueueTask(AbstractImporterBase *importer, typename StateT::TimePointType const &tp, F &&action) {
             taskQueue_.push(new TaskQueueItemImpl<F>(this, importer, tp, std::move(action)));
-            if (importer != nullptr) {
-                auto iter = importerInQueueMap_.find(importer);
-                if (iter == importerInQueueMap_.end()) {
-                    importerInQueueMap_.insert({importer, 1});
-                } else {
-                    ++(iter->second);
+            if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
+                if (importer != nullptr) {
+                    auto iter = importerInQueueMap_.find(importer);
+                    if (iter == importerInQueueMap_.end()) {
+                        importerInQueueMap_.insert({importer, 1});
+                    } else {
+                        ++(iter->second);
+                    }
                 }
             }
         }
@@ -2789,36 +2791,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } else {
                 for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
                     auto *pImporter = *iter;
-                    if (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
-                        if (!pImporter->next()) {
-                            importerSet_.erase(pImporter);
-                            doneIterators.push_back(iter);
-                        } else {
-
-                        }
+                    if (!pImporter->next()) {
+                        importerSet_.erase(pImporter);
+                        doneIterators.push_back(iter);
                     }
                 }
                 for (auto iter : doneIterators) {
                     importers_.erase(iter);
                 }
+                AbstractImporterBase *lastImporterPtr = nullptr;
                 while (!taskQueue_.empty()) {
                     auto *topTask = taskQueue_.top();
-                    taskQueue_.pop();
+                    AbstractImporterBase *topTaskImporter = nullptr;
                     bool isImporterTask = topTask->fromImporter();
+                    if (isImporterTask) {
+                        topTaskImporter = topTask->importer();
+                        if (lastImporterPtr != nullptr) {
+                            if (lastImporterPtr != topTaskImporter) {
+                                break;
+                            }
+                        } else {
+                            lastImporterPtr = topTaskImporter;
+                        }
+                    }
+                    taskQueue_.pop();
                     topTask->act(env);
                     delete topTask;
-                    if (isImporterTask) {
-                        auto *topTaskImporter = topTask->importer();
-                        auto iter = importerInQueueMap_.find(topTaskImporter);
-                        if (iter != importerInQueueMap_.end()) {
-                            if (iter->second <= 1) {
-                                importerInQueueMap_.erase(iter);
-                            } else {
-                                --(iter->second);
-                            }
-                        }
-                        break;
-                    }
                 }
             }
             return !(importers_.empty() && taskQueue_.empty());
