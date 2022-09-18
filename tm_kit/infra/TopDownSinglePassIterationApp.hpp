@@ -193,15 +193,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             typename StateT::TimePointType tp_;
             uint64_t id_;
             AbstractImporterBase *importer_;
-            std::function<void()> action_;
         public:
-            TaskQueueItem() : tp_(), id_(0), importer_(nullptr), action_() {}
-            TaskQueueItem(TopDownSinglePassIterationApp *app, AbstractImporterBase *importer, typename StateT::TimePointType const &tp, std::function<void()> &&action) 
-                : tp_(tp), id_(app->nextID()), importer_(importer), action_(std::move(action)) 
+            TaskQueueItem() : tp_(), id_(0), importer_(nullptr) {}
+            TaskQueueItem(TopDownSinglePassIterationApp *app, AbstractImporterBase *importer, typename StateT::TimePointType const &tp) 
+                : tp_(tp), id_(app->nextID()), importer_(importer) 
             {}
-            ~TaskQueueItem() = default;
-            TaskQueueItem(TaskQueueItem const &) = default;
-            TaskQueueItem &operator=(TaskQueueItem const &) = default;
+            virtual ~TaskQueueItem() {}
+            TaskQueueItem(TaskQueueItem const &) = delete;
+            TaskQueueItem &operator=(TaskQueueItem const &) = delete;
             TaskQueueItem(TaskQueueItem &&) = default;
             TaskQueueItem &operator=(TaskQueueItem &&) = default;
             bool operator<(TaskQueueItem const &q) const {
@@ -240,9 +239,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractImporterBase *importer() const {
                 return importer_;
             }
-            void act(StateT *env) const {
+            virtual void realAction() = 0;
+            void act(StateT *env) {
                 top_down_single_pass_iteration_app_utils::TimeSetter<StateT,UseExecutionStrategyThatAllowsForHiddenTimeDependency> _ {env, tp_, (importer_ != nullptr)};
-                action_();
+                realAction();
+            }
+        };
+        template <class F>
+        class TaskQueueItemImpl : public TaskQueueItem {
+        private:
+            F f_;
+        public:
+            TaskQueueItemImpl() : TaskQueueItem(), f_() {}
+            TaskQueueItemImpl(TopDownSinglePassIterationApp *app, AbstractImporterBase *importer, typename StateT::TimePointType const &tp, F &&action) 
+                : TaskQueueItem(app, importer, tp), f_(std::move(action)) 
+            {}
+            virtual ~TaskQueueItemImpl() {}
+            TaskQueueItemImpl(TaskQueueItemImpl const &) = delete;
+            TaskQueueItemImpl &operator=(TaskQueueItemImpl const &) = delete;
+            TaskQueueItemImpl(TaskQueueItemImpl &&) = default;
+            TaskQueueItemImpl &operator=(TaskQueueItemImpl &&) = default;
+            
+            virtual void realAction() override {
+                f_();
             }
         };
         class TaskQueueItemPtrComparor {
@@ -255,16 +274,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         TaskQueue taskQueue_;
     public:
-        void enqueueTask(AbstractImporterBase *importer, typename StateT::TimePointType const &tp, std::function<void()> &&action) {
-            taskQueue_.push(new TaskQueueItem(this, importer, tp, std::move(action)));
-            if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
-                if (importer != nullptr) {
-                    auto iter = importerInQueueMap_.find(importer);
-                    if (iter == importerInQueueMap_.end()) {
-                        importerInQueueMap_.insert({importer, 1});
-                    } else {
-                        ++(iter->second);
-                    }
+        template <class F>
+        void enqueueTask(AbstractImporterBase *importer, typename StateT::TimePointType const &tp, F &&action) {
+            taskQueue_.push(new TaskQueueItemImpl<F>(this, importer, tp, std::move(action)));
+            if (importer != nullptr) {
+                auto iter = importerInQueueMap_.find(importer);
+                if (iter == importerInQueueMap_.end()) {
+                    importerInQueueMap_.insert({importer, 1});
+                } else {
+                    ++(iter->second);
                 }
             }
         }
@@ -2771,9 +2789,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } else {
                 for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
                     auto *pImporter = *iter;
-                    if (!pImporter->next()) {
-                        importerSet_.erase(pImporter);
-                        doneIterators.push_back(iter);
+                    if (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
+                        if (!pImporter->next()) {
+                            importerSet_.erase(pImporter);
+                            doneIterators.push_back(iter);
+                        } else {
+
+                        }
                     }
                 }
                 for (auto iter : doneIterators) {
@@ -2786,6 +2808,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     topTask->act(env);
                     delete topTask;
                     if (isImporterTask) {
+                        auto *topTaskImporter = topTask->importer();
+                        auto iter = importerInQueueMap_.find(topTaskImporter);
+                        if (iter != importerInQueueMap_.end()) {
+                            if (iter->second <= 1) {
+                                importerInQueueMap_.erase(iter);
+                            } else {
+                                --(iter->second);
+                            }
+                        }
                         break;
                     }
                 }
