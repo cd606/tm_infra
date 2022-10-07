@@ -325,11 +325,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class T>
+        OneDeclarativeGraphItem(typename R::template Sourceoid<T> const &sourceoid, std::string const &sinkName, std::size_t sinkIdx) {
+            registration_ = [sourceoid,sinkName,sinkIdx](R &r, std::string const &/*prefix*/) {
+                sourceoid(
+                    r 
+                    , r.template sinkByName<T>(sinkName, sinkIdx)
+                );
+            };
+        }
+        template <class T>
         OneDeclarativeGraphItem(std::string const &sourceName, typename R::template Sinkoid<T> const &sinkoid) {
             registration_ = [sourceName,sinkoid](R &r, std::string const &/*prefix*/) {
                 sinkoid(
                     r 
                     , r.template sourceByName<T>(sourceName)
+                );
+            };
+        }
+        template <class T>
+        OneDeclarativeGraphItem(std::string const &sourceName, std::size_t sourceIdx, typename R::template Sinkoid<T> const &sinkoid) {
+            registration_ = [sourceName,sourceIdx,sinkoid](R &r, std::string const &/*prefix*/) {
+                sinkoid(
+                    r 
+                    , r.template sourceByName<T>(sourceName, sourceIdx)
                 );
             };
         }
@@ -343,10 +361,28 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
         template <class T>
+        OneDeclarativeGraphItem(typename R::template Source<T> &&source, std::string const &sinkName, std::size_t sinkIdx) {
+            registration_ = [source=std::move(source),sinkName,sinkIdx](R &r, std::string const &/*prefix*/) mutable {
+                r.connect(
+                    std::move(source)
+                    , r.template sinkByName<T>(sinkName, sinkIdx)
+                );
+            };
+        }
+        template <class T>
         OneDeclarativeGraphItem(std::string const &sourceName, typename R::template Sink<T> const &sink) {
             registration_ = [sourceName,sink](R &r, std::string const &/*prefix*/) {
                 r.connect(
                     r.template sourceByName<T>(sourceName)
+                    , sink
+                );
+            };
+        }
+        template <class T>
+        OneDeclarativeGraphItem(std::string const &sourceName, std::size_t sourceIdx, typename R::template Sink<T> const &sink) {
+            registration_ = [sourceName,sourceIdx,sink](R &r, std::string const &/*prefix*/) {
+                r.connect(
+                    r.template sourceByName<T>(sourceName, sourceIdx)
                     , sink
                 );
             };
