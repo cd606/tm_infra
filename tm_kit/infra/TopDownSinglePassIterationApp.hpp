@@ -1743,7 +1743,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return {false, InnerData<T> {
                         env
                         , {
-                            env->resolveTime()
+                            TimePoint {}
                             , std::move(t)
                             , true
                         }
