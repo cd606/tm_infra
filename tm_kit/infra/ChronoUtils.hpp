@@ -71,9 +71,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 m->tm_sec = 0;
                 midnight_ = std::chrono::system_clock::from_time_t(std::mktime(m));
             }
+            MemorizedMidnight(int year, int month, int day) {
+                midnight_ = parseLocalTime(year, month, day, 0, 0, 0);
+            }
             template <class Duration>
             int64_t sinceMidnight(std::chrono::system_clock::time_point tp) const {
-                return static_cast<uint64_t>(std::chrono::duration_cast<Duration>(tp-midnight_).count());
+                return static_cast<int64_t>(std::chrono::duration_cast<Duration>(tp-midnight_).count());
             }
             template <class Duration>
             std::chrono::system_clock::time_point midnightDurationToTime(Duration const &d) const {
