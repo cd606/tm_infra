@@ -46,11 +46,7 @@ class Producer<std::variant<A0,A1>,IsImporter> : public virtual ProducerBase<std
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -234,11 +230,7 @@ class Producer<std::variant<A0,A1,A2>,IsImporter> : public virtual ProducerBase<
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -480,11 +472,7 @@ class Producer<std::variant<A0,A1,A2,A3>,IsImporter> : public virtual ProducerBa
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -784,11 +772,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4>,IsImporter> : public virtual Produce
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -1146,11 +1130,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5>,IsImporter> : public virtual Prod
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -1566,11 +1546,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6>,IsImporter> : public virtual P
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -2044,11 +2020,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,IsImporter> : public virtua
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -2580,11 +2552,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,IsImporter> : public vir
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -3174,11 +3142,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,IsImporter> : public 
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -3826,11 +3790,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>,IsImporter> : pub
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -4536,11 +4496,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>,IsImporter> :
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -5304,11 +5260,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>,IsImporte
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -6130,11 +6082,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>,IsImp
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -7014,11 +6962,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>,I
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -7956,11 +7900,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A1
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -8956,11 +8896,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A1
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -10014,11 +9950,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A1
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -11130,11 +11062,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A1
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
@@ -12304,11 +12232,7 @@ class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A1
 private:
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            static AbstractImporterBase *ret = nullptr;
-            if (ret == nullptr) {
-                ret = dynamic_cast<AbstractImporterBase *>(this);
-            }
-            return ret;
+            return dynamic_cast<AbstractImporterBase *>(this);
         } else {
             return nullptr;
         }
