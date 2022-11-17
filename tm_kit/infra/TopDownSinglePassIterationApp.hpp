@@ -333,9 +333,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T, bool IsImporter=false>
         class Producer : public virtual ProducerBase<T> {
         private:
+            AbstractImporterBase *p_asImporter_ = nullptr;
             AbstractImporterBase *asImporter() {
                 if constexpr (IsImporter) {
-                    return dynamic_cast<AbstractImporterBase *>(this);
+                    if (p_asImporter_ == nullptr) {
+                        p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+                    }
+                    return p_asImporter_;
                 } else {
                     return nullptr;
                 }

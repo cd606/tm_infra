@@ -44,9 +44,13 @@ public:
 template <class A0, class A1, bool IsImporter>
 class Producer<std::variant<A0,A1>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -228,9 +232,13 @@ public:
 template <class A0, class A1, class A2, bool IsImporter>
 class Producer<std::variant<A0,A1,A2>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -470,9 +478,13 @@ public:
 template <class A0, class A1, class A2, class A3, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -770,9 +782,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -1128,9 +1144,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -1544,9 +1564,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -2018,9 +2042,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -2550,9 +2578,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -3140,9 +3172,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -3788,9 +3824,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -4494,9 +4534,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -5258,9 +5302,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -6080,9 +6128,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -6960,9 +7012,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -7898,9 +7954,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -8894,9 +8954,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -9948,9 +10012,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class A17, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -11060,9 +11128,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class A17, class A18, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
@@ -12230,9 +12302,13 @@ public:
 template <class A0, class A1, class A2, class A3, class A4, class A5, class A6, class A7, class A8, class A9, class A10, class A11, class A12, class A13, class A14, class A15, class A16, class A17, class A18, class A19, bool IsImporter>
 class Producer<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>,IsImporter> : public virtual ProducerBase<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>> {
 private:
+    AbstractImporterBase *p_asImporter_ = nullptr;
     AbstractImporterBase *asImporter() {
         if constexpr (IsImporter) {
-            return dynamic_cast<AbstractImporterBase *>(this);
+            if (p_asImporter_ == nullptr) {
+                p_asImporter_ = dynamic_cast<AbstractImporterBase *>(this);
+            }
+            return p_asImporter_;
         } else {
             return nullptr;
         }
