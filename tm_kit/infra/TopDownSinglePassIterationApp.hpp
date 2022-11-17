@@ -335,11 +335,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             AbstractImporterBase *asImporter() {
                 if constexpr (IsImporter) {
-                    static AbstractImporterBase *ret = nullptr;
-                    if (ret == nullptr) {
-                        ret = dynamic_cast<AbstractImporterBase *>(this);
-                    }
-                    return ret;
+                    return dynamic_cast<AbstractImporterBase *>(this);
                 } else {
                     return nullptr;
                 }
