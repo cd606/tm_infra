@@ -467,7 +467,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 parent_->enqueueTask(
                     nullptr
                     , tp 
-                    , [h,output=withtime_utils::pureTimedDataWithEnvironment<KeyedData<A,B>, StateT, typename StateT::TimePointType>(data.environment, std::move(outputT))]() mutable {
+                    , [h,output=withtime_utils::pureTimedDataWithEnvironment<KeyedData<A,B>, StateT, typename StateT::TimePointType>(data.environment, std::move(outputT), true)]() mutable {
                         h->handle(std::move(output));
                     }
                 );  
@@ -578,17 +578,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             DelaySimulator delaySimulator_;
         public:
             TimedAppData<B, StateT> action(StateT *env, WithTime<A,typename StateT::TimePointType> &&data) {
+                auto ret = withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data), true);
                 if constexpr (ForceFinal) {
-                    auto ret = withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
                     ret.timedData.finalFlag = true;
-                    if (delaySimulator_) {
-                        auto delay = (*delaySimulator_)(0, ret.timedData.timePoint);
-                        ret.timedData.timePoint += delay;
-                    }
-                    return ret;
-                } else {
-                    return withtime_utils::pureTimedDataWithEnvironmentLift(env, f_, std::move(data));
-                }               
+                }
+                if (delaySimulator_) {
+                    auto delay = (*delaySimulator_)(0, ret.timedData.timePoint);
+                    ret.timedData.timePoint += delay;
+                }
+                return ret;          
             }
             PureOneLevelDownKleisli(F &&f, DelaySimulator const &delaySimulator) : f_(std::move(f)), delaySimulator_(delaySimulator) {}
             PureOneLevelDownKleisli(PureOneLevelDownKleisli const &) = delete;
