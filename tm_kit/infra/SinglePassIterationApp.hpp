@@ -2218,6 +2218,131 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
         }
+    private:
+        template <class T>
+        class BunchedImporter : public AbstractImporterCore<std::vector<T>> {
+        private:
+            std::shared_ptr<Importer<T>> underlyingImporter_;
+            StateT *env_;
+            std::vector<T> buffer_;
+            bool stopped_;
+            std::optional<TimePoint> lastTime_;
+            virtual Data<std::vector<T>> generate(std::vector<T> const *notUsed) override final {
+                if (stopped_) {
+                    if (!lastTime_ || buffer_.empty()) {
+                        return std::nullopt;
+                    } else {
+                        Data<std::vector<T>> ret = InnerData<std::vector<T>> {
+                            env_
+                            , {
+                                *lastTime_
+                                , std::move(buffer_)
+                                , true
+                            }
+                        };
+                        buffer_.clear();
+                        lastTime_ = std::nullopt;
+                        return std::move(ret);
+                    }
+                }
+                auto x = underlyingImporter_->core_->generate((T const *) nullptr);
+                stopped_ = (x && x->timedData.finalFlag);
+                if (stopped_) {
+                    if (!x) {
+                        if (!lastTime_ || buffer_.empty()) {
+                            return std::nullopt;
+                        } else {
+                            Data<std::vector<T>> ret = InnerData<std::vector<T>> {
+                                env_
+                                , {
+                                    *lastTime_
+                                    , std::move(buffer_)
+                                    , true
+                                }
+                            };
+                            buffer_.clear();
+                            lastTime_ = std::nullopt;
+                            return std::move(ret);
+                        }
+                    } else {
+                        if (!lastTime_ || x->timedData.timePoint > *lastTime_) {
+                            Data<std::vector<T>> ret = std::nullopt;
+                            if (lastTime_ && !buffer_.empty()) {
+                                ret = InnerData<std::vector<T>> {
+                                    env_
+                                    , {
+                                        *lastTime_
+                                        , std::move(buffer_)
+                                        , false
+                                    }
+                                };
+                                buffer_.clear();
+                            }
+                            buffer_.push_back(std::move(x->timedData.value));
+                            lastTime_ = x->timedData.timePoint;
+                            return std::move(ret);
+                        } else {
+                            buffer_.push_back(std::move(x->timedData.value));
+                            Data<std::vector<T>> ret = InnerData<std::vector<T>> {
+                                env_
+                                , {
+                                    *lastTime_
+                                    , std::move(buffer_)
+                                    , true
+                                }
+                            };
+                            buffer_.clear();
+                            lastTime_ = std::nullopt;
+                            return std::move(ret);
+                        }
+                    }
+                } else {
+                    if (!x) {
+                        return std::nullopt;
+                    }
+                    if (!lastTime_ || x->timedData.timePoint > *lastTime_) {
+                        Data<std::vector<T>> ret = std::nullopt;
+                        if (lastTime_ && !buffer_.empty()) {
+                            ret = InnerData<std::vector<T>> {
+                                env_
+                                , {
+                                    *lastTime_
+                                    , std::move(buffer_)
+                                    , false
+                                }
+                            };
+                            buffer_.clear();
+                        }
+                        buffer_.push_back(std::move(x->timedData.value));
+                        lastTime_ = x->timedData.timePoint;
+                        return std::move(ret);
+                    } else {
+                        buffer_.push_back(std::move(x->timedData.value));
+                        return std::nullopt;
+                    }
+                }
+            }
+        public:
+            BunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter)
+                : underlyingImporter_(underlyingImporter)
+                , env_(nullptr)
+                , buffer_()
+                , stopped_(false)
+                , lastTime_(std::nullopt)
+            {
+            }
+            BunchedImporter(BunchedImporter const &) = delete;
+            BunchedImporter &operator=(BunchedImporter const &) = delete;
+            virtual void start(StateT *env) override final {
+                env_ = env;
+                underlyingImporter_->core_->start(env);
+            }
+        };
+    public:
+        template <class T>
+        static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter) {
+            return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T>>(underlyingImporter));
+        }
     public:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {

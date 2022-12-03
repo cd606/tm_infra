@@ -2449,6 +2449,108 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             };
         }
+    private:
+        template <class T>
+        class BunchedImporter : public IRealTimeAppPossiblyThreadedNode, public virtual IHandler<T>, public AbstractImporter<std::vector<T>> {
+        private:
+            typename RealTimeAppComponents<StateT>::template TimeChecker<false, T> timeChecker_;
+            std::mutex mutex_;
+            std::condition_variable cond_;
+            std::thread th_;
+            std::atomic<bool> running_;
+
+            std::list<TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType>> incoming_, processing_;
+        
+            std::shared_ptr<Importer<T>> underlyingImporter_;
+
+            void stopThread() {
+                running_ = false;
+                cond_.notify_one();
+            }
+
+            void runThread() {
+                while (running_) {
+                    {
+                        std::unique_lock<std::mutex> lock(mutex_);
+                        cond_.wait_for(lock, std::chrono::milliseconds(1));
+                        if (!running_) {
+                            lock.unlock();
+                            return;
+                        }
+                        if (incoming_.empty()) {
+                            lock.unlock();
+                            continue;
+                        }
+                        processing_.splice(processing_.end(), incoming_);
+                        lock.unlock();
+                        if constexpr (std::is_convertible_v<StateT *, OutputRealTimeThreadBufferSizeComponent *>) {
+                            std::ostringstream oss;
+                            oss << "Thread buffer for " << std::this_thread::get_id() << " size: " << processing_.size();
+                            processing_.front().environment->log(LogLevel::Debug, oss.str());
+                        }
+                        bool final = false;
+                        auto *env = processing_.front().environment;
+                        std::vector<T> v;
+                        for (auto &x : processing_) {
+                            if (x.timedData.finalFlag) {
+                                final = true;
+                            }
+                            v.push_back(std::move(x.timedData.value));
+                        }
+                        processing_.clear();
+                        if (final) {
+                            running_ = false;
+                        }
+                        this->publish(InnerData<std::vector<T>> {
+                            env
+                            , {
+                                env->resolveTime()
+                                , std::move(v)
+                                , final
+                            }
+                        });
+                    }
+                }  
+            }
+        public:
+            BunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter) 
+                : timeChecker_(), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_()
+                , underlyingImporter_(underlyingImporter)
+            {
+                underlyingImporter_->core_->addHandler(this);
+            }
+            ~BunchedImporter() {
+                stopThread();
+                try {
+                    if (th_.joinable()) {
+                        th_.join();
+                    }
+                } catch (...) {}
+            }
+            virtual void start(StateT *env) override final {
+                running_ = true;
+                th_ = std::thread(&BunchedImporter::runThread, this);
+                th_.detach();
+                underlyingImporter_->core_->start(env);
+            }
+            virtual std::optional<std::thread::native_handle_type> threadHandle() override final {
+                return th_.native_handle();
+            }
+            virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) override final {
+                if (running_ && timeChecker_(data)) {
+                    {
+                        std::lock_guard<std::mutex> _(mutex_);
+                        incoming_.push_back(std::move(data));
+                    }
+                    cond_.notify_one();
+                }                
+            }
+        };
+    public:
+        template <class T>
+        static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter) {
+            return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T>>(underlyingImporter));
+        }
     public:
         template <class T>
         using AbstractExporter = typename RealTimeAppComponents<StateT>::template AbstractExporter<T>;
