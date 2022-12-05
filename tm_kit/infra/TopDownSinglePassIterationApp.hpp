@@ -79,9 +79,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     class TopDownSinglePassIterationApp {
     private:
         static constexpr bool UseExecutionStrategyThatAllowsForHiddenTimeDependency
-            = std::is_convertible_v<
+            = !std::is_convertible_v<
                 StateT *
-                , HiddenTimeDependencyComponent *
+                , NoHiddenTimeDependencyComponent *
             >;
     public:
         friend class AppRunner<TopDownSinglePassIterationApp>;
@@ -2890,10 +2890,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
                 for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
                     auto *pImporter = *iter;
-                    if (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
+                    while (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
                         if (!pImporter->next()) {
                             importerSet_.erase(pImporter);
                             doneIterators.push_back(iter);
+                            break;
                         }
                     }
                 }

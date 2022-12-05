@@ -83,10 +83,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return t_;
         }
     };
-    //This marks hidden time dependency inside the environment
+    //These marks hidden/no hidden time dependency inside the environment
     //Currently this affects TopDown execution scheme, but it may
     //affect others in the future
-    class HiddenTimeDependencyComponent {};
+    class HiddenTimeDependencyComponent {}; //this used to need to be put into environment to turn on hidden dependency for top-down, but now turning on is default, so this has no effect
+    class NoHiddenTimeDependencyComponent {}; //this now needs to be put into environment to turn off hidden dependency for top-down.
 
     //this class is provided for template specialization purposes
     template <class TimePoint=std::chrono::system_clock::time_point>
