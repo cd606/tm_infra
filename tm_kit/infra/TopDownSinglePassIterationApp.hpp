@@ -24,6 +24,9 @@
 #include <array>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
+
+    class DontForceDrainTopDownSinglePassImporter {};
+
     template <class M>
     class SynchronousRunner;
 
@@ -2890,11 +2893,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if constexpr (UseExecutionStrategyThatAllowsForHiddenTimeDependency) {
                 for (auto iter = importers_.begin(); iter != importers_.end(); ++iter) {
                     auto *pImporter = *iter;
-                    while (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
-                        if (!pImporter->next()) {
-                            importerSet_.erase(pImporter);
-                            doneIterators.push_back(iter);
-                            break;
+                    if constexpr (std::is_convertible_v<
+                        StateT *
+                        , DontForceDrainTopDownSinglePassImporter *
+                    >) {
+                        if (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
+                            if (!pImporter->next()) {
+                                importerSet_.erase(pImporter);
+                                doneIterators.push_back(iter);
+                            }
+                        }
+                    } else {
+                        while (importerInQueueMap_.find(pImporter) == importerInQueueMap_.end()) {
+                            if (!pImporter->next()) {
+                                importerSet_.erase(pImporter);
+                                doneIterators.push_back(iter);
+                                break;
+                            }
                         }
                     }
                 }
