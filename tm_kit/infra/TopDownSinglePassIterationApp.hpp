@@ -535,7 +535,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class UnregisteredImporterIterator;
 
     private:
-        template <class T>
+        template <class T, class BunchSplitLogic>
         class BunchedImporter;
 
     public:
@@ -546,7 +546,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             friend class UnregisteredImporterIterator<T>;
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
             virtual std::tuple<bool, Data<T>> generate(T const *notUsed) = 0; //the bool part means whether the importer has more data to come
-            friend class BunchedImporter<T>;
+            template <class U, class BunchSplitLogic>
+            friend class BunchedImporter;
         public:
             bool next() override final {
                 auto d = generate((T const *) nullptr);
@@ -1903,9 +1904,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
     private:
         template <class T>
+        class DefaultBunchSplitLogic {
+        public:
+            bool operator()(std::vector<T> const &/*buffer*/, TimePoint const &lastTime, InnerData<T> const &newData) const {
+                return newData.timedData.timePoint > lastTime;
+            }
+        };
+        template <class T, class BunchSplitLogic>
         class BunchedImporter : public AbstractImporter<std::vector<T>> {
         private:
             std::shared_ptr<Importer<T>> underlyingImporter_;
+            BunchSplitLogic bunchSplitLogic_;
             StateT *env_;
             std::vector<T> buffer_;
             bool stopped_;
@@ -1948,7 +1957,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             return {false, std::move(ret)};
                         }
                     } else {
-                        if (!lastTime_ || std::get<1>(x)->timedData.timePoint > *lastTime_) {
+                        if (!lastTime_ || bunchSplitLogic_(buffer_, *lastTime_, *(std::get<1>(x)))) {
                             Data<std::vector<T>> ret = std::nullopt;
                             if (lastTime_ && !buffer_.empty()) {
                                 ret = InnerData<std::vector<T>> {
@@ -1983,7 +1992,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!std::get<1>(x)) {
                         return {true, std::nullopt};
                     }
-                    if (!lastTime_ || std::get<1>(x)->timedData.timePoint > *lastTime_) {
+                    if (!lastTime_ || bunchSplitLogic_(buffer_, *lastTime_, *(std::get<1>(x)))) {
                         Data<std::vector<T>> ret = std::nullopt;
                         if (lastTime_ && !buffer_.empty()) {
                             ret = InnerData<std::vector<T>> {
@@ -2006,8 +2015,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            BunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter)
+            BunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter, BunchSplitLogic &&bunchSplitLogic)
                 : underlyingImporter_(underlyingImporter)
+                , bunchSplitLogic_(std::move(bunchSplitLogic))
                 , env_(nullptr)
                 , buffer_()
                 , stopped_(false)
@@ -2022,9 +2032,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
     public:
-        template <class T>
-        static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter) {
-            return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T>>(underlyingImporter));
+        template <class T, class BunchSplitLogic=DefaultBunchSplitLogic<T>>
+        static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter, BunchSplitLogic &&bunchSplitLogic = BunchSplitLogic {}) {
+            return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T, BunchSplitLogic>>(underlyingImporter, std::move(bunchSplitLogic)));
         }
     public:
         template <class T>

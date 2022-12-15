@@ -2450,7 +2450,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             };
         }
     private:
-        template <class T>
+        template <class T, class NotUsed>
         class BunchedImporter : public IRealTimeAppPossiblyThreadedNode, public virtual IHandler<T>, public AbstractImporter<std::vector<T>> {
         private:
             typename RealTimeAppComponents<StateT>::template TimeChecker<false, T> timeChecker_;
@@ -2513,7 +2513,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }  
             }
         public:
-            BunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter) 
+            BunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter, NotUsed &&) 
                 : timeChecker_(), mutex_(), cond_(), th_(), running_(false), incoming_(), processing_()
                 , underlyingImporter_(underlyingImporter)
             {
@@ -2547,9 +2547,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
     public:
-        template <class T>
-        static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter) {
-            return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T>>(underlyingImporter));
+        template <class T, class NotUsed=std::monostate>
+        static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter, NotUsed &&notUsed=NotUsed {}) {
+            return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T, NotUsed>>(underlyingImporter, std::move(notUsed)));
         }
     public:
         template <class T>
