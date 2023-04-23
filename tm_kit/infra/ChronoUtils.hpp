@@ -52,7 +52,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class Duration>
         inline constexpr std::chrono::system_clock::time_point epochDurationToTime(int64_t d) {
+#ifdef _MSC_VER
+            return std::chrono::system_clock::time_point { 
+                std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                    Duration { static_cast<typename Duration::rep>(d) }
+                )
+            };
+#else
             return std::chrono::system_clock::time_point { Duration { static_cast<typename Duration::rep>(d) } };
+#endif
         }
 
         template <class Env
