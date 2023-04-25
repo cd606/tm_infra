@@ -92,7 +92,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
-#if __cplusplus >= 202002L
+//zoned_time support is not yet complete in gcc, so currently this is only enabled for Visual C++
+#if __cplusplus >= 202002L && defined(_MSC_VER)
         //Because we want to use c++20 implementation when the library is included
         //in a c++20 project, we cannot put the implementation into a different
         //.cpp file (which will not be compiled with c++20), so everything is inline
