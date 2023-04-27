@@ -3312,11 +3312,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         void sendStopToAllNodes(std::chrono::system_clock::duration const &waitTimeAfterwards) {
             std::lock_guard<std::recursive_mutex> _(mutex_);
+            env_->log(LogLevel::Info, "Starting to send stop to all nodes");
             for (auto const &item : controllableNodeMap_) {
                 for (auto *p : item.second) {
-                    p->control(env_, "stop", {});
+                    std::thread th([env=env_,p,name=item.first]() {
+                        env->log(LogLevel::Info, "Sending stop to one node under '"+name+"'");
+                        p->control(env, "stop", {});
+                        env->log(LogLevel::Info, "Done sending stop to one node under '"+name+"'");
+                    });
+                    th.detach();
                 }
             }
+            env_->log(LogLevel::Info, "Finished sending stop to all nodes");
             std::this_thread::sleep_for(waitTimeAfterwards);
         }
         std::optional<std::string> findFirstControllableNodeAtOrAbove(std::string const &nodeName) {
