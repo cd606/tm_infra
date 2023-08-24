@@ -12,6 +12,7 @@
 #include <optional>
 #include <atomic>
 #include <exception>
+#include <stdexcept>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     class GraphStructureBasedResourceHolderComponentException : public std::runtime_error {
