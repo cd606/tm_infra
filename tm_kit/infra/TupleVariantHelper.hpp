@@ -98,6 +98,22 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     VariantConcat<S, VariantRepeat<N, T>> augmentedDispatchVariantConstruct(std::size_t idx, T &&t) {
         return AugmentedDispatchVariantConstructHelper<N,0,S,T>::construct(idx, std::move(t));
     }
+
+    template <typename T>
+    class TupleVariantConversionHelper {
+    };
+    template <typename... Ts>
+    class TupleVariantConversionHelper<std::tuple<Ts...>> {
+    public:
+        using TheType = std::variant<Ts...>;
+    };
+    template <typename... Ts>
+    class TupleVariantConversionHelper<std::variant<Ts...>> {
+    public:
+        using TheType = std::tuple<Ts...>;
+    };
+    template <class T>
+    using TupleVariantConversion = typename TupleVariantConversionHelper<T>::TheType;
 } } } }
 
 #endif
