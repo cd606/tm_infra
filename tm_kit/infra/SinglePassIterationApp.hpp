@@ -2235,7 +2235,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::vector<T> buffer_;
             bool stopped_;
             std::optional<TimePoint> lastTime_;
-            virtual Data<std::vector<T>> generate(std::vector<T> const *notUsed) override final {
+            virtual Data<std::vector<T>> generate(std::vector<T> const * /*notUsed*/) override final {
                 if (stopped_) {
                     if (!lastTime_ || buffer_.empty()) {
                         return std::nullopt;
