@@ -13,6 +13,7 @@
 #include <atomic>
 #include <exception>
 #include <stdexcept>
+#include <algorithm>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     class GraphStructureBasedResourceHolderComponentException : public std::runtime_error {
@@ -84,6 +85,26 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             return {std::any_cast<T>(innerIter->second)};
         }
+        template <class T, typename=std::enable_if_t<std::is_copy_constructible_v<T>>>
+        std::optional<T> getResourceByNodeNamePrefix(std::string const &nodeNamePrefix) {
+            if (!finalized_) {
+                throw GraphStructureBasedResourceHolderComponentException("Cannot query for resources before resource map has been finalized");
+            }
+            auto parts = splitNodeName(nodeNamePrefix);
+            auto prefixes = nodePrefixes(parts);
+            std::reverse(prefixes.begin(), prefixes.end());
+            for (auto const &k : prefixes) {
+                auto iter = resourceMap_.find(k);
+                if (iter != resourceMap_.end()) {
+                    auto innerIter = iter->second.find(std::type_index(typeid(std::decay_t<T>)));
+                    if (innerIter != iter->second.end()) {
+                        return {std::any_cast<T>(innerIter->second)};
+                    }
+                }
+            }
+            return std::nullopt;
+        }
+        
         //This one also has no mutex lock for the same reason
         std::optional<std::string> currentNodeName() {
             if (!finalized_) {

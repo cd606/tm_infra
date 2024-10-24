@@ -31,7 +31,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         std::ostringstream oss;
         for (std::size_t ii=0; ii<v.size(); ++ii) {
-            oss << '/' << v[ii];
+            if (v[ii] != "") {
+                oss << '/' << v[ii];
+            }
         }
         return oss.str();
     }
@@ -40,8 +42,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         ret.push_back("/");
         std::ostringstream oss;
         for (std::size_t ii=0; ii<v.size(); ++ii) {
-            oss << '/' << v[ii];
-            ret.push_back(oss.str());
+            if (v[ii] != "") {
+                oss << '/' << v[ii];
+                ret.push_back(oss.str());
+            }
         }
         return ret;
     }

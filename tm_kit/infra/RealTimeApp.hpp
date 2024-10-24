@@ -1163,34 +1163,34 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         
         template <class A, class F>
-        static auto liftPure1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(A()))>> {
+        static auto liftPure1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(std::declval<A>()))>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,true>(std::move(f)));
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,true,false>(std::move(f)));
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,decltype(f(A()))>>(new PureActionCore<A,decltype(f(A())),F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,false,false>(std::move(f)));
                 }
             }
         }     
         template <class A, class F>
-        static auto liftMaybe1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(A()))::value_type>> {
+        static auto liftMaybe1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::declval<A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,true,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new MaybeActionCore<A,typename decltype(f(A()))::value_type,F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,false>(std::move(f)));
                 }
             }
         }
@@ -1405,18 +1405,18 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         #include <tm_kit/infra/RealTimeApp_MultiActionCore_Piece.hpp>
     public:
         template <class A, class F>
-        static auto liftMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(A()))::value_type>> {
+        static auto liftMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(std::declval<A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,true>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,true>(std::move(f)));
                 }
             } else {
                 if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,true,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,false>(std::move(f)));
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(A()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(A()))::value_type,F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,false>(std::move(f)));
                 }
             }
         }     
@@ -1798,20 +1798,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class F>
         static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A,decltype(f(A()))>> {
+            -> std::shared_ptr<OnOrderFacility<A,decltype(f(std::declval<A>()))>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F,true>(std::move(f)));
+                return std::make_shared<OnOrderFacility<A,decltype(f(std::declval<A>()))>>(new PureOnOrderFacilityCore<A,decltype(f(std::declval<A>())),F,true>(std::move(f)));
             } else {
-                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCore<A,decltype(f(A())),F,false>(std::move(f)));
+                return std::make_shared<OnOrderFacility<A,decltype(f(std::declval<A>()))>>(new PureOnOrderFacilityCore<A,decltype(f(std::declval<A>())),F,false>(std::move(f)));
             }
         }     
         template <class A, class F>
         static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F,true>(std::move(f)));
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true>(std::move(f)));
             } else {
-                return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(A()))::value_type,F,false>(std::move(f)));
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false>(std::move(f)));
             }
         }
         template <class A, class F>
@@ -1839,20 +1839,20 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class F, class StartF>
         static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A,decltype(f(A()))>> {
+            -> std::shared_ptr<OnOrderFacility<A,decltype(f(std::declval<A>()))>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(A())),F,StartF,true>(std::move(f), std::move(startF)));
+                return std::make_shared<OnOrderFacility<A,decltype(f(std::declval<A>()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(std::declval<A>())),F,StartF,true>(std::move(f), std::move(startF)));
             } else {
-                return std::make_shared<OnOrderFacility<A,decltype(f(A()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(A())),F,StartF,false>(std::move(f), std::move(startF)));
+                return std::make_shared<OnOrderFacility<A,decltype(f(std::declval<A>()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(std::declval<A>())),F,StartF,false>(std::move(f), std::move(startF)));
             }
         }     
         template <class A, class F, class StartF>
         static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
-            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(A()))::value_type>> {
+            -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>> {
             if (liftParam.suggestThreaded) {
-                return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(A()))::value_type,F,StartF,true>(std::move(f),std::move(startF)));
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::declval<A>()))::value_type,F,StartF,true>(std::move(f),std::move(startF)));
             } else {
-                return std::make_shared<OnOrderFacility<A, typename decltype(f(A()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(A()))::value_type,F,StartF,false>(std::move(f),std::move(startF)));
+                return std::make_shared<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::declval<A>()))::value_type,F,StartF,false>(std::move(f),std::move(startF)));
             }
         }
         template <class A, class F, class StartF>
