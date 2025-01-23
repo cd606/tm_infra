@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
+#include <fstream>
 
 #include <tm_kit/infra/PidUtil.hpp>
 
@@ -16,15 +17,53 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     private:
         int64_t pid_;
         std::unordered_map<void *, std::string> nodeNameMap_;
-        mutable std::mutex traceStreamMutex_;
-        std::atomic<std::ostream *> traceStream_;
+        std::mutex traceStreamMutex_;
+        std::mutex mtx_;
+        std::atomic<std::ostream*> traceStream_;
+        std::unique_ptr<std::ostream> os_;
+        bool isFirst_;
+
+    private:
+        template <class Env>
+        void writeTrace(Env *env, int64_t tid, std::string const *name, char phase) {
+            if (!name) {
+                return;
+            }
+            auto p = traceStream_.load(std::memory_order_acquire);
+            if (!p) {
+                return;
+            }
+            if (phase != 'B' && phase != 'E') {
+                return;
+            }
+            auto timestamp = static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
+            std::lock_guard<std::mutex> _(traceStreamMutex_);
+            if (isFirst_) {
+                (*p) << "[\n";
+                isFirst_ = false;
+            } else {
+                (*p) << ",\n";
+            }
+            (*p) << "{\"name\": \"" << *name << "\""
+                << ",\"pid\": " << pid_
+                << ",\"tid\": " << tid
+                << ",\"ph\": \"" << phase << "\""
+                << ",\"ts\": " << timestamp
+                << "}";
+        }
     public:
-        TraceNodesComponent() : pid_(pid_util::getpid()), nodeNameMap_(), traceStreamMutex_(), traceStream_(nullptr) {}
+        TraceNodesComponent() : pid_(pid_util::getpid()), nodeNameMap_(), traceStreamMutex_(), traceStream_(nullptr), isFirst_(true) {}
         TraceNodesComponent(TraceNodesComponent const &) = delete;
         TraceNodesComponent(TraceNodesComponent &&) = delete;
         TraceNodesComponent &operator=(TraceNodesComponent const &) = delete;
         TraceNodesComponent &operator=(TraceNodesComponent &&) = delete;
-        ~TraceNodesComponent() = default;
+        ~TraceNodesComponent() {
+            auto p = traceStream_.load(std::memory_order_acquire);
+            if (p) {
+                std::lock_guard<std::mutex> _(traceStreamMutex_);
+                (*p) << "\n]\n";
+            }
+        }
         
         //Please note that the methods are not mutex protected
         void setNodeNameMap(std::unordered_map<void *, std::string> const &m) {
@@ -38,33 +77,45 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return &(iter->second);
             }
         }
-        void setTraceStream(std::ostream *os) {
-            traceStream_.store(os);
-        }
-        template <class Env>
-        void writeTrace(Env *env, int64_t tid, std::string const *name, char phase) const {
-            if (!name) {
+
+        void setTraceStream(std::ostream* s) {
+            if (traceStream_.load(std::memory_order_relaxed)) {
                 return;
             }
-            auto *p = traceStream_.load();
-            if (p) {
-                std::lock_guard<std::mutex> _(traceStreamMutex_);
-                (*p) << "{\"name\": \"" << *name << "\""
-                    << ",\"pid\": " << pid_
-                    << ",\"tid\": " << tid
-                    << ",\"ph\": \"" << phase << "\""
-                    << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
-                    << "},\n";
-            } else {
-                std::ostringstream oss;
-                oss << "{\"name\": \"" << *name << "\""
-                    << ",\"pid\": " << pid_
-                    << ",\"tid\": " << tid
-                    << ",\"ph\": \"" << phase << "\""
-                    << ",\"ts\": " << static_cast<int64_t>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count())
-                    << "},";
-                env->log(LogLevel::Trace, oss.str());
+            std::lock_guard<std::mutex> _(mtx_);
+            if (traceStream_.load(std::memory_order_relaxed)) {
+                return;
             }
+            traceStream_.store(s, std::memory_order_relaxed);
+        }
+        
+        void setTraceFile(std::string const& filename) {
+            if (traceStream_.load(std::memory_order_relaxed)) {
+                return;
+            }
+            std::lock_guard<std::mutex> _(mtx_);
+            if (traceStream_.load(std::memory_order_relaxed)) {
+                return;
+            }
+            if (os_) {
+                return;
+            }
+            auto ofs = new std::ofstream(filename, std::ofstream::out);
+            if (!ofs->is_open()) {
+                throw std::runtime_error("Cannot open trace file: " + filename);
+            }
+            os_.reset(ofs);
+            traceStream_.store(os_.get(), std::memory_order_relaxed);
+        }
+
+        template <class Env>
+        void writeBeginTrace(Env* env, int64_t tid, std::string const *name) {
+            writeTrace(env, tid, name, 'B');
+        }
+
+        template <class Env>
+        void writeEndTrace(Env* env, int64_t tid, std::string const *name) {
+            writeTrace(env, tid, name, 'E');
         }
     };
 
@@ -92,12 +143,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     name_ = (*n)+suffix;
                 }
                 tid_ = std::hash<std::thread::id>()(std::this_thread::get_id());
-                env_->template writeTrace<Env>(env_, tid_, &name_, 'B');
+                env_->template writeBeginTrace<Env>(env_, tid_, &name_);
             }
         }
         ~TraceNodesComponentWrapper() {
             if (good_) {
-                env_->template writeTrace<Env>(env_, tid_, &name_, 'E');
+                env_->template writeEndTrace<Env>(env_, tid_, &name_);
             }
         }
     };
