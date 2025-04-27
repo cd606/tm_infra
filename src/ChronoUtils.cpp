@@ -79,7 +79,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 << std::setw(2) << std::setfill('0') << m->tm_sec;
             auto d = tp - std::chrono::system_clock::from_time_t(t);
             int micros = std::chrono::duration_cast<std::chrono::microseconds>(d).count();
-            oss << '.' << std::setw(6) << std::setfill('0') << micros;
+            if (micros != 0) {
+                oss << '.' << std::setw(6) << std::setfill('0') << micros;
+            }
             return oss.str();
         }
         std::chrono::system_clock::time_point parseUtcTime(int year, int month, int day, int hour, int minute, int second, int microseconds) {
@@ -189,7 +191,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 << std::setw(2) << std::setfill('0') << m->tm_sec;
             auto d = tp - std::chrono::system_clock::from_time_t(t);
             int micros = std::chrono::duration_cast<std::chrono::microseconds>(d).count();
-            oss << '.' << std::setw(6) << std::setfill('0') << micros << 'Z';
+            if (micros != 0) {
+                oss << '.' << std::setw(6) << std::setfill('0') << micros;
+            }
+            oss << 'Z';
             return oss.str();
         }    
     }
