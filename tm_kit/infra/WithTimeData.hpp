@@ -664,15 +664,39 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class Source {
         private:
             friend class AppRunner;
-            typename App::template Source<T> mSource;
+            std::optional<typename App::template Source<T>> mSource;
             std::string producer;
             bool useAltOutput;
             Source(typename App::template Source<T> &&s, std::string const &p) : mSource(std::move(s)), producer(p), useAltOutput(false) {}
             Source(typename App::template Source<T> &&s, std::string const &p, bool ao) : mSource(std::move(s)), producer(p), useAltOutput(ao) {}
         public:
             using TheDataTypeOfThisSource = T;
+            Source() = default;
+            Source(Source const& rhs)
+                : mSource(rhs.mSource ? std::optional<typename App::template Source<T>>{rhs.mSource->clone()} : std::nullopt)
+                , producer(rhs.producer)
+                , useAltOutput(rhs.useAltOutput)
+            {
+            }
+            Source& operator=(Source const& rhs) 
+            {
+                if (this != &rhs) {
+                    mSource = rhs.mSource? std::optional<typename App::template Source<T>>{rhs.mSource->clone()} : std::nullopt;
+                    producer = rhs.producer;
+                    useAltOutput = rhs.useAltOutput;
+                }
+                return *this;
+            }
+            Source(Source && rhs) = default;
+            Source& operator=(Source &&rhs) = default;
             Source<T> clone() const {
-                return {mSource.clone(), producer, useAltOutput};
+                return *this;
+            }
+            typename App::template Source<T>&& theSource() && {
+                if (!mSource) {
+                    throw std::runtime_error("Source is not initialized.");
+                }
+                return std::move(*mSource);
             }
             //The name is always copied back for safety
             std::string registeredNodeName() const {
@@ -1577,7 +1601,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return { m_.template actionAsSource<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
                 }
             }
-            return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
+            return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(std::move(x).theSource())), name };
         }
         template <class Action, typename = std::enable_if_t<!withtime_utils::IsVariant<typename withtime_utils::ActionTypeInfo<App,Action>::InputType>::Value>>
         Source<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType> execute(std::shared_ptr<Action> const &f, Source<typename withtime_utils::ActionTypeInfo<App,Action>::InputType> &&x) {
@@ -1589,7 +1613,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 name = nameMap_[(void *) f.get()].name;
             }
-            return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
+            return { m_.template execute<typename withtime_utils::ActionTypeInfo<App,Action>::InputType, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(std::move(x).theSource())), name };
         }
         template <
             class Action
@@ -1608,7 +1632,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     return { m_.template actionAsSource<std::any, typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(env_, *f), name };
                 }
             }
-            return { m_.template executeAny<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
+            return { m_.template executeAny<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(std::move(x).theSource())), name };
         }
         template <
             class Action
@@ -1628,7 +1652,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 name = nameMap_[(void *) f.get()].name;
             }
-            return { m_.template executeAny<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(x.mSource)), name };
+            return { m_.template executeAny<typename withtime_utils::ActionTypeInfo<App,Action>::OutputType>(*f, std::move(std::move(x).theSource())), name };
         }
 
         #include <tm_kit/infra/WithTimeData_VariantExecute_Piece.hpp>
@@ -1848,7 +1872,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
-            m_.template placeOrderWithFacility<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(input.mSource), *f, sink.mSink);
+            m_.template placeOrderWithFacility<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithFacility(
@@ -1869,7 +1893,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 connectAndCheck_(sink.pos, iter->second, name, color, false);
             }
-            m_.template placeOrderWithFacility<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(input.mSource), *f, sink.mSink);
+            m_.template placeOrderWithFacility<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithFacilityAndForget(
@@ -1882,7 +1906,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 registerOnOrderFacility_<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(f, name);
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
-            m_.template placeOrderWithFacilityAndForget<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(input.mSource), *f);
+            m_.template placeOrderWithFacilityAndForget<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(std::move(input).theSource()), *f);
         }
         template <class Fac>
         void placeOrderWithFacilityAndForget(
@@ -1894,7 +1918,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 checkName_((void *) f.get());
                 connectAndCheck_(0, (void *) f.get(), input.producer, color, input.useAltOutput);
             }
-            m_.template placeOrderWithFacilityAndForget<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(input.mSource), *f);
+            m_.template placeOrderWithFacilityAndForget<typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType, typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType>(std::move(std::move(input).theSource()), *f);
         }
 
         template <class Fac>
@@ -1924,7 +1948,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f, sink.mSink);
+                >(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithLocalFacility(
@@ -1949,7 +1973,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f, sink.mSink);
+                >(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithLocalFacilityAndForget(
@@ -1970,7 +1994,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f);
+                >(std::move(std::move(input).theSource()), *f);
         }
         template <class Fac>
         void placeOrderWithLocalFacilityAndForget(
@@ -1986,7 +2010,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ExporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f);
+                >(std::move(std::move(input).theSource()), *f);
         }
 
         template <class Fac>
@@ -2016,7 +2040,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ImporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f, sink.mSink);
+                >(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithFacilityWithExternalEffects(
@@ -2041,7 +2065,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ImporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f, sink.mSink);
+                >(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithFacilityWithExternalEffectsAndForget(
@@ -2062,7 +2086,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ImporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f);
+                >(std::move(std::move(input).theSource()), *f);
         }
         template <class Fac>
         void placeOrderWithFacilityWithExternalEffectsAndForget(
@@ -2078,7 +2102,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::InputType
                 , typename withtime_utils::OnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::ImporterTypeInfo<App,Fac>::DataType
-                >(std::move(input.mSource), *f);
+                >(std::move(std::move(input).theSource()), *f);
         }
 
         template <class Fac>
@@ -2110,7 +2134,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraInputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraOutputType
-                >(std::move(input.mSource), *f, sink.mSink);
+                >(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithVIEFacility(
@@ -2136,7 +2160,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraInputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraOutputType
-                >(std::move(input.mSource), *f, sink.mSink);
+                >(std::move(std::move(input).theSource()), *f, sink.mSink);
         }
         template <class Fac>
         void placeOrderWithVIEFacilityAndForget(
@@ -2159,7 +2183,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraInputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraOutputType
-                >(std::move(input.mSource), *f);
+                >(std::move(std::move(input).theSource()), *f);
         }
         template <class Fac>
         void placeOrderWithVIEFacilityAndForget(
@@ -2176,7 +2200,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::OutputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraInputType
                 , typename withtime_utils::VIEOnOrderFacilityTypeInfo<App,Fac>::ExtraOutputType
-                >(std::move(input.mSource), *f);
+                >(std::move(std::move(input).theSource()), *f);
         }
 
         template <class T>
@@ -2191,7 +2215,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (!connectAndCheck_(sink.pos, iter->second, source.producer, 0, source.useAltOutput)) {
                 return;
             }
-            m_.connect(std::move(source.mSource), sink.mSink);
+            m_.connect(std::move(std::move(source).theSource()), sink.mSink);
         }
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         void connectAny(Source<T> &&source, Sink<std::any> const &sink) {
@@ -2205,7 +2229,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (!connectAndCheck_(sink.pos, iter->second, source.producer, 0, source.useAltOutput)) {
                 return;
             }
-            m_.connectAny(std::move(source.mSource), sink.mSink);
+            m_.connectAny(std::move(std::move(source).theSource()), sink.mSink);
         }
 
         #include <tm_kit/infra/WithTimeData_ConnectN_Piece.hpp>
