@@ -485,26 +485,26 @@ export function RealTimeApp_Utils_kleisliMulti<Env extends Types.EnvBase, T, Out
     };
     return new LocalA();
 }
-export function RealTimeApp_Utils_liftPure2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: Types.Either2<T1, T2>) => OutT): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
+export function RealTimeApp_Utils_liftPure2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: T1 | T2) => OutT): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
     class LocalA extends RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
         public constructor() {
             super();
         }
         public handle(data: Types.TimedDataWithEnvironment<Env, Types.Either2<T1, T2>>): void {
             this.publish(pureTimedDataWithEnvironment(
-                data.environment, f(data.timedData.value), data.timedData.finalFlag
+                data.environment, f(data.timedData.value[1]), data.timedData.finalFlag
             ));
         }
     };
     return new LocalA();
 }
-export function RealTimeApp_Utils_liftMaybe2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: Types.Either2<T1, T2>) => OutT): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
+export function RealTimeApp_Utils_liftMaybe2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: T1 | T2) => OutT): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
     class LocalA extends RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
         public constructor() {
             super();
         }
         public handle(data: Types.TimedDataWithEnvironment<Env, Types.Either2<T1, T2>>): void {
-            let v = f(data.timedData.value);
+            let v = f(data.timedData.value[1]);
             if (v === null) {
                 return;
             }
@@ -515,14 +515,14 @@ export function RealTimeApp_Utils_liftMaybe2<Env extends Types.EnvBase, T1, T2, 
     };
     return new LocalA();
 }
-export function RealTimeApp_Utils_enhancedMaybe2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: [Date, Types.Either2<T1, T2>]) => OutT): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
+export function RealTimeApp_Utils_enhancedMaybe2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: [Date, T1 | T2]) => OutT): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
     class LocalA extends RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
         public constructor() {
             super();
         }
         public handle(data: Types.TimedDataWithEnvironment<Env, Types.Either2<T1, T2>>): void {
             let v = f(
-                [data.timedData.timePoint, data.timedData.value]
+                [data.timedData.timePoint, data.timedData.value[1]]
             );
             if (v === null) {
                 return;
@@ -551,13 +551,13 @@ export function RealTimeApp_Utils_kleisli2<Env extends Types.EnvBase, T1, T2, Ou
     };
     return new LocalA();
 }
-export function RealTimeApp_Utils_liftMulti2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: Types.Either2<T1, T2>) => OutT[]): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
+export function RealTimeApp_Utils_liftMulti2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: T1 | T2) => OutT[]): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
     class LocalA extends RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
         public constructor() {
             super();
         }
         public handle(data: Types.TimedDataWithEnvironment<Env, Types.Either2<T1, T2>>): void {
-            let v = f(data.timedData.value);
+            let v = f(data.timedData.value[1]);
             if (v === null) {
                 return;
             }
@@ -570,14 +570,14 @@ export function RealTimeApp_Utils_liftMulti2<Env extends Types.EnvBase, T1, T2, 
     };
     return new LocalA();
 }
-export function RealTimeApp_Utils_enhancedMulti2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: [Date, Types.Either2<T1, T2>]) => OutT[]): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
+export function RealTimeApp_Utils_enhancedMulti2<Env extends Types.EnvBase, T1, T2, OutT>(f: (x: [Date, T1 | T2]) => OutT[]): RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
     class LocalA extends RealTimeApp_Action<Env, Types.Either2<T1, T2>, OutT> {
         public constructor() {
             super();
         }
         public handle(data: Types.TimedDataWithEnvironment<Env, Types.Either2<T1, T2>>): void {
             let v = f(
-                [data.timedData.timePoint, data.timedData.value]
+                [data.timedData.timePoint, data.timedData.value[1]]
             );
             if (v === null) {
                 return;
