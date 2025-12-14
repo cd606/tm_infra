@@ -1,0 +1,26 @@
+{
+    "name": "@dev_cd606/tm_infra",
+    "version": "1.0.0",
+    "description": "Pure Node.js implementation of tm_infra (currently only partial functionalities of RealTimeApp)",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "build": "tsc"
+    },
+    "engines": {
+        "node": ">=18"
+    },
+    "devDependencies": {
+        "@types/node": "^25.0.2",
+        "typescript": "^5.4.0"
+    },
+    "dependencies": {
+        "process": "^0.11.10",
+        "stream": "^0.0.3",
+        "uuid": "^13.0.0"
+    }
+}
