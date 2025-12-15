@@ -7,12 +7,12 @@ export interface KeyedData<A, B> {
     data: B;
 };
 export interface VersionedData<Version, T> {
-    version: Version;
+    version: Version | null;
     data: T;
 };
 export interface GroupedVersionedData<GroupID, Version, T> {
-    groupID: GroupID;
-    version: Version;
+    groupID: GroupID | null;
+    version: Version | null;
     data: T;
 };
 export interface WithTime<T> {

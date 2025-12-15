@@ -3,6 +3,9 @@ import * as Types from "./types";
 import * as Stream from 'stream'
 import { v4 as uuidv4 } from 'uuid';
 
+export type * from "./types";
+export { LogLevel } from "./types";
+
 export function keyify<T>(t: T): Types.Key<T> {
     return {
         id: uuidv4()
@@ -398,7 +401,7 @@ export function RealTimeApp_Utils_liftPure<Env extends Types.EnvBase, T, OutT>(f
     };
     return new LocalA();
 }
-export function RealTimeApp_Utils_liftMaybe<Env extends Types.EnvBase, T, OutT>(f: (a: T) => OutT): RealTimeApp_Action<Env, T, OutT> {
+export function RealTimeApp_Utils_liftMaybe<Env extends Types.EnvBase, T, OutT>(f: (a: T) => OutT | null): RealTimeApp_Action<Env, T, OutT> {
     class LocalA extends RealTimeApp_Action<Env, T, OutT> {
         public handle(data: Types.TimedDataWithEnvironment<Env, T>): void {
             let v = f(data.timedData.value);
