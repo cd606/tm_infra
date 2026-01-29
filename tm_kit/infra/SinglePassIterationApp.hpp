@@ -31,7 +31,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class Env, bool HasSetTime=(decltype(hasSetLocalTime<Env>(0))::value && decltype(hasResetLocalTime<Env>(0))::value)>
         class TimePreserver;
-        
+
         template <class Env>
         class TimePreserver<Env, true> {
         private:
@@ -189,8 +189,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return c.timePointUnsafe();
         }
     public:
-        //The assumption is that next() will ONLY be called if poll() 
-        //returns a valid time point, and the certificate is used to 
+        //The assumption is that next() will ONLY be called if poll()
+        //returns a valid time point, and the certificate is used to
         //help enforce that
         template <class T>
         class Provider : public virtual ProviderBase {
@@ -278,7 +278,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (sourceSet_.find(p) != sourceSet_.end()) {
                         sources_.erase(std::find(sources_.begin(), sources_.end(), p));
                         sourceSet_.erase(p);
-                    }                                    
+                    }
                     if (!sources_.empty()) {
                         x->timedData.finalFlag = false;
                     }
@@ -346,11 +346,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 virtual Certificate<T> poll() override final {
                     if (parent_->outputs_.size() == 1) {
                         return parent_->source_->poll().push(this);
-                    }                 
+                    }
                     if (qPos_ >= parent_->queue_.size()) {
                         auto parentCert = parent_->source_->poll();
                         return parentCert.push(this);
-                    } else { 
+                    } else {
                         return Certificate<T> {std::get<0>(*((parent_->queue_.begin()+qPos_)->data)), this};
                     }
                 }
@@ -732,7 +732,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 >;
             virtual CheckAndProduceResult checkAndProduce() = 0;
         private:
-            CheckAndProduceResult buffer_; 
+            CheckAndProduceResult buffer_;
             void fillBuffer() {
                 if (buffer_) {
                     return;
@@ -805,7 +805,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             input->environment, static_cast<AbstractActionCore<A,B> *>(this)
                         );
                         TraceNodesComponentWrapper<StateT,AbstractActionCore<A,B>> tracer(
-                            input->environment 
+                            input->environment
                             , this
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
@@ -825,14 +825,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     } else {
                         return std::nullopt;
-                    }    
+                    }
                 };
                 auto tp1 = tp;
                 if (delaySimulator_) {
                     tp1 += (*delaySimulator_)(0, tp);
                 }
                 return std::tuple<TimePoint, std::function<Data<B>()>> {tp1, produce};
-            }       
+            }
             virtual Data<B> handle(InnerData<A> &&) = 0;
             Data<B> realHandle(InnerData<A> &&a) {
                 auto ret = handle(std::move(a));
@@ -847,7 +847,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            ActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
+            ActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}
         };
 
         template <class B>
@@ -861,7 +861,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         private:
             MultiData<B> latestBFrame_;
             std::deque<B> latestBs_;
-            CheckAndProduceResult buffer_; 
+            CheckAndProduceResult buffer_;
             void fillBuffer() {
                 if (latestBFrame_) {
                     return;
@@ -954,7 +954,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             input->environment, static_cast<AbstractActionCore<A,B> *>(this)
                         );
                         TraceNodesComponentWrapper<StateT,AbstractActionCore<A,B>> tracer(
-                            input->environment 
+                            input->environment
                             , this
                         );
                         if constexpr (decltype(single_pass_iteration_app_utils::hasSetLocalTime<StateT>(0))::value && decltype(single_pass_iteration_app_utils::hasResetLocalTime<StateT>(0))::value) {
@@ -974,14 +974,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     } else {
                         return std::nullopt;
-                    }    
+                    }
                 };
                 auto tp1 = tp;
                 if (delaySimulator_) {
                     tp1 += (*delaySimulator_)(0, tp);
                 }
                 return std::tuple<TimePoint, std::function<MultiData<B>()>> {tp1, produce};
-            }       
+            }
             virtual MultiData<B> handle(InnerData<A> &&) = 0;
             MultiData<B> realHandle(InnerData<A> &&a) {
                 auto ret = handle(std::move(a));
@@ -1003,7 +1003,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
         public:
-            MultiActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}           
+            MultiActionCore(DelaySimulatorType const &delaySimulator=DelaySimulatorType()) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), delaySimulator_(delaySimulator) {}
         };
 
     private:
@@ -1012,7 +1012,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (delaySimulator) {
                 auto delay = (*delaySimulator)(which, input.timedData.timePoint);
                 input.timedData.timePoint += delay;
-            } 
+            }
             return Data<T> {std::move(input)};
         }
         template <class T>
@@ -1021,8 +1021,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (input) {
                     auto delay = (*delaySimulator)(which, input->timedData.timePoint);
                     input->timedData.timePoint += delay;
-                }  
-            } 
+                }
+            }
             return std::move(input);
         }
         template <class A, class B, class F>
@@ -1056,7 +1056,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~PureActionCore() {}
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
-            }  
+            }
         };
         template <class A, class B, class F>
         class MaybeActionCore final : public ActionCore<A,B> {
@@ -1190,31 +1190,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
 
         template <class A, class B>
         static bool actionIsThreaded(std::shared_ptr<Action<A,B>> const &) {
-            return false; 
+            return false;
         }
         template <class A, class B>
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
-            return a->core_->isOneTimeOnly(); 
+            return a->core_->isOneTimeOnly();
         }
 
     public:
         template <class A, class F>
-        static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftPure(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, decltype(f(std::declval<A>()))>> {
             return std::make_shared<Action<A, decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
         template <class A, class F>
-        static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, typename decltype(f(std::declval<A>()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
         template <class A, class F>
-        static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto enhancedMaybe(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
         template <class A, class F>
-        static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto kleisli(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
@@ -1333,17 +1333,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     public:
         template <class A, class F>
-        static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, typename decltype(f(std::declval<A>()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
         template <class A, class F>
-        static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto enhancedMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
         template <class A, class F>
-        static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto kleisliMulti(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>> {
             return std::make_shared<Action<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type>>(new KleisliMultiActionCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType::value_type,F>(std::move(f), liftParam.delaySimulator, liftParam.fireOnceOnly));
         }
@@ -1398,7 +1398,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             bool fireOnceOnly_;
             bool done_;
             using CPR = typename ContinuationProvider<B,ContinuationStructure>::CheckAndProduceResult;
-            
+
             Data<A> inputCopy_;
             std::tuple<CPR, Data<B>> nextStep() {
                 if (fireOnceOnly_ && done_) {
@@ -1420,7 +1420,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return std::tuple<CPR, Data<B>> {
                     CPR { std::tuple<TimePoint, std::function<std::tuple<CPR,Data<B>>()>> {
-                        *nextTP 
+                        *nextTP
                         , [this](){
                             return nextStep();
                         }
@@ -1451,10 +1451,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         hasA_ = true;
                         aTime_ = tp;
                         inputCopy_ = std::move(*input);
-                        return nextStep();                        
+                        return nextStep();
                     } else {
                         return {{std::nullopt}, std::nullopt};
-                    }    
+                    }
                 };
                 TimePoint tp1 = tp;
                 std::optional<TimePoint> tp2 = state_.nextTimePoint();
@@ -1462,9 +1462,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     tp1 = *tp2;
                 }
                 return CPR { { std::tuple<TimePoint, std::function<std::tuple<CPR,Data<B>>()>> {tp1, produce} } };
-            }       
+            }
         public:
-            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), state_(std::move(state)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false), inputCopy_(std::nullopt) {}           
+            ContinuationActionCore(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state, DelaySimulatorType const &delaySimulator, bool fireOnceOnly) : Provider<B>(), Consumer<A>(), hasA_(false), aTime_(), versionChecker_(), cont_(cont), state_(std::move(state)), delaySimulator_(delaySimulator), fireOnceOnly_(fireOnceOnly), done_(false), inputCopy_(std::nullopt) {}
             virtual bool isOneTimeOnly() const override final {
                 return fireOnceOnly_;
             }
@@ -1476,7 +1476,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 new ContinuationActionCore<A,B,ContinuationStructure>(cont, std::move(state), liftParam.delaySimulator, liftParam.fireOnceOnly)
             );
         }
-    
+
     private:
         template <class A, class B, class C>
         class ComposeCore : public virtual AbstractActionCore<A,C> {
@@ -1488,7 +1488,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return x_->source();
             }
         public:
-            ComposeCore(std::unique_ptr<AbstractActionCore<A,B>> &&x, std::unique_ptr<AbstractActionCore<B,C>> &&y) 
+            ComposeCore(std::unique_ptr<AbstractActionCore<A,B>> &&x, std::unique_ptr<AbstractActionCore<B,C>> &&y)
                 : x_(std::move(x)), y_(std::move(y))
             {
                 y_->connectToSource(x_.get());
@@ -1594,7 +1594,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 virtual Data<KeyedData<A,B>> next(Certificate<KeyedData<A,B>> &&cert) override final {
                     cert.consume(this);
-                    auto ret = std::move(std::get<1>(queue_.top()));              
+                    auto ret = std::move(std::get<1>(queue_.top()));
                     queue_.pop();
                     return {ret};
                 }
@@ -1630,7 +1630,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (isFinalResponseForThisKey) {
                     if (!synchronousRunnerMode_ && !std::get<1>(iter->second)) {
                         //this key is not final
-                        keyedData.timedData.finalFlag = false; 
+                        keyedData.timedData.finalFlag = false;
                     }
                     keyMap_.erase(iter);
                 }
@@ -1638,17 +1638,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             void publish(InnerData<Key<B>> &&response) {
                 publishResponse(std::move(response));
-            }   
+            }
             void publish(StateT *env, Key<B> &&data, bool isFinal) {
                 publish(pureInnerData<Key<B>>(env, std::move(data), isFinal));
-            }  
-            void markEndHandlingRequest(typename StateT::IDType const &id) {                
+            }
+            void markEndHandlingRequest(typename StateT::IDType const &id) {
                 keyMap_.erase(id);
             }
             static constexpr OnOrderFacilityCore *nullptrToInheritedFacility() {return nullptr;}
         public:
             OnOrderFacilityCore() : keyMap_(), providers_(), synchronousRunnerMode_(false) {}
-            virtual ~OnOrderFacilityCore() {}           
+            virtual ~OnOrderFacilityCore() {}
             void placeOrder(InnerData<Key<A>> &&input, AbstractConsumer<KeyedData<A,B>> *consumer) {
                 if (consumer != nullptr) {
                     Key<A> keyCopy = input.timedData.value;
@@ -1666,16 +1666,16 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     keyMap_.insert({
                         keyCopy.id()
                         , {keyCopy, keyIsFinal, p}
-                    });                   
+                    });
                 }
                 handle(std::move(input));
-            }   
+            }
             virtual void handle(InnerData<Key<A>> &&input) = 0;
         private:
             virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &) {
                 //by default do nothing
-            } 
-            friend class SinglePassIterationApp;       
+            }
+            friend class SinglePassIterationApp;
         };
 
     public:
@@ -1688,7 +1688,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class F>
         class PureOnOrderFacilityCore final : public OnOrderFacilityCore<A,B> {
         private:
-            F f_; 
+            F f_;
             DelaySimulatorType delaySimulator_;
         public:
             PureOnOrderFacilityCore(F &&f, DelaySimulatorType const &delaySimulator) : OnOrderFacilityCore<A,B>(), f_(std::move(f)), delaySimulator_(delaySimulator) {
@@ -1701,7 +1701,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 auto resp = *applyDelaySimulator<Key<B>>(0, pureInnerDataLift([this](Key<A> &&k) {
                     return withtime_utils::apply(f_, std::move(k));
                 }, std::move(input)), delaySimulator_);
-                resp.timedData.finalFlag = true; 
+                resp.timedData.finalFlag = true;
                 this->publishResponse(std::move(resp));
             }
         };
@@ -1722,7 +1722,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::optional<B> x = f_(std::move(input.timedData.value.key()));
                 if (x) {
                     this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
-                } 
+                }
             }
         };
         template <class A, class B, class F>
@@ -1742,7 +1742,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
                 if (x) {
                     this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
-                } 
+                }
             }
         };
         template <class A, class B, class F>
@@ -1775,7 +1775,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B, class F, class StartF>
         class PureOnOrderFacilityCoreWithStart final : public virtual IExternalComponent, public OnOrderFacilityCore<A,B> {
         private:
-            F f_; 
+            F f_;
             StartF startF_;
             DelaySimulatorType delaySimulator_;
         public:
@@ -1789,7 +1789,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 auto resp = *applyDelaySimulator<Key<B>>(0, pureInnerDataLift([this](Key<A> &&k) {
                     return withtime_utils::apply(f_, std::move(k));
                 }, std::move(input)), delaySimulator_);
-                resp.timedData.finalFlag = true; 
+                resp.timedData.finalFlag = true;
                 this->publishResponse(std::move(resp));
             }
             virtual void start(StateT *environment) override final {
@@ -1814,7 +1814,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::optional<B> x = f_(std::move(input.timedData.value.key()));
                 if (x) {
                     this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
-                } 
+                }
             }
             virtual void start(StateT *environment) override final {
                 startF_(environment);
@@ -1838,7 +1838,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::optional<B> x = f_(std::tuple<TimePoint,A> {input.timedData.timePoint, std::move(input.timedData.value.key())});
                 if (x) {
                     this->publishResponse(*applyDelaySimulator<Key<B>>(0, pureInnerData<Key<B>>(input.environment, {input.timedData.timePoint, {id, std::move(*x)}, true}), delaySimulator_));
-                } 
+                }
             }
             virtual void start(StateT *environment) override final {
                 startF_(environment);
@@ -1877,42 +1877,42 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     public:
         template <class A, class F>
-        static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftPureOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, decltype(f(std::declval<A>()))>> {
             return std::make_shared<OnOrderFacility<A, decltype(f(std::declval<A>()))>>(new PureOnOrderFacilityCore<A,decltype(f(std::declval<A>())),F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
-        static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeOnOrderFacilityCore<A,typename decltype(f(std::declval<A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
-        static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto enhancedMaybeOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F>
-        static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto kleisliOnOrderFacility(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliOnOrderFacilityCore<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F>(std::move(f), liftParam.delaySimulator));
         }
         template <class A, class F, class StartF>
-        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftPureOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, decltype(f(std::declval<A>()))>> {
             return std::make_shared<OnOrderFacility<A, decltype(f(std::declval<A>()))>>(new PureOnOrderFacilityCoreWithStart<A,decltype(f(std::declval<A>())),F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
         }
         template <class A, class F, class StartF>
-        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto liftMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(std::declval<A>()))::value_type>>(new MaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::declval<A>()))::value_type,F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
         }
         template <class A, class F, class StartF>
-        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto enhancedMaybeOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeOnOrderFacilityCoreWithStart<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
         }
         template <class A, class F, class StartF>
-        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) 
+        static auto kleisliOnOrderFacilityWithStart(F &&f, StartF &&startF, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>())
             -> std::shared_ptr<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>> {
             return std::make_shared<OnOrderFacility<A, typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType>>(new KleisliOnOrderFacilityCoreWithStart<A,typename decltype(f(pureInnerData<A>(nullptr,A())))::value_type::ValueType,F,StartF>(std::move(f), std::move(startF), liftParam.delaySimulator));
         }
@@ -1922,7 +1922,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::make_shared<OnOrderFacility<A,B>>(p);
         }
 
-    private:     
+    private:
         struct TimePointComparisonStruct {
             int idx;
             TimePoint tp;
@@ -1944,7 +1944,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 return (idx < s.idx);
             }
-        };  
+        };
 
         #include <tm_kit/infra/SinglePassIterationApp_ActionCore_Piece.hpp>
 
@@ -1968,7 +1968,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
             }
             static constexpr AbstractImporterCore *nullptrToInheritedImporter() {return nullptr;}
-        public:           
+        public:
             virtual Data<T> generate(T const *notUsed=nullptr) = 0;
             AbstractImporterCore() : BufferedProvider<T>() {}
         };
@@ -2113,7 +2113,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 T t_;
                 StateT *env_;
                 Data<T> toPublish_;
-            public:           
+            public:
                 virtual Data<T> generate(T const * =nullptr) {
                     Data<T> ret {std::move(toPublish_)};
                     toPublish_ = std::nullopt;
@@ -2152,7 +2152,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             private:
                 std::deque<T> q_;
                 StateT *env_;
-            public:           
+            public:
                 virtual Data<T> generate(T const * =nullptr) {
                     if (q_.empty()) {
                         return std::nullopt;
@@ -2190,7 +2190,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             private:
                 std::deque<WithTime<T,TimePoint>> q_;
                 StateT *env_;
-            public:           
+            public:
                 virtual Data<T> generate(T const * =nullptr) {
                     if (q_.empty()) {
                         return std::nullopt;
@@ -2352,6 +2352,50 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<std::vector<T>>> bunchedImporter(std::shared_ptr<Importer<T>> const &underlyingImporter, BunchSplitLogic &&bunchSplitLogic = BunchSplitLogic {}) {
             return std::make_shared<Importer<std::vector<T>>>(std::make_unique<BunchedImporter<T, BunchSplitLogic>>(underlyingImporter, std::move(bunchSplitLogic)));
         }
+    private:
+        template <class T>
+        class LookAheadImporterCore : public AbstractImporterCore<std::tuple<T, std::optional<T>>> {
+        private:
+            std::shared_ptr<Importer<T>> baseImporter_;
+            AbstractImporterCore<T> *baseCore_;
+            Data<T> next_;
+        public:
+            LookAheadImporterCore(std::shared_ptr<Importer<T>> const &baseImporter)
+                : baseImporter_(baseImporter), baseCore_(nullptr), next_(std::nullopt)
+            {
+                baseCore_ = (AbstractImporterCore<T> *) (*(baseImporter_->getUnderlyingPointers().begin()));
+            }
+            virtual void start(StateT *env) override final {
+                baseCore_->start(env);
+                next_ = baseCore_->generate((T const *) nullptr);
+            }
+            virtual Data<std::tuple<T, std::optional<T>>> generate(std::tuple<T, std::optional<T>> const *notUsed=nullptr) override final {
+                if (!next_) {
+                    return std::nullopt;
+                }
+                Data<T> nextNext = baseCore_->generate((T const *) nullptr);
+                InnerData<std::tuple<T, std::optional<T>>> ret(
+                    next_->environment
+                    , {
+                        .timePoint = next_->timedData.timePoint
+                        , .value = std::make_tuple<T, std::optional<T>>(
+                            std::move(next_->timedData.value)
+                            , (nextNext?std::optional<T> {nextNext->timedData.value}:std::nullopt)
+                        )
+                        , .finalFlag = (nextNext?false:true)
+                    }
+                );
+                next_ = std::move(nextNext);
+                return {std::move(ret)};
+            }
+        };
+    public:
+        template <class T>
+        static std::shared_ptr<Importer<std::tuple<T, std::optional<T>>>> lookAheadImporter(std::shared_ptr<Importer<T>> const &baseImporter) {
+            return importer<std::tuple<T, std::optional<T>>>(
+                new LookAheadImporterCore<T>(baseImporter)
+            );
+        }
     public:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {
@@ -2371,7 +2415,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 } else {
                     return {std::nullopt, this};
                 }
-            } 
+            }
             virtual Data<SpecialOutputDataTypeForExporters> next(Certificate<SpecialOutputDataTypeForExporters> &&cert) override final {
                 cert.consume(this);
                 auto input = this->source()->next(std::move(sourceCert_));
@@ -2449,7 +2493,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class T>
         static std::shared_ptr<Exporter<T>> trivialExporter() {
             return simpleExporter<T>([](InnerData<T> &&) {}, LiftParameters<TimePoint> {});
-        }        
+        }
 
     public:
         template <class T1, class T2>
@@ -2459,7 +2503,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 Importer<T1> orig_;
                 Action<T1,T2> post_;
             public:
-                LocalI(Importer<T1> &&orig, Action<T1,T2> &&post) 
+                LocalI(Importer<T1> &&orig, Action<T1,T2> &&post)
                     : orig_(std::move(orig)), post_(std::move(post))
                 {
                     post_.core_->connectToSource(orig_.core_.get());
@@ -2490,7 +2534,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 Exporter<T2> orig_;
                 FillableProvider<T1> fillable_;
             public:
-                LocalE(Action<T1,T2> &&pre, Exporter<T2> &&orig) 
+                LocalE(Action<T1,T2> &&pre, Exporter<T2> &&orig)
                     : pre_(std::move(pre)), orig_(std::move(orig)), fillable_()
                 {
                     pre_.core_->connectToSource(&fillable_);
@@ -2522,7 +2566,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 Importer<T2> importer_;
                 bool started_;
             public:
-                LocalA(Importer<T2> &&importer) 
+                LocalA(Importer<T2> &&importer)
                     : importer_(std::move(importer)), started_(false)
                 {
                     if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
@@ -2570,7 +2614,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::shared_ptr<Importer<T2>> importer_;
                 bool started_;
             public:
-                LocalA(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory) 
+                LocalA(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory)
                     : importerFactory_(importerFactory), importer_(), started_(false)
                 {
                 }
@@ -2615,7 +2659,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 Action<T1,T2> action_;
                 FillableProvider<T1> fillable_;
             public:
-                LocalE(Action<T1,T2> &&action) 
+                LocalE(Action<T1,T2> &&action)
                     : action_(std::move(action)), fillable_()
                 {
                     action_.core_->connectToSource(&fillable_);
@@ -2654,7 +2698,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     toWrap_->placeOrder(std::move(i1), consumer_);
                 }
                 void start(StateT *) override final {}
-            }; 
+            };
             class Conduit3 final : public ActionCore<KeyedData<I1,O1>, Key<O1>> {
             protected:
                 virtual Data<Key<O1>> handle(InnerData<KeyedData<I1,O1>> &&o1WithKey) override final {
@@ -2679,7 +2723,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 void start(StateT *) override final {}
             };
             Conduit4 c4_;
-            Conduit3 c3_;   
+            Conduit3 c3_;
             Conduit2 c2_;
             FillableProvider<Key<I0>> c1_;
         public:
@@ -2712,7 +2756,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) override final {
                 output.push_back(&c4_);
                 output.push_back(&c2_);
-            } 
+            }
         };
 
     public:
@@ -2728,7 +2772,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class SimpleWrappedOnOrderFacility final : public IExternalComponent, public OnOrderFacilityCore<I0,O0> {
         private:
             OnOrderFacility<I1,O1> toWrap_;
-            
+
             class Conduit2 final : public AbstractExporterCore<Key<I0>> {
             private:
                 OnOrderFacilityCore<I1,O1> *toWrap_;
@@ -2757,7 +2801,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     }
                 }
                 void start(StateT *) override final {}
-            }; 
+            };
             class Conduit3 final : public AbstractExporterCore<KeyedData<I1,O1>> {
             private:
                 SimpleWrappedOnOrderFacility *parent_;
@@ -2787,7 +2831,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 void start(StateT *) override final {}
             };
-            Conduit3 c3_;   
+            Conduit3 c3_;
             Conduit2 c2_;
             FillableProvider<Key<I0>> c1_;
         public:
@@ -2795,7 +2839,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 OnOrderFacility<I1,O1> &&toWrap,
                 std::function<I1(I0 &&)> const &inputT,
                 std::function<O0(I1 const &, O1 &&)> const &outputT
-            ) : toWrap_(std::move(toWrap)), 
+            ) : toWrap_(std::move(toWrap)),
                 c3_(this, outputT), c2_(toWrap_.core_.get(), &c3_, inputT), c1_() {
                 c2_.connectToSource(&c1_);
                 if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
@@ -2821,7 +2865,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual void fetchProvidersForAppRunner(std::list<Provider<SpecialOutputDataTypeForExporters> *> &output) override final {
                 output.push_back(&c3_);
                 output.push_back(&c2_);
-            } 
+            }
         };
 
     public:
@@ -2847,10 +2891,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , AbstractExporterCore<DataInputType> *e) {
             return std::make_shared<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>>(t,e);
         }
-                
+
         template <class QueryKeyType, class QueryResultType, class DataInputType>
-        class AbstractIntegratedLocalOnOrderFacility 
-            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<DataInputType> 
+        class AbstractIntegratedLocalOnOrderFacility
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<DataInputType>
         {
         public:
             using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
@@ -2861,7 +2905,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractIntegratedLocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType> *p) {
             return std::make_shared<LocalOnOrderFacility<QueryKeyType, QueryResultType, DataInputType>>(p,p);
         }
-        
+
         template <class Fac, class Exp>
         static std::shared_ptr<LocalOnOrderFacility<
             typename Fac::InputType
@@ -2941,10 +2985,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , AbstractImporterCore<DataInputType> *e) {
             return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(t,e);
         }
-                
+
         template <class QueryKeyType, class QueryResultType, class DataInputType, bool HasConcretePublishForImporter=false>
-        class AbstractIntegratedOnOrderFacilityWithExternalEffects 
-            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<DataInputType>, AbstractImporter<DataInputType>> 
+        class AbstractIntegratedOnOrderFacilityWithExternalEffects
+            : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<DataInputType>, AbstractImporter<DataInputType>>
         {
         public:
             using FacilityParent = AbstractOnOrderFacility<QueryKeyType,QueryResultType>;
@@ -2957,7 +3001,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractIntegratedOnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType, HasConcretePublishForImporter> *p) {
             return std::make_shared<OnOrderFacilityWithExternalEffects<QueryKeyType, QueryResultType, DataInputType>>(p,p);
         }
-        
+
         template <class Fac, class Imp>
         static std::shared_ptr<OnOrderFacilityWithExternalEffects<
             typename Fac::InputType
@@ -3040,9 +3084,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             , AbstractImporterCore<ExtraOutputType> *o) {
             return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(t,i,o);
         }
-                
+
         template <class QueryKeyType, class QueryResultType, class ExtraInputType, class ExtraOutputType, bool HasConcretePublishForImporter=false>
-        class AbstractIntegratedVIEOnOrderFacility 
+        class AbstractIntegratedVIEOnOrderFacility
             : public AbstractOnOrderFacility<QueryKeyType,QueryResultType>, public AbstractExporter<ExtraInputType>, public std::conditional_t<HasConcretePublishForImporter, ConcreteImporterCore<ExtraOutputType>, AbstractImporter<ExtraOutputType>>
         {
         public:
@@ -3057,7 +3101,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractIntegratedVIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType, HasConcretePublishForImporter> *p) {
             return std::make_shared<VIEOnOrderFacility<QueryKeyType, QueryResultType, ExtraInputType, ExtraOutputType>>(p,p,p);
         }
-        
+
         template <class Fac, class Exp, class Imp>
         static std::shared_ptr<VIEOnOrderFacility<
             typename Fac::InputType
@@ -3161,13 +3205,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::unordered_map<std::size_t, std::unordered_map<ProviderBase *, std::unordered_set<ConsumerBase *>>> connectionMap_;
 
         SinglePassIterationApp() : externalComponents_(), externalComponentsSet_(), joinedSource_(), joinedSpecialSource_(), outputMultiplexerMap_(), connectionMap_() {}
-        SinglePassIterationApp(SinglePassIterationApp &&other) : 
+        SinglePassIterationApp(SinglePassIterationApp &&other) :
             externalComponents_(std::move(other.externalComponents_))
             , externalComponentsSet_(std::move(other.externalComponentsSet_))
             , joinedSource_(std::move(other.joinedSource_))
             , joinedSpecialSource_(std::move(other.joinedSpecialSource_))
             , outputMultiplexerMap_(std::move(other.outputMultiplexerMap_))
-            , connectionMap_(std::move(other.connectionMap_)) 
+            , connectionMap_(std::move(other.connectionMap_))
         {}
         SinglePassIterationApp &operator=(SinglePassIterationApp &&other) {
             if (this != &other) {
@@ -3262,9 +3306,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class B>
         void innerConnectFacility(Provider<Key<A>> *provider, OnOrderFacilityCore<A,B> *facility, AbstractConsumer<KeyedData<A,B>> *consumer) {
             class LocalE final : public virtual AbstractExporterCore<Key<A>> {
-            private:                 
+            private:
                 OnOrderFacilityCore<A,B> *facility_;
-                AbstractConsumer<KeyedData<A,B>> *consumer_;              
+                AbstractConsumer<KeyedData<A,B>> *consumer_;
             public:
                 LocalE(OnOrderFacilityCore<A,B> *p, AbstractConsumer<KeyedData<A,B>> *h) : AbstractExporterCore<Key<A>>(), facility_(p), consumer_(h) {}
                 virtual void start(StateT *) override final {}
@@ -3274,11 +3318,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             } *localE = new LocalE(facility, consumer);
             innerConnect(localE, provider);
             std::list<Provider<SpecialOutputDataTypeForExporters> *> l;
-            joinedSpecialSource_.addSource(getMultiplexerOutput(localE)); 
+            joinedSpecialSource_.addSource(getMultiplexerOutput(localE));
             facility->fetchProvidersForAppRunner(l);
             for (auto *p : l) {
                 joinedSpecialSource_.addSource(getMultiplexerOutput(p));
-            }      
+            }
         }
     private:
         template <class T>
@@ -3302,7 +3346,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         #include <tm_kit/infra/SinglePassIterationApp_ExecuteAction_Piece.hpp>
-   
+
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(exporter.core_.get()));
@@ -3321,15 +3365,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core_.get());
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core_.get(), sink.consumer);
-        }  
+        }
         template <class A, class B>
         void placeOrderWithFacilityAndForget(Source<Key<A>> &&input, OnOrderFacility<A,B> &facility) {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core_.get());
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core_.get(), (AbstractConsumer<KeyedData<A,B>> *) nullptr);
         }
 
@@ -3338,17 +3382,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core1_, sink.consumer);
-         } 
+         }
         template <class A, class B, class C>
         void placeOrderWithLocalFacilityAndForget(Source<Key<A>> &&input, LocalOnOrderFacility<A,B,C> &facility) {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core1_, (AbstractConsumer<KeyedData<A,B>> *) nullptr);
-        } 
+        }
         template <class A, class B, class C>
         Sink<C> localFacilityAsSink(LocalOnOrderFacility<A,B,C> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_));
@@ -3361,17 +3405,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core1_, sink.consumer);
-         } 
+         }
         template <class A, class B, class C>
         void placeOrderWithFacilityWithExternalEffectsAndForget(Source<Key<A>> &&input, OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core1_, (AbstractConsumer<KeyedData<A,B>> *) nullptr);
-        } 
+        }
         template <class A, class B, class C>
         Source<C> facilityWithExternalEffectsAsSource(OnOrderFacilityWithExternalEffects<A,B,C> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core2_));
@@ -3383,17 +3427,17 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core1_, sink.consumer);
-         } 
+         }
         template <class A, class B, class C, class D>
         void placeOrderWithVIEFacilityAndForget(Source<Key<A>> &&input, VIEOnOrderFacility<A,B,C,D> &facility) {
             auto *p = dynamic_cast<IExternalComponent *>(facility.core1_);
             if (p != nullptr) {
                 registerExternalComponent(p);
-            } 
+            }
             innerConnectFacility(input.provider, facility.core1_, (AbstractConsumer<KeyedData<A,B>> *) nullptr);
-        } 
+        }
         template <class A, class B, class C, class D>
         Source<D> vieFacilityAsSource(VIEOnOrderFacility<A,B,C,D> &facility) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(facility.core3_));
@@ -3416,8 +3460,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         #include <tm_kit/infra/SinglePassIterationApp_ConnectN_Piece.hpp>
-    
-        std::function<void(StateT *)> finalize() { 
+
+        std::function<void(StateT *)> finalize() {
             std::list<IExternalComponent *> aCopy = std::move(externalComponents_);
             InputMultiplexer<SpecialOutputDataTypeForExporters> joinedSourceCopy = std::move(joinedSource_);
             InputMultiplexer<SpecialOutputDataTypeForExporters> joinedSpecialSourceCopy = std::move(joinedSpecialSource_);
@@ -3448,8 +3492,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                             break;
                         }
                     }
-                }       
-            };        
+                }
+            };
         }
         std::function<std::function<bool(StateT *)>(StateT *)> finalizeForInterleaving() {
             std::list<IExternalComponent *> aCopy = std::move(externalComponents_);
@@ -3490,8 +3534,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         }
                     } else {
                         return false;
-                    } 
-                };   
+                    }
+                };
             };
         }
     public:
@@ -3637,7 +3681,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static void runStartedExporterSynchronously(StateT *, std::shared_ptr<Exporter<T>> const &exporter, InnerData<T> &&data) {
             exporter->core_->handle(std::move(data));
         }
-    
+
     public:
         //This is supposed to be used outside of any Runner instance
         //on an unregistered importer
@@ -3657,7 +3701,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             Data<T> data_;
             bool hasMore_;
             UnregisteredImporterIterator() : importerCore_(nullptr), data_(std::nullopt), hasMore_(false) {}
-            UnregisteredImporterIterator(EnvironmentType *env, AbstractImporterCore<T> *importerCore) 
+            UnregisteredImporterIterator(EnvironmentType *env, AbstractImporterCore<T> *importerCore)
                 : importerCore_(importerCore), data_(), hasMore_(true) {
                 if (importerCore_) {
                     importerCore_->start(env);
@@ -3680,7 +3724,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             static UnregisteredImporterIterator endIter() {
                 return UnregisteredImporterIterator();
             }
-            UnregisteredImporterIterator(UnregisteredImporterIterator const &iter) 
+            UnregisteredImporterIterator(UnregisteredImporterIterator const &iter)
                 : importerCore_(iter.importerCore_), data_(withtime_utils::clone(iter.data_)), hasMore_(iter.hasMore_)
             {
             }
@@ -3693,7 +3737,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 return *this;
             }
             bool operator==(UnregisteredImporterIterator const &iter) const {
-                //very rough check, because the intended use is only to 
+                //very rough check, because the intended use is only to
                 //compare against endIter
                 return (importerCore_ == iter.importerCore_ && hasMore_ == iter.hasMore_);
             }
@@ -3755,14 +3799,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             AbstractExporterCore<T> *exporterCore_;
             EnvironmentType *env_;
             UnregisteredExporterIterator() : exporterCore_(nullptr), env_(nullptr) {}
-            UnregisteredExporterIterator(EnvironmentType *env, AbstractExporterCore<T> *exporterCore) 
+            UnregisteredExporterIterator(EnvironmentType *env, AbstractExporterCore<T> *exporterCore)
                 : exporterCore_(exporterCore), env_(env) {
                 if (exporterCore_) {
                     exporterCore_->start(env);
                 }
             }
         public:
-            UnregisteredExporterIterator(UnregisteredExporterIterator const &iter) 
+            UnregisteredExporterIterator(UnregisteredExporterIterator const &iter)
                 : exporterCore_(iter.exporterCore_), env_(iter.env_)
             {
             }
@@ -3811,7 +3855,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void operator=(T &&data) {
                 if (exporterCore_) {
                     exporterCore_->handle(InnerData<T> {
-                        env_ 
+                        env_
                         , {
                             env_->resolveTime()
                             , std::move(data)
@@ -3823,7 +3867,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             void operator=(T const &data) {
                 if (exporterCore_) {
                     exporterCore_->handle(InnerData<T> {
-                        env_ 
+                        env_
                         , {
                             env_->resolveTime()
                             , std::move(data)
