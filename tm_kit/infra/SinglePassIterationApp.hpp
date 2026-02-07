@@ -2377,12 +2377,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 InnerData<std::tuple<T, std::optional<T>>> ret(
                     next_->environment
                     , {
+#ifndef _MSC_VER
                         .timePoint = next_->timedData.timePoint
                         , .value = std::make_tuple<T, std::optional<T>>(
                             std::move(next_->timedData.value)
                             , (nextNext?std::optional<T> {nextNext->timedData.value}:std::nullopt)
                         )
                         , .finalFlag = (nextNext?false:true)
+#else
+                        next_->timedData.timePoint
+                        , std::make_tuple<T, std::optional<T>>(
+                            std::move(next_->timedData.value)
+                            , (nextNext?std::optional<T> {nextNext->timedData.value}:std::nullopt)
+                        )
+                        , (nextNext?false:true)
+#endif
                     }
                 );
                 next_ = std::move(nextNext);

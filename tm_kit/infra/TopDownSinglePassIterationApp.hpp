@@ -2069,12 +2069,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 InnerData<std::tuple<T, std::optional<T>>> ret(
                     next_->environment
                     , {
+#ifndef _MSC_VER
                         .timePoint = next_->timedData.timePoint
                         , .value = std::make_tuple<T, std::optional<T>>(
                             std::move(next_->timedData.value)
                             , std::nullopt
                         )
                         , .finalFlag = next_->timedData.finalFlag
+#else
+                        next_->timedData.timePoint
+                        , std::make_tuple<T, std::optional<T>>(
+                            std::move(next_->timedData.value)
+                            , std::nullopt
+                        )
+                        , next_->timedData.finalFlag
+#endif
                     }
                 );
                 auto r = baseCore_->generate((T const *) nullptr);
