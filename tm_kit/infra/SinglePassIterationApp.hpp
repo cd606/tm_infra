@@ -2405,6 +2405,71 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 new LookAheadImporterCore<T>(baseImporter)
             );
         }
+    private:
+        template <class T>
+        class LookAheadIncludingTimeImporterCore : public AbstractImporterCore<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>> {
+        private:
+            std::shared_ptr<Importer<T>> baseImporter_;
+            AbstractImporterCore<T> *baseCore_;
+            Data<T> next_;
+        public:
+            LookAheadIncludingTimeImporterCore(std::shared_ptr<Importer<T>> const &baseImporter)
+                : baseImporter_(baseImporter), baseCore_(nullptr), next_(std::nullopt)
+            {
+                baseCore_ = (AbstractImporterCore<T> *) (*(baseImporter_->getUnderlyingPointers().begin()));
+            }
+            virtual void start(StateT *env) override final {
+                baseCore_->start(env);
+                next_ = baseCore_->generate((T const *) nullptr);
+            }
+            virtual Data<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>> generate(std::tuple<T, std::optional<std::tuple<TimePoint, T>>> const *notUsed=nullptr) override final {
+                if (!next_) {
+                    return std::nullopt;
+                }
+                Data<T> nextNext = baseCore_->generate((T const *) nullptr);
+                InnerData<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>> ret(
+                    next_->environment
+                    , {
+#ifndef _MSC_VER
+                        .timePoint = next_->timedData.timePoint
+                        , .value = std::make_tuple<T, std::optional<std::tuple<TimePoint, T>>>(
+                            std::move(next_->timedData.value)
+                            , (
+                                nextNext
+                                ? std::optional<std::tuple<TimePoint, T>> {
+                                    std::tuple<TimePoint, T> {nextNext->timedData.timePoint, nextNext->timedData.value}
+                                }
+                                : std::nullopt
+                            )
+                        )
+                        , .finalFlag = (nextNext?false:true)
+#else
+                        next_->timedData.timePoint
+                        , std::make_tuple<T, std::optional<std::tuple<TimePoint, T>>>(
+                            std::move(next_->timedData.value)
+                            , (
+                                nextNext
+                                ? std::optional<std::tuple<TimePoint, T>> {
+                                    std::tuple<TimePoint, T> {nextNext->timedData.timePoint, nextNext->timedData.value}
+                                }
+                                : std::nullopt
+                            )
+                        )
+                        , (nextNext?false:true)
+#endif
+                    }
+                );
+                next_ = std::move(nextNext);
+                return {std::move(ret)};
+            }
+        };
+    public:
+        template <class T>
+        static std::shared_ptr<Importer<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>> lookAheadIncludingTimeImporter(std::shared_ptr<Importer<T>> const &baseImporter) {
+            return importer<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>(
+                new LookAheadIncludingTimeImporterCore<T>(baseImporter)
+            );
+        }
     public:
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
         class AbstractExporterCore : public virtual IExternalComponent, public virtual Consumer<T>, public virtual Provider<SpecialOutputDataTypeForExporters> {

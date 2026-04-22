@@ -539,6 +539,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         class BunchedImporter;
         template <class T>
         class LookAheadImporter;
+        template <class T>
+        class LookAheadIncludingTimeImporter;
 
     public:
         //We don't allow importer to manufacture keyed data "out of the blue"
@@ -547,6 +549,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         protected:
             friend class UnregisteredImporterIterator<T>;
             friend class LookAheadImporter<T>;
+            friend class LookAheadIncludingTimeImporter<T>;
             static constexpr AbstractImporter *nullptrToInheritedImporter() {return nullptr;}
             virtual std::tuple<bool, Data<T>> generate(T const *notUsed) = 0; //the bool part means whether the importer has more data to come
             template <class U, class BunchSplitLogic>
@@ -2108,6 +2111,80 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         static std::shared_ptr<Importer<std::tuple<T, std::optional<T>>>> lookAheadImporter(std::shared_ptr<Importer<T>> const &baseImporter) {
             return importer<std::tuple<T, std::optional<T>>>(
                 new LookAheadImporter<T>(baseImporter)
+            );
+        }
+    private:
+        template <class T>
+        class LookAheadIncludingTimeImporter : public AbstractImporter<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>> {
+        private:
+            std::shared_ptr<Importer<T>> baseImporter_;
+            AbstractImporter<T> *baseCore_;
+            Data<T> next_;
+        public:
+            LookAheadIncludingTimeImporter(std::shared_ptr<Importer<T>> const &baseImporter)
+                : baseImporter_(baseImporter), baseCore_(nullptr), next_(std::nullopt)
+            {
+                baseCore_ = (AbstractImporter<T> *) (*(baseImporter_->getUnderlyingPointers().begin()));
+            }
+            virtual void start(StateT *env) override final {
+                baseCore_->start(env);
+                auto r = baseCore_->generate((T const *) nullptr);
+                next_ = std::move(std::get<1>(r));
+                if (!std::get<0>(r)) {
+                    if (next_) {
+                        next_->timedData.finalFlag = true;
+                    }
+                }
+            }
+            virtual std::tuple<bool, Data<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>> generate(std::tuple<T, std::optional<std::tuple<TimePoint, T>>> const *notUsed=nullptr) override final {
+                if (!next_) {
+                    return std::make_tuple<bool, Data<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>>(false, std::nullopt);
+                }
+                InnerData<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>> ret(
+                    next_->environment
+                    , {
+#ifndef _MSC_VER
+                        .timePoint = next_->timedData.timePoint
+                        , .value = std::make_tuple<T, std::optional<std::tuple<TimePoint, T>>>(
+                            std::move(next_->timedData.value)
+                            , std::nullopt
+                        )
+                        , .finalFlag = next_->timedData.finalFlag
+#else
+                        next_->timedData.timePoint
+                        , std::make_tuple<T, std::optional<std::tuple<TimePoint, T>>>(
+                            std::move(next_->timedData.value)
+                            , std::nullopt
+                        )
+                        , next_->timedData.finalFlag
+#endif
+                    }
+                );
+                auto r = baseCore_->generate((T const *) nullptr);
+                next_ = std::move(std::get<1>(r));
+                if (!std::get<0>(r)) {
+                    if (next_) {
+                        next_->timedData.finalFlag = true;
+                    }
+                }
+                if (!next_) {
+                    ret.timedData.finalFlag = true;
+                } else {
+                    ret.timedData.finalFlag = false;
+                    std::get<1>(ret.timedData.value) = std::tuple<TimePoint, T> {
+                        next_->timedData.timePoint
+                        , next_->timedData.value
+                    };
+                }
+                auto hasNext = !ret.timedData.finalFlag;
+                return std::make_tuple<bool, Data<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>>(std::move(hasNext), {std::move(ret)});
+            }
+        };
+    public:
+        template <class T>
+        static std::shared_ptr<Importer<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>> lookAheadIncludingTimeImporter(std::shared_ptr<Importer<T>> const &baseImporter) {
+            return importer<std::tuple<T, std::optional<std::tuple<TimePoint, T>>>>(
+                new LookAheadIncludingTimeImporter<T>(baseImporter)
             );
         }
     public:
