@@ -9,6 +9,8 @@
 #include <thread>
 #include <mutex>
 #include <fstream>
+#include <atomic>
+#include <memory>
 
 #include <tm_kit/infra/PidUtil.hpp>
 
@@ -78,6 +80,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         }
 
+        bool traceEnabled() const {
+            return traceStream_.load(std::memory_order_acquire) != nullptr;
+        }
+
         void setTraceStream(std::ostream* s) {
             if (traceStream_.load(std::memory_order_relaxed)) {
                 return;
@@ -86,7 +92,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             if (traceStream_.load(std::memory_order_relaxed)) {
                 return;
             }
-            traceStream_.store(s, std::memory_order_relaxed);
+            traceStream_.store(s, std::memory_order_release);
         }
         
         void setTraceFile(std::string const& filename) {
@@ -105,7 +111,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 throw std::runtime_error("Cannot open trace file: " + filename);
             }
             os_.reset(ofs);
-            traceStream_.store(os_.get(), std::memory_order_relaxed);
+            traceStream_.store(os_.get(), std::memory_order_release);
         }
 
         template <class Env>
@@ -132,6 +138,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
     public:
         template <class T>
         TraceNodesComponentWrapper(Env *env, T *p, std::string const &suffix="") : env_(env), good_(false), name_(), tid_(0) {
+            if (!env_->traceEnabled()) {
+                return;
+            }
             auto const *n = env_->nodeName(static_cast<BaseClass *>(p));
             if (n == nullptr) {
                 good_ = false;

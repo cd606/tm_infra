@@ -101,6 +101,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         T key() {
             return key_;
         }
+        // Explicit consumption only; key() retains its existing copy/reference semantics.
+        T takeKey() && {
+            return std::move(key_);
+        }
         bool operator==(Key<T,Env> const &k) const {
             if (this == &k) {
                 return true;

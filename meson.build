@@ -7,3 +7,4 @@ pkg = import('pkgconfig')
 
 subdir('tm_kit/infra')
 subdir('src')
+subdir('tests')

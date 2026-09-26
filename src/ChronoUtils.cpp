@@ -3,9 +3,66 @@
 #include <iomanip>
 #include <sstream>
 #include <time.h>
+#include <charconv>
+#include <algorithm>
+#include <locale>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     namespace withtime_utils {
+        namespace {
+            // Match ostream's right-aligned padding, including zero padding before
+            // a minus sign for the legacy pre-epoch fractional-second output.
+            char *appendNumber(char *out, int value, int width, char fill) {
+                char digits[32];
+                auto end = std::to_chars(digits, digits+sizeof(digits), value).ptr;
+                auto size = static_cast<int>(end-digits);
+                out = std::fill_n(out, std::max(0, width-size), fill);
+                return std::copy(digits, end, out);
+            }
+
+            std::string formatTime(std::tm const &m, int micros, bool utc) {
+                // The previous stream formatter honored the global C++ locale.
+                // Retain that behavior for custom locales, including digit grouping.
+                if (std::locale() != std::locale::classic()) {
+                    std::ostringstream oss;
+                    oss << std::setw(4) << (m.tm_year+1900)
+                        << '-' << std::setw(2) << std::setfill('0') << (m.tm_mon+1)
+                        << '-' << std::setw(2) << m.tm_mday
+                        << 'T' << std::setw(2) << m.tm_hour
+                        << ':' << std::setw(2) << m.tm_min
+                        << ':' << std::setw(2) << m.tm_sec;
+                    if (micros != 0) {
+                        oss << '.' << std::setw(6) << micros;
+                    }
+                    if (utc) {
+                        oss << 'Z';
+                    }
+                    return oss.str();
+                }
+                // Seven int fields, six separators and an optional Z fit even
+                // when an int field takes its full decimal width.
+                char buffer[128];
+                auto out = appendNumber(buffer, m.tm_year+1900, 4, ' ');
+                *out++ = '-';
+                out = appendNumber(out, m.tm_mon+1, 2, '0');
+                *out++ = '-';
+                out = appendNumber(out, m.tm_mday, 2, '0');
+                *out++ = 'T';
+                out = appendNumber(out, m.tm_hour, 2, '0');
+                *out++ = ':';
+                out = appendNumber(out, m.tm_min, 2, '0');
+                *out++ = ':';
+                out = appendNumber(out, m.tm_sec, 2, '0');
+                if (micros != 0) {
+                    *out++ = '.';
+                    out = appendNumber(out, micros, 6, '0');
+                }
+                if (utc) {
+                    *out++ = 'Z';
+                }
+                return std::string(buffer, out);
+            }
+        }
         std::chrono::system_clock::time_point parseLocalTime(int year, int month, int day, int hour, int minute, int second, int microseconds) {
             std::tm m;
             m.tm_year = year-1900;
@@ -65,24 +122,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::string localTimeString(std::chrono::system_clock::time_point const &tp) {
             auto t = std::chrono::system_clock::to_time_t(tp);
             std::tm *m = std::localtime(&t);
-            std::ostringstream oss;
-            oss << std::setw(4) << (m->tm_year+1900)
-                << '-'
-                << std::setw(2) << std::setfill('0') << (m->tm_mon+1)
-                << '-'
-                << std::setw(2) << std::setfill('0') << m->tm_mday
-                << 'T'
-                << std::setw(2) << std::setfill('0') << m->tm_hour
-                << ':'
-                << std::setw(2) << std::setfill('0') << m->tm_min
-                << ':'
-                << std::setw(2) << std::setfill('0') << m->tm_sec;
             auto d = tp - std::chrono::system_clock::from_time_t(t);
             int micros = std::chrono::duration_cast<std::chrono::microseconds>(d).count();
-            if (micros != 0) {
-                oss << '.' << std::setw(6) << std::setfill('0') << micros;
-            }
-            return oss.str();
+            return formatTime(*m, micros, false);
         }
         std::chrono::system_clock::time_point parseUtcTime(int year, int month, int day, int hour, int minute, int second, int microseconds) {
             std::tm m;
@@ -99,14 +141,21 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return std::chrono::system_clock::from_time_t(timegm(&m))+std::chrono::microseconds(microseconds);
 #endif
         }
-        //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmmZ" (the microsecond part can be omitted)
-        std::chrono::system_clock::time_point parseUtcTime(std::string_view const &s) {
-            if (s.empty()) {
+        namespace {
+        // Parse a body with a virtual trailing Z. This preserves the original
+        // parser's length checks and permissive handling without allocating the
+        // body+"Z" string used by numeric-offset parsing.
+        std::chrono::system_clock::time_point parseUtcTimeBody(std::string_view const &body) {
+            if (body.length() < 8) {
                 return std::chrono::system_clock::time_point {};
             }
-            if (s[s.length()-1] != 'Z') {
-                return std::chrono::system_clock::time_point {};
-            }
+            struct UtcView {
+                std::string_view body;
+                std::size_t length() const { return body.length()+1; }
+                char operator[](std::size_t i) const {
+                    return i == body.length() ? 'Z' : body[i];
+                }
+            } s {body};
             if (s.length() == 9) {
                 int year = (s[0]-'0')*1000+(s[1]-'0')*100+(s[2]-'0')*10+(s[3]-'0');
                 int mon = (s[4]-'0')*10+(s[5]-'0');
@@ -141,7 +190,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     year, mon, day, hour, min, sec, microsec
                 );
             }
-        } 
+        }
+        }
+        //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmmZ" (the microsecond part can be omitted)
+        std::chrono::system_clock::time_point parseUtcTime(std::string_view const &s) {
+            if (s.empty() || s.back() != 'Z') {
+                return std::chrono::system_clock::time_point {};
+            }
+            return parseUtcTimeBody(s.substr(0, s.length()-1));
+        }
         //The format is fixed as "yyyy-MM-ddTHH:mm:ss.mmmmmm+/-HH:mm" (the microsecond part can be omitted)
         std::chrono::system_clock::time_point parseZonedTime(std::string_view const &s) {
             if (s.empty()) {
@@ -167,7 +224,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 +(s[s.length()-4]-'0')*60
                 +(s[s.length()-2]-'0')*10
                 +(s[s.length()-1]-'0');
-            auto baseTime = parseUtcTime(std::string(s.substr(0,s.length()-6))+"Z");
+            auto baseTime = parseUtcTimeBody(s.substr(0,s.length()-6));
             if (add) {
                 return baseTime-std::chrono::minutes(offsetMinutes);
             } else {
@@ -177,25 +234,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::string utcTimeString(std::chrono::system_clock::time_point const &tp) {
             auto t = std::chrono::system_clock::to_time_t(tp);
             std::tm *m = std::gmtime(&t);
-            std::ostringstream oss;
-            oss << std::setw(4) << (m->tm_year+1900)
-                << '-'
-                << std::setw(2) << std::setfill('0') << (m->tm_mon+1)
-                << '-'
-                << std::setw(2) << std::setfill('0') << m->tm_mday
-                << 'T'
-                << std::setw(2) << std::setfill('0') << m->tm_hour
-                << ':'
-                << std::setw(2) << std::setfill('0') << m->tm_min
-                << ':'
-                << std::setw(2) << std::setfill('0') << m->tm_sec;
             auto d = tp - std::chrono::system_clock::from_time_t(t);
             int micros = std::chrono::duration_cast<std::chrono::microseconds>(d).count();
-            if (micros != 0) {
-                oss << '.' << std::setw(6) << std::setfill('0') << micros;
-            }
-            oss << 'Z';
-            return oss.str();
+            return formatTime(*m, micros, true);
         }    
     }
 } } } }

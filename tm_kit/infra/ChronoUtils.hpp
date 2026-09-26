@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
+#include <string_view>
 
 namespace dev { namespace cd606 { namespace tm { namespace infra {
     //Some small helper functions to help write apps and tests
@@ -154,14 +156,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::chrono::zoned_time<
                 std::chrono::system_clock::duration
             > zt {timeZoneName, tp};
-            auto days = std::chrono::floor<std::chrono::days>(zt.get_local_time());
+            auto local = zt.get_local_time();
+            auto days = std::chrono::floor<std::chrono::days>(local);
             std::chrono::year_month_day ymd {days};
-            std::chrono::zoned_time<
-                std::chrono::system_clock::duration
-            > zt1 {timeZoneName, std::chrono::local_days {ymd}};
-            auto micros = std::chrono::duration_cast<std::chrono::microseconds>(
-                zt.get_local_time()-zt1.get_local_time()
-            ).count();
+            // Preserve the existing exceptions for ambiguous/nonexistent midnight,
+            // reusing the resolved zone instead of constructing another zoned_time.
+            (void) zt.get_time_zone()->to_sys(
+                std::chrono::local_time<typename decltype(zt)::duration> {days}
+            );
+            auto micros = std::chrono::duration_cast<std::chrono::microseconds>(local-days).count();
             std::ostringstream oss;
             oss << std::setw(4) << std::setfill('0') << (int) ymd.year()
                 << '-'
@@ -194,12 +197,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::chrono::zoned_time<
                 std::chrono::system_clock::duration
             > zt {timeZoneName, tp};
-            auto days = std::chrono::floor<std::chrono::days>(zt.get_local_time());
-            std::chrono::year_month_day ymd {days};
-            std::chrono::zoned_time<
-                std::chrono::system_clock::duration
-            > zt1 {timeZoneName, std::chrono::local_days {ymd}};
-            return static_cast<int64_t>(std::chrono::duration_cast<Duration>(zt.get_local_time()-zt1.get_local_time()).count());
+            auto local = zt.get_local_time();
+            auto days = std::chrono::floor<std::chrono::days>(local);
+            // Keep midnight validation (including its DST exceptions).
+            (void) zt.get_time_zone()->to_sys(
+                std::chrono::local_time<typename decltype(zt)::duration> {days}
+            );
+            return static_cast<int64_t>(std::chrono::duration_cast<Duration>(local-days).count());
         }
         template <class Env
             , std::enable_if_t<std::is_same_v<typename Env::TimePointType, std::chrono::system_clock
