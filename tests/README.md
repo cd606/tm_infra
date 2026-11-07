@@ -11,6 +11,22 @@ meson test -C builddir --print-errorlogs
 For an existing build directory, start with `meson compile` so Meson discovers
 new test targets. Checks remain active in release builds.
 
+- `realtime scheduler` checks FIFO and round-robin dispatch, shared-thread
+  serialization, concurrent producers, independent IDs and application instances,
+  variant and multi-output graphs, composition, move-only inputs, one-time and
+  continuation actions, queue teardown, shutdown, and Linux CPU affinity.
+- `realtime scheduler storage` counts allocations while enqueuing actual action
+  inputs and compares them with a plain deque of the same input type. It rejects
+  extra per-input allocations for envelopes, control blocks, or callbacks.
+- `realtime publisher batching` checks stable mixed synchronous/dedicated-thread
+  listener order, ascending scheduler IDs, shared batch locks, variant outputs,
+  distinct application contexts, exception cleanup, and `std::any` adapters.
+- `graphviz scheduler annotations` checks scheduler IDs and dark violet styling on plain
+  and HTML labels, one-time dotted styling, existing dedicated-thread red styling,
+  and compatibility with application models without schedulers.
+- `realtime exporter scheduler` checks shared action/exporter threads, FIFO,
+  synchronous execution, move-only composition, `SynchronousRunner`, publisher
+  batching, mode validation, exporter teardown, and application isolation.
 - `key semantics` checks copy/reference behavior of existing accessors, explicit
   consumption, reference counts, and compile-time rejection of `takeKey()` on
   lvalues and const objects.

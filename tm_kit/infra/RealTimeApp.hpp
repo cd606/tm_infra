@@ -2,6 +2,7 @@
 #define TM_KIT_INFRA_REALTIME_APP_HPP_
 
 #include <tm_kit/infra/WithTimeData.hpp>
+#include <tm_kit/infra/RealTimeApp_Scheduler.hpp>
 #include <tm_kit/infra/ControllableNode.hpp>
 #include <tm_kit/infra/ObservableNode.hpp>
 #include <tm_kit/infra/StoppableProducer.hpp>
@@ -53,6 +54,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual ~IHandler() {}
             virtual void handle(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) = 0;
             virtual void notifyForSourceTermination(std::any const &/*extraInfo*/, T const */*notUsed*/) {}
+            // Queried only while adding a listener, never on the publish path.
+            virtual real_time_app_detail::ScheduledNode *scheduledNode() {
+                return dynamic_cast<real_time_app_detail::ScheduledNode *>(this);
+            }
         };
 
         template <bool MutexProtected, class T>
@@ -315,16 +320,64 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class T>
+        class HandlerList {
+            struct Entry {
+                IHandler<T> *handler;
+                real_time_app_detail::ScheduledNode *node;
+            };
+            std::vector<Entry> entries_;
+            void deliver(std::size_t i, std::size_t count, TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &data) const {
+                if (i+1 == count) { entries_[i].handler->handle(std::move(data)); }
+                else { entries_[i].handler->handle(data.clone()); }
+            }
+        public:
+            bool empty() const { return entries_.empty(); }
+            void add(IHandler<T> *handler) {
+                auto *node = handler->scheduledNode();
+                auto id = node ? node->schedulerID() : std::nullopt;
+                if (!id) { node = nullptr; }
+                // Stable insertion leaves all non-scheduler listeners in their
+                // original relative order and places scheduler IDs after them.
+                auto position = std::find_if(entries_.begin(), entries_.end(), [&](Entry const &entry) {
+                    if (!id) { return entry.node != nullptr; }
+                    return entry.node && *entry.node->schedulerID() > *id;
+                });
+                entries_.insert(position, Entry {handler, node});
+            }
+            template <class F>
+            void forEach(F &&f) const {
+                for (auto const &entry : entries_) { f(entry.handler); }
+            }
+            void publish(TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> &&data) const {
+                auto count = entries_.size();
+                if (count == 0) { return; }
+                if (count == 1) { entries_.front().handler->handle(std::move(data)); return; }
+                std::size_t i = 0;
+                for (; i < count && !entries_[i].node; ++i) { deliver(i, count, data); }
+                while (i < count) {
+                    auto *scheduler = entries_[i].node->schedulerInstance();
+                    if (!scheduler) {
+                        throw std::logic_error("Scheduler action must be attached to a RealTimeApp before receiving input");
+                    }
+                    real_time_app_detail::Scheduler::Batch batch(*scheduler);
+                    do {
+                        deliver(i++, count, data);
+                        // An ID is local to an application: keep the lock only
+                        // while the actual scheduler instance stays the same.
+                    } while (i < count && entries_[i].node->schedulerInstance() == scheduler);
+                }
+            }
+        };
+
+        template <class T>
         class Producer : public virtual IStoppableRealTimeProducer<1> {
         private:
-            std::vector<IHandler<T> *> handlers_;
+            HandlerList<T> handlers_;
             std::unordered_set<IHandler<T> *> handlerSet_;
             std::mutex mutex_;
         protected:
             void copyHandlersTo(Producer<T> *p) const {
-                for (auto *x : handlers_) {
-                    p->addHandler(x);
-                }
+                handlers_.forEach([p](auto *handler) { p->addHandler(handler); });
             }
         public:
             Producer() : handlers_(), handlerSet_(), mutex_() {}
@@ -339,7 +392,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 }
                 std::lock_guard<std::mutex> _(mutex_);
                 if (handlerSet_.find(h) == handlerSet_.end()) {
-                    handlers_.push_back(h);
+                    handlers_.add(h);
                     handlerSet_.insert(h);
                 }               
             }
@@ -350,35 +403,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 if (this->producerIsStopped()) {
                     return;
                 }
-                //In "publish", the system has reached stable state, so mutex is no longer needed
-                //std::lock_guard<std::mutex> _(mutex_);
-                auto s = handlers_.size();
-                switch (s) {
-                    case 0:
-                        return;
-                    case 1:
-                        handlers_.front()->handle(std::move(data));
-                        break;
-                    default:
-                        {
-                            for (auto ii=0; ii<s-1; ++ii) {
-                                handlers_[ii]->handle(data.clone());
-                            }
-                            handlers_[s-1]->handle(std::move(data));
-                            /*
-                            TimedDataWithEnvironment<T, StateT, typename StateT::TimePointType> ownedCopy { std::move(data) };
-                            for (auto *h : handlers_) {
-                                h->handle(ownedCopy.clone());
-                            }
-                            */
-                        }
-                        break;
-                }
+                // Listener layout is fixed during graph construction.
+                handlers_.publish(std::move(data));
             }
             void notifyHandlersForTermination(std::any const &info) {
-                for (auto const &h : handlers_) {
-                    h->notifyForSourceTermination(info, (T const *) nullptr);
-                }
+                handlers_.forEach([&info](auto *handler) {
+                    handler->notifyForSourceTermination(info, (T const *) nullptr);
+                });
             }
         };
 
@@ -466,14 +497,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
         };
 
-        class IExternalComponent {
+        class IExternalComponent : public real_time_app_detail::SchedulerContainer {
         public:
             virtual ~IExternalComponent() {}
             virtual void start(StateT *environment) = 0;
         };
 
         template <class A, class B>
-        class AbstractAction : public virtual IHandler<A>, public Producer<B>, public virtual IControllableNode<StateT>, public virtual IObservableNode<StateT> {
+        class AbstractAction : public real_time_app_detail::ScheduledNode, public virtual IHandler<A>, public Producer<B>, public virtual IControllableNode<StateT>, public virtual IObservableNode<StateT> {
         public:
             virtual bool isThreaded() const = 0;
             virtual bool isOneTimeOnly() const = 0;
@@ -514,11 +545,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
 
         template <class T, typename=std::enable_if_t<!withtime_utils::IsVariant<T>::Value>>
-        class AbstractExporter : public virtual IExternalComponent, public virtual IHandler<T> {
+        class AbstractExporter : public real_time_app_detail::ScheduledNode, public virtual IExternalComponent, public virtual IHandler<T> {
         protected:
             static constexpr AbstractExporter *nullptrToInheritedExporter() {return nullptr;}
         public:
             virtual bool isTrivialExporter() const {return false;}
+            void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                real_time_app_detail::ScheduledNode::attachScheduler(context);
+            }
         };
 
         template <class A, class B>
@@ -768,6 +802,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             TwoWayHolder(std::unique_ptr<T> &&p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p.get())), controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p.get())), core_(std::move(p)) {}
             template <class A>
             TwoWayHolder(A *p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p)), controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p)), core_(std::unique_ptr<T>(static_cast<T *>(p))) {}
+            template <class A>
+            TwoWayHolder(A *p, LiftParameters<TimePoint> const &params) : TwoWayHolder(p) {
+                params.useDedicatedThread();
+                if (auto *node = dynamic_cast<real_time_app_detail::ScheduledNode *>(core_.get())) {
+                    node->configureScheduler(params.schedulerID);
+                }
+            }
+            TwoWayHolder(TwoWayHolder &&) = default;
+            TwoWayHolder &operator=(TwoWayHolder &&other) {
+                if (this != &other) {
+                    detachScheduler();
+                    core_ = std::move(other.core_);
+                    threadInfo_ = other.threadInfo_;
+                    controlInfo_ = other.controlInfo_;
+                    observeInfo_ = other.observeInfo_;
+                }
+                return *this;
+            }
+            ~TwoWayHolder() { detachScheduler(); }
+        private:
+            void detachScheduler() {
+                if (auto *node = dynamic_cast<real_time_app_detail::ScheduledNode *>(core_.get())) {
+                    node->detachScheduler();
+                }
+            }
+        public:
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
             }
@@ -818,6 +878,38 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             OneWayHolder(std::unique_ptr<T> &&p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p.get())), controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p.get())), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p.get())), core_(std::move(p)) {}
             template <class A>
             OneWayHolder(A *p) : threadInfo_(dynamic_cast<IRealTimeAppPossiblyThreadedNode *>(p)), controlInfo_(dynamic_cast<IControllableNode<StateT> *>(p)), observeInfo_(dynamic_cast<IObservableNode<StateT> *>(p)), core_(std::unique_ptr<T>(dynamic_cast<T *>(p))) {}
+            OneWayHolder(std::unique_ptr<T> &&p, LiftParameters<TimePoint> const &params) : OneWayHolder(std::move(p)) {
+                configureScheduler(params);
+            }
+            template <class A>
+            OneWayHolder(A *p, LiftParameters<TimePoint> const &params) : OneWayHolder(p) {
+                configureScheduler(params);
+            }
+            OneWayHolder(OneWayHolder &&) = default;
+            OneWayHolder &operator=(OneWayHolder &&other) {
+                if (this != &other) {
+                    detachScheduler();
+                    core_ = std::move(other.core_);
+                    threadInfo_ = other.threadInfo_;
+                    controlInfo_ = other.controlInfo_;
+                    observeInfo_ = other.observeInfo_;
+                }
+                return *this;
+            }
+            ~OneWayHolder() { detachScheduler(); }
+        private:
+            void configureScheduler(LiftParameters<TimePoint> const &params) {
+                params.useDedicatedThread();
+                if (auto *node = dynamic_cast<real_time_app_detail::ScheduledNode *>(core_.get())) {
+                    node->configureScheduler(params.schedulerID);
+                }
+            }
+            void detachScheduler() {
+                if (auto *node = dynamic_cast<real_time_app_detail::ScheduledNode *>(core_.get())) {
+                    node->detachScheduler();
+                }
+            }
+        public:
             std::unordered_set<void *> getUnderlyingPointers() const {
                 return {core_.get()};
             }
@@ -1087,7 +1179,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~ActionCore() {
             }
+            std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+                return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<A>, ActionCore>>(this);
+            }
             virtual void handle(InnerData<A> &&data) override final {
+                if (this->enqueueScheduled(std::move(data))) { return; }
+                handleImmediately(std::move(data));
+            }
+            void handleImmediately(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
                     if (done_) {
                         return;
@@ -1152,6 +1251,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             return a->core_->isThreaded(); 
         }
         template <class A, class B>
+        static std::optional<std::size_t> actionSchedulerID(std::shared_ptr<Action<A,B>> const &a) {
+            return a->core_->schedulerID();
+        }
+        template <class A, class B>
         static bool actionIsOneTimeOnly(std::shared_ptr<Action<A,B>> const &a) {
             return a->core_->isOneTimeOnly(); 
         }
@@ -1167,72 +1270,72 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static auto liftPure1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,decltype(f(std::declval<A>()))>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,true,true>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,true,true>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,false,true>(std::move(f)), liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,true,false>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,true,false>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,decltype(f(std::declval<A>()))>>(new PureActionCore<A,decltype(f(std::declval<A>())),F,false,false>(std::move(f)), liftParam);
                 }
             }
         }     
         template <class A, class F>
         static auto liftMaybe1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::declval<A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,true>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,true>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,true>(std::move(f)), liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,false>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,false>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new MaybeActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,false>(std::move(f)), liftParam);
                 }
             }
         }
         template <class A, class F>
         static auto enhancedMaybe1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f)), liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMaybeActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f)), liftParam);
                 }
             }  
         }
         template <class A, class F>
         static auto kleisli1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
+                if (liftParam.useDedicatedThread()) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
                         new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true, true>(std::move(f))
-                    );
+                    , liftParam);
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
                         new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false, true>(std::move(f))
-                    );
+                    , liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
+                if (liftParam.useDedicatedThread()) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
                         new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, true, false>(std::move(f))
-                    );
+                    , liftParam);
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType>>(
                         new KleisliActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType, F, false, false>(std::move(f))
-                    );
+                    , liftParam);
                 }
             }
         }
@@ -1342,7 +1445,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~MultiActionCore() {
             }
+            std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+                return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<A>, MultiActionCore>>(this);
+            }
             virtual void handle(InnerData<A> &&data) override final {
+                if (this->enqueueScheduled(std::move(data))) { return; }
+                handleImmediately(std::move(data));
+            }
+            void handleImmediately(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
                     if (done_) {
                         return;
@@ -1409,56 +1519,56 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         template <class A, class F>
         static auto liftMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A,typename decltype(f(std::declval<A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,true>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,true>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,true>(std::move(f)), liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,false>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,true,false>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::declval<A>()))::value_type>>(new SimpleMultiActionCore<A,typename decltype(f(std::declval<A>()))::value_type,F,false,false>(std::move(f)), liftParam);
                 }
             }
         }     
         template <class A, class F>
         static auto enhancedMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(std::tuple<TimePoint,A>()))::value_type>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,true>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,true>(std::move(f)), liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f)));
+                if (liftParam.useDedicatedThread()) {
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,true,false>(std::move(f)), liftParam);
                 } else {
-                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f)));
+                    return std::make_shared<Action<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type>>(new EnhancedMultiActionCore<A,typename decltype(f(std::tuple<TimePoint,A>()))::value_type,F,false,false>(std::move(f)), liftParam);
                 }
             }
         }
         template <class A, class F>
         static auto kleisliMulti1(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>> {
             if (liftParam.fireOnceOnly) {
-                if (liftParam.suggestThreaded) {
+                if (liftParam.useDedicatedThread()) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
                         new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true, true>(std::move(f))
-                    );
+                    , liftParam);
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
                         new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false, true>(std::move(f))
-                    );
+                    , liftParam);
                 }
             } else {
-                if (liftParam.suggestThreaded) {
+                if (liftParam.useDedicatedThread()) {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
                         new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, true, false>(std::move(f))
-                    );
+                    , liftParam);
                 } else {
                     return std::make_shared<Action<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type>>(
                         new KleisliMultiActionCore<A, typename decltype(f(pureInnerData(nullptr,A())))::value_type::ValueType::value_type, F, false, false>(std::move(f))
-                    );
+                    , liftParam);
                 }
             }
         }
@@ -1502,6 +1612,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
+            void setIdleWorker(std::function<void(void *)>) override final {}
+            void setStartWaiter(std::function<void()>) override final {}
         };
         template <class A, class B, class ContinuationStructure, bool FireOnceOnly>
         class ContinuationActionCore<A,B,ContinuationStructure,false,FireOnceOnly> : public RealTimeAppComponents<StateT>::template AbstractAction<A,B> {
@@ -1515,7 +1627,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             }
             virtual ~ContinuationActionCore() {
             }
+            std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+                return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<A>, ContinuationActionCore>>(this);
+            }
             virtual void handle(InnerData<A> &&data) override final {
+                if (this->enqueueScheduled(std::move(data))) { return; }
+                handleImmediately(std::move(data));
+            }
+            void handleImmediately(InnerData<A> &&data) {
                 if constexpr (FireOnceOnly) {
                     if (done_) {
                         return;
@@ -1536,29 +1655,31 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             virtual bool isOneTimeOnly() const override final {
                 return FireOnceOnly;
             }
+            void setIdleWorker(std::function<void(void *)>) override final {}
+            void setStartWaiter(std::function<void()>) override final {}
         };
     public:
         template <class A, class B, class ContinuationStructure>
         static auto continuationAction(TimedAppModelContinuation<A, B, ContinuationStructure, EnvironmentType> const &cont, ContinuationStructure &&state=ContinuationStructure(), LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) -> std::shared_ptr<Action<A, B>> {
-            if (liftParam.suggestThreaded) {
+            if (liftParam.useDedicatedThread()) {
                 if (liftParam.fireOnceOnly) {
                     return std::make_shared<Action<A,B>>(
                         new ContinuationActionCore<A,B,ContinuationStructure,true,true>(cont,std::move(state))
-                    );
+                    , liftParam);
                 } else {
                     return std::make_shared<Action<A,B>>(
                         new ContinuationActionCore<A,B,ContinuationStructure,true,false>(cont,std::move(state))
-                    );
+                    , liftParam);
                 }
             } else {
                 if (liftParam.fireOnceOnly) {
                     return std::make_shared<Action<A,B>>(
                         new ContinuationActionCore<A,B,ContinuationStructure,false,true>(cont,std::move(state))
-                    );
+                    , liftParam);
                 } else {
                     return std::make_shared<Action<A,B>>(
                         new ContinuationActionCore<A,B,ContinuationStructure,false,false>(cont,std::move(state))
-                    );
+                    , liftParam);
                 }
             }
         }
@@ -1881,8 +2002,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
 
         template <class A, class B>
-        static std::shared_ptr<Action<A,B>> fromAbstractAction(typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *t) {
-            return std::make_shared<Action<A,B>>(t);
+        static std::shared_ptr<Action<A,B>> fromAbstractAction(typename RealTimeAppComponents<StateT>::template AbstractAction<A,B> *t, LiftParameters<TimePoint> const &params = LiftParameters<TimePoint>()) {
+            // Custom actions opt into scheduling by using enqueueScheduled() in
+            // their handle implementation, just like the built-in action cores.
+            return std::make_shared<Action<A,B>>(t, params);
         }
         template <class A, class B>
         static std::shared_ptr<OnOrderFacility<A,B>> fromAbstractOnOrderFacility(typename RealTimeAppComponents<StateT>::template AbstractOnOrderFacility<A,B> *t) {
@@ -1959,6 +2082,12 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     GraphStructureBasedResourceHolderComponent::registerParentNode(outputT_.core_.get(), static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
                 }
             }
+            void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                inputT_.core_->attachScheduler(context);
+                outputT_.core_->attachScheduler(context);
+                auto *component = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
+                if (component) { component->attachScheduler(context); }
+            }
             virtual void start(StateT *env) override final {
                 auto *p = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
                 if (p != nullptr) {
@@ -2031,6 +2160,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     GraphStructureBasedResourceHolderComponent::registerParentNode(&c_, static_cast<AbstractOnOrderFacility<I0,O0> *>(this));
                 }
             }
+            void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                auto *component = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
+                if (component) { component->attachScheduler(context); }
+            }
             virtual void start(StateT *env) override final {
                 auto *p = dynamic_cast<IExternalComponent *>(toWrap_.core_.get());
                 if (p != nullptr) {
@@ -2091,6 +2224,15 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 f_->handle(std::move(data));
             }
         public:
+            void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                f_->attachScheduler(context);
+                g_->attachScheduler(context);
+            }
+            void detachScheduler() override {
+                if (f_) { f_->detachScheduler(); }
+                if (g_) { g_->detachScheduler(); }
+            }
+            ~Compose() { detachScheduler(); }
             Compose() : f_(), g_(), innerHandler_(this) {}
             Compose(std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<A,B>> &&f, std::unique_ptr<typename RealTimeAppComponents<StateT>::template AbstractAction<B,C>> &&g) : f_(std::move(f)), g_(std::move(g)), innerHandler_(this) {
                 f_->addHandler(g_.get());
@@ -2613,7 +2755,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             SimpleExporter(F &&f, bool isTrivial=false) : AbstractExporter<T>(), f_(std::move(f)), timeChecker_(), isTrivial_(isTrivial) {}
         #endif
             virtual ~SimpleExporter() {}
+            std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+                return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<T>,SimpleExporter>>(this);
+            }
             virtual void handle(InnerData<T> &&d) override final {
+                if (this->enqueueScheduled(std::move(d))) { return; }
+                handleImmediately(std::move(d));
+            }
+            void handleImmediately(InnerData<T> &&d) {
                 if (timeChecker_(d)) {
                     GraphStructureBasedResourceHolderComponent_CurrentNodeSetter<StateT> ns(
                         d.environment, static_cast<AbstractExporter<T> *>(this)
@@ -2629,15 +2778,19 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         };
     public:       
         template <class T>
-        static std::shared_ptr<Exporter<T>> exporter(AbstractExporter<T> *p) {
-            return std::make_shared<Exporter<T>>(p);
+        static std::shared_ptr<Exporter<T>> exporter(AbstractExporter<T> *p, LiftParameters<TimePoint> const &params = LiftParameters<TimePoint>()) {
+            return std::make_shared<Exporter<T>>(p, params);
+        }
+        template <class T>
+        static std::optional<std::size_t> exporterSchedulerID(std::shared_ptr<Exporter<T>> const &exporter) {
+            return exporter->core_->schedulerID();
         }
         template <class T, class F>
         static std::shared_ptr<Exporter<T>> simpleExporter(F &&f, LiftParameters<TimePoint> const &liftParam = LiftParameters<TimePoint>()) {
-            if (liftParam.suggestThreaded) {
-                return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F,true>>(std::move(f)));
+            if (liftParam.useDedicatedThread()) {
+                return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F,true>>(std::move(f)), liftParam);
             } else {
-                return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F,false>>(std::move(f)));
+                return std::make_shared<Exporter<T>>(std::make_unique<SimpleExporter<T,F,false>>(std::move(f)), liftParam);
             }            
         }
         template <class T, class F>
@@ -2686,6 +2839,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         GraphStructureBasedResourceHolderComponent::registerParentNode(post_.core_.get(), static_cast<AbstractImporter<T2> *>(this));
                     }
                 }
+                void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                    orig_.core_->attachScheduler(context);
+                    post_.core_->attachScheduler(context);
+                }
                 virtual ~LocalI() {}
                 virtual void start(StateT *env) override final {
                     orig_.core_->start(env);
@@ -2708,6 +2865,10 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         GraphStructureBasedResourceHolderComponent::registerParentNode(pre_.core_.get(), static_cast<AbstractExporter<T1> *>(this));
                         GraphStructureBasedResourceHolderComponent::registerParentNode(orig_.core_.get(), static_cast<AbstractExporter<T1> *>(this));
                     }
+                }
+                void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                    pre_.core_->attachScheduler(context);
+                    orig_.core_->attachScheduler(context);
                 }
                 virtual ~LocalE() {}
                 virtual void start(StateT *env) override final {
@@ -2732,6 +2893,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
                         GraphStructureBasedResourceHolderComponent::registerParentNode(importer_.core_.get(), static_cast<AbstractAction<T1,T2> *>(this));
                     }
+                }
+                void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                    importer_.core_->attachScheduler(context);
                 }
                 virtual ~LocalA() {}
                 virtual bool isThreaded() const override final {
@@ -2761,10 +2925,14 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::function<std::shared_ptr<Importer<T2>>(T1 &&)> importerFactory_;
                 std::shared_ptr<Importer<T2>> importer_;
                 std::atomic<bool> started_;
+                std::shared_ptr<real_time_app_detail::SchedulerContext> schedulerContext_;
             public:
                 LocalA(std::function<std::shared_ptr<Importer<T2>>(T1 &&)> const &importerFactory)
                     : importerFactory_(importerFactory), importer_(), started_(false)
                 {
+                }
+                void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                    schedulerContext_ = context;
                 }
                 virtual ~LocalA() {}
                 virtual bool isThreaded() const override final {
@@ -2777,6 +2945,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if (!started_) {
                         started_ = true;
                         importer_ = importerFactory_(std::move(d.timedData.value));
+                        if (schedulerContext_) { importer_->core_->attachScheduler(schedulerContext_); }
                         this->Producer<T2>::copyHandlersTo(importer_->core_.get());
                         importer_->core_->start(d.environment);
                     }
@@ -2800,6 +2969,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     if constexpr (std::is_convertible_v<StateT *, GraphStructureBasedResourceHolderComponent *>) {
                         GraphStructureBasedResourceHolderComponent::registerParentNode(action_.core_.get(), static_cast<AbstractExporter<T1> *>(this));
                     }
+                }
+                void attachScheduler(std::shared_ptr<real_time_app_detail::SchedulerContext> const &context) override {
+                    action_.core_->attachScheduler(context);
                 }
                 virtual ~LocalE() {}
                 virtual void start(StateT *) override final {
@@ -3174,16 +3346,32 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::array<std::list<IExternalComponent *>,3> externalComponents_;
         std::unordered_set<IExternalComponent *> externalComponentsSet_;
         std::mutex mutex_;
+        std::shared_ptr<real_time_app_detail::SchedulerContext> schedulers_ = std::make_shared<real_time_app_detail::SchedulerContext>();
         RealTimeApp() : externalComponents_(), externalComponentsSet_(), mutex_() {}
-        RealTimeApp(RealTimeApp &&other) : externalComponents_(std::move(other.externalComponents_)), externalComponentsSet_(std::move(externalComponentsSet_)), mutex_() {}
+        RealTimeApp(RealTimeApp &&other) : externalComponents_(std::move(other.externalComponents_)), externalComponentsSet_(std::move(other.externalComponentsSet_)), mutex_(), schedulers_(std::move(other.schedulers_)) {}
         RealTimeApp &operator=(RealTimeApp &&other) {
             if (this != &other) {
+                if (schedulers_) { schedulers_->stop(); }
+                schedulers_ = std::move(other.schedulers_);
                 externalComponents_ = std::move(other.externalComponents_);
-                externalComponentsSet_ = std::move(externalComponentsSet_);
+                externalComponentsSet_ = std::move(other.externalComponentsSet_);
             }
             return *this;
         }
-        ~RealTimeApp() {}
+        ~RealTimeApp() { stopSchedulers(); }
+    public:
+        void setSchedulerCPU(std::size_t id, unsigned int cpu) {
+            schedulers_->get(id)->setCPU(cpu);
+        }
+        void stopSchedulers() {
+            if (schedulers_) { schedulers_->stop(); }
+        }
+    private:
+        template <class A, class B>
+        void attachScheduler(Action<A,B> &action) {
+            action.core_->attachScheduler(schedulers_);
+        }
+
 
         void registerExternalComponent(IExternalComponent *c, int idx) {
             if (c == nullptr) {
@@ -3191,6 +3379,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     "Cannot register an external component of null"
                 );
             }
+            c->attachScheduler(schedulers_);
             std::lock_guard<std::mutex> _(mutex_);
             if (externalComponentsSet_.find(c) == externalComponentsSet_.end()) {
                 externalComponents_[idx].push_back(c);
@@ -3234,6 +3423,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             IHandler<std::any> *handler_;
         public:
             AnyHandlerAdapter(IHandler<std::any> *handler) : handler_(handler) {}
+            real_time_app_detail::ScheduledNode *scheduledNode() override final {
+                return handler_->scheduledNode();
+            }
             virtual ~AnyHandlerAdapter() = default;
             virtual void handle(InnerData<A> &&x) override final {
                 handler_->handle(std::move(x).moveToAny());
@@ -3278,21 +3470,29 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B>
         Source<B> actionAsSource(StateT */*env*/, Action<A,B> &action) {
+            attachScheduler(action);
             return {dynamic_cast<Producer<B> *>(action.core_.get())};
         }
         template <class A, class B>
         Source<B> execute(Action<A,B> &action, Source<A> &&variable) {
+            attachScheduler(action);
             innerConnect(dynamic_cast<IHandler<A> *>(action.core_.get()), variable.producer);
             return {dynamic_cast<Producer<B> *>(action.core_.get())};
         }
         template <class A, class B>
         Source<B> executeAny(Action<std::any,B> &action, Source<A> &&variable) {
+            attachScheduler(action);
             innerConnectAny(dynamic_cast<IHandler<std::any> *>(action.core_.get()), variable.producer);
             return {dynamic_cast<Producer<B> *>(action.core_.get())};
         }
 
         #include <tm_kit/infra/RealTimeApp_ExecuteAction_Piece.hpp>
  
+        template <class T>
+        void prepareExporterForSynchronousRun(Exporter<T> &exporter) {
+            exporter.core_->attachScheduler(schedulers_);
+            schedulers_->start();
+        }
         template <class T>
         Sink<T> exporterAsSink(Exporter<T> &exporter) {
             registerExternalComponent(dynamic_cast<IExternalComponent *>(exporter.core_.get()), 0);
@@ -3304,6 +3504,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         }
         template <class A, class B>
         Sink<A> actionAsSink(Action<A,B> &action) {
+            attachScheduler(action);
             return {dynamic_cast<IHandler<A> *>(action.core_.get())};
         }
 
@@ -3416,7 +3617,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::copy(externalComponents_[1].begin(), externalComponents_[1].end(), std::back_inserter(aCopy));
                 std::copy(externalComponents_[2].begin(), externalComponents_[2].end(), std::back_inserter(aCopy));
             }  
-            return [aCopy=std::move(aCopy)](StateT *env) {
+            return [aCopy=std::move(aCopy), schedulers=schedulers_](StateT *env) {
+                schedulers->start();
                 for (auto c : aCopy) {
                     c->start(env);
                 }
@@ -3430,7 +3632,8 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 std::copy(externalComponents_[1].begin(), externalComponents_[1].end(), std::back_inserter(aCopy));
                 std::copy(externalComponents_[2].begin(), externalComponents_[2].end(), std::back_inserter(aCopy));
             }  
-            return [aCopy=std::move(aCopy)](StateT *env) -> std::function<bool(StateT *)> {
+            return [aCopy=std::move(aCopy), schedulers=schedulers_](StateT *env) -> std::function<bool(StateT *)> {
+                schedulers->start();
                 for (auto c : aCopy) {
                     c->start(env);
                 }

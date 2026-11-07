@@ -98,7 +98,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -273,7 +281,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -454,7 +470,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -641,7 +665,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -834,7 +866,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -1033,7 +1073,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -1238,7 +1286,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -1449,7 +1505,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -1666,7 +1730,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -1889,7 +1961,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -2118,7 +2198,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -2353,7 +2441,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -2594,7 +2690,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -2841,7 +2945,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -3094,7 +3206,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -3353,7 +3473,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -3618,7 +3746,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -3889,7 +4025,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;
@@ -4166,7 +4310,15 @@ private:
     T t_;
 protected:
     virtual void *getIdleHandlerParam() {return nullptr;}
+    friend class real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>>, MultiActionCore>;
+    std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+        return std::make_unique<real_time_app_detail::Scheduler::InputQueue<InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>>, MultiActionCore>>(this);
+    }
     inline void actuallyHandle(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>> &&data) {
+        if (this->enqueueScheduled(std::move(data))) { return; }
+        handleImmediately(std::move(data));
+    }
+    void handleImmediately(InnerData<std::variant<A0,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19>> &&data) {
         if constexpr (FireOnceOnly) {
             if (done_) {
                 return;

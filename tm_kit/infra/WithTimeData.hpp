@@ -61,8 +61,23 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         //This only applies to actions, not to on-order facilities
         bool fireOnceOnly = false;
 
+        // RealTimeApp actions and exporters: an engaged ID selects scheduler execution.
+        std::optional<std::size_t> schedulerID = std::nullopt;
+
+        bool useDedicatedThread() const {
+            if (suggestThreaded && schedulerID) {
+                throw std::invalid_argument("Threaded and scheduler action modes are mutually exclusive");
+            }
+            return suggestThreaded;
+        }
+        LiftParameters &Scheduler(std::size_t id = 0) {
+            schedulerID = id;
+            suggestThreaded = false;
+            return *this;
+        }
         LiftParameters &SuggestThreaded(bool s) {
             suggestThreaded = s;
+            if (s) { schedulerID.reset(); }
             return *this;
         }
         LiftParameters &DelaySimulator(DelaySimulatorType const &d) {
@@ -781,6 +796,30 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             std::optional<std::function<void(AppRunner &, FacilitioidConnector<A,B> const &)>>;
 
     private:
+        template <class M>
+        static auto stopSchedulersIfSupported(M &m, int) -> decltype(m.stopSchedulers(), void()) {
+            m.stopSchedulers();
+        }
+        template <class M>
+        static void stopSchedulersIfSupported(M &, long) {}
+        template <class M, class ActionPtr>
+        static auto actionSchedulerIDIfSupported(ActionPtr const &action, int)
+            -> decltype(M::actionSchedulerID(action)) {
+            return M::actionSchedulerID(action);
+        }
+        template <class M, class ActionPtr>
+        static std::optional<std::size_t> actionSchedulerIDIfSupported(ActionPtr const &, long) {
+            return std::nullopt;
+        }
+        template <class M, class ExporterPtr>
+        static auto exporterSchedulerIDIfSupported(ExporterPtr const &exporter, int)
+            -> decltype(M::exporterSchedulerID(exporter)) {
+            return M::exporterSchedulerID(exporter);
+        }
+        template <class M, class ExporterPtr>
+        static std::optional<std::size_t> exporterSchedulerIDIfSupported(ExporterPtr const &, long) {
+            return std::nullopt;
+        }
         App m_;
         StateT *env_;
         
@@ -915,6 +954,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         struct ActionProperties {
             bool threaded;
             bool oneTimeOnly;
+            std::optional<std::size_t> schedulerID;
         };
         std::unordered_map<std::string, ActionProperties> actionPropertiesMap_;
         bool restrictFacilityOutputConnectionByDefault_;
@@ -1085,6 +1125,7 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             ActionProperties prop;
             prop.threaded = AppType::template actionIsThreaded<A,B>(f);
             prop.oneTimeOnly = AppType::template actionIsOneTimeOnly<A,B>(f);
+            prop.schedulerID = actionSchedulerIDIfSupported<AppType>(f, 0);
             actionPropertiesMap_.insert({name, prop});
 
             addSourceoidForAny(actionAsSource(f), sourceoidsForAny_);
@@ -1162,6 +1203,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
             nameMap_.insert({p, ActionCheckData::template createForExporter<A>(f.get(), name)});
             reverseLookup_.insert({name, p});
             components_.push_back(std::static_pointer_cast<void>(f));
+            if (auto schedulerID = exporterSchedulerIDIfSupported<AppType>(f, 0)) {
+                actionPropertiesMap_.insert({name, ActionProperties {false, false, schedulerID}});
+            }
             addTypedSink(exporterAsSink(f), typedSinks_);
             if constexpr (IsKeyedData<A>::value) {
                 addTypedKeyedDataSink(exporterAsSink(f), typedKeyedDataSinks_);
@@ -1469,6 +1513,13 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         AppRunner(AppRunner &&) = default;
         AppRunner &operator=(AppRunner &&) = default;
         ~AppRunner() noexcept {
+            stopSchedulersIfSupported(m_, 0);
+        }
+        void setSchedulerCPU(std::size_t id, unsigned int cpu) {
+            m_.setSchedulerCPU(id, cpu);
+        }
+        void stopSchedulers() {
+            m_.stopSchedulers();
         }
         StateT *environment() const {
             return env_;
@@ -2518,6 +2569,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                         if (propIter->second.oneTimeOnly) {
                             htmlNodeShape = "box";
                         }
+                        if (propIter->second.schedulerID) {
+                            nodeLabel += " [scheduler: "+std::to_string(*propIter->second.schedulerID)+"]";
+                        }
                     }
                 }
                 if (item.second.hasAltOutput) {
@@ -2564,7 +2618,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                     //actionPropertiesMap is not applicable for facilities
                     auto propIter = actionPropertiesMap_.find(item.second.name);
                     if (propIter != actionPropertiesMap_.end()) {
-                        if (propIter->second.threaded) {
+                        if (propIter->second.schedulerID) {
+                            os << ",color=darkviolet";
+                        } else if (propIter->second.threaded) {
                             os << ",color=red";
                         }
                         if (propIter->second.oneTimeOnly) {

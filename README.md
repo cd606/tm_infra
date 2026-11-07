@@ -47,3 +47,111 @@ No third party library is required
 Typescript codes have been tested with Typescript 4.0.2 and NodeJS 14.13.1.
 
 C# codes have been tested with .NET Core 3.1.403.
+
+## C++ RealTimeApp action and exporter scheduling
+
+Actions lifted with default `LiftParameters` execute synchronously on their
+caller's thread. `SuggestThreaded(true)` retains the existing dedicated thread
+and input queue per action. `Scheduler(id)` selects a shared scheduler thread;
+omitting `id` selects scheduler `0`:
+
+```cpp
+using M = dev::cd606::tm::infra::RealTimeApp<MyEnvironment>;
+using Params = dev::cd606::tm::infra::LiftParameters<M::TimePoint>;
+
+auto action = M::liftPure1<int>(
+    [](int value) { return value + 1; },
+    Params().Scheduler() // equivalent to Scheduler(0)
+);
+
+dev::cd606::tm::infra::AppRunner<M> runner(&environment);
+runner.setSchedulerCPU(0, 3); // optional: bind scheduler 0 to logical CPU 3
+// Register and connect the graph as usual, then runner.finalize().
+```
+
+`simpleExporter` and `pureExporter` accept the same `Scheduler(id)` option.
+`M::exporterSchedulerID(exporter)` returns the optional ID. Exporters share
+scheduler threads and publisher batches with actions using the same ID, and
+`SynchronousRunner::exportItem` also supports scheduled exporters.
+
+Scheduler IDs are local to each application instance. Each ID owns one thread
+and each assigned action or exporter has one FIFO input queue, including actions
+with multiple input types. Queues store typed inputs directly, without per-input
+callbacks or shared ownership. One virtual dispatch per selected queue pops an
+input and calls the concrete action logic. Callers enqueue inputs and wake the scheduler through a
+condition variable. The scheduler visits nonempty queues in round-robin order,
+processing one input per queue per turn. Nodes sharing an ID execute
+serially; different IDs can execute concurrently. Synchronous downstream actions
+run on the scheduler thread of their caller. A blocking action delays every
+other action on that scheduler; dispatch does not preempt an action.
+
+Publishers arrange listeners when each connection is added. Synchronous and
+dedicated-thread listeners retain their original relative order; scheduler
+listeners follow them, sorted by scheduler ID, with stable order within each ID.
+Each contiguous group on the same scheduler instance shares one enqueue lock
+and sends one notification after the group has been enqueued. Equal IDs from
+different applications use separate locks. This applies to ordinary and variant
+outputs, including adapters that deliver typed data to `std::any` actions.
+Scheduler delivery therefore happens after all non-scheduler deliveries;
+relative execution timing across asynchronous listeners is not guaranteed.
+
+Scheduler threads start during finalization, before importers start. Composition
+of actions, importers, exporters, and wrapped facilities preserves the scheduler
+choices of contained actions and exporters. A scheduled node cannot use schedulers
+from multiple application instances. `M::actionSchedulerID(action)` returns its optional ID;
+`M::actionIsThreaded(action)` continues to identify dedicated-thread actions.
+Graphviz output marks scheduled actions and exporters dark violet and appends
+`[scheduler: N]` to their labels, including scheduler `0`. Dedicated-thread actions remain red, and
+one-time actions retain their dotted style.
+
+CPU affinity is implemented on Linux with `pthread_setaffinity_np`. Unconfigured
+schedulers inherit normal OS scheduling. `setSchedulerCPU` can configure affinity
+before finalization or update a running scheduler. Invalid or unavailable CPUs
+raise an exception when affinity is applied (during finalization for a deferred
+binding). Requesting affinity on an unsupported platform raises an exception;
+scheduler execution itself remains portable.
+
+`runner.stopSchedulers()` stops dispatch, discards pending inputs, and waits for
+current dispatches to finish. Call it from outside the scheduler threads. It is
+also called automatically before the runner releases its graph. Stopping is
+idempotent, and stopped schedulers cannot be restarted. As with dedicated
+threaded actions, uncaught exceptions in scheduled action logic terminate the
+process.
+
+`Scheduler(id)` clears `suggestThreaded`; `SuggestThreaded(true)` clears the
+scheduler ID. Setting both fields directly is rejected by action and exporter
+lifting factories. Other application models ignore the scheduler setting;
+importer and facility lifting modes retain their previous behavior.
+
+Custom `AbstractAction` subclasses can use
+`fromAbstractAction(action, Params().Scheduler(id))`. Their `handle` implementation
+must use the inherited `enqueueScheduled` hook before running its synchronous
+body, following the built-in action cores:
+
+```cpp
+void handle(InnerData<A> &&data) override {
+    if (this->enqueueScheduled(std::move(data))) {
+        return;
+    }
+    handleImmediately(std::move(data));
+}
+```
+
+The custom action must also create its typed queue once when attached:
+
+```cpp
+std::unique_ptr<real_time_app_detail::Scheduler::Queue> makeSchedulerQueue() override {
+    return std::make_unique<
+        real_time_app_detail::Scheduler::InputQueue<InnerData<A>, MyAction>
+    >(this);
+}
+```
+
+Here `MyAction` is the custom class, `real_time_app_detail` is in the `infra`
+namespace, `handleImmediately` is public and contains its execution logic, and
+`isThreaded()` returns `false`. Without a scheduler ID the hook leaves the input
+untouched and execution remains synchronous.
+
+Custom `AbstractExporter` subclasses can likewise use
+`M::exporter(exporter, Params().Scheduler(id))` with the same typed queue and
+`enqueueScheduled` hook. They retain their existing `start` implementation.

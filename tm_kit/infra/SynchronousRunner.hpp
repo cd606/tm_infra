@@ -31,7 +31,11 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
         std::mutex mutex_;
     public:
         SynchronousRunner(typename M::EnvironmentType *env) : env_(env), app_(), startedComponents_(), components_(), mutex_() {}
-        ~SynchronousRunner() = default;
+        ~SynchronousRunner() {
+            if constexpr (app_classification_v<M> == AppClassification::RealTime) {
+                app_.stopSchedulers();
+            }
+        }
         SynchronousRunner(SynchronousRunner const &) = delete;
         SynchronousRunner &operator=(SynchronousRunner const &) = delete;
         SynchronousRunner(SynchronousRunner &&) = delete;
@@ -250,6 +254,9 @@ namespace dev { namespace cd606 { namespace tm { namespace infra {
                 components_.insert(std::static_pointer_cast<void>(exporter));
                 auto *p = app_.template exporterAsExternalComponent<T>(exporter);
                 if (startedComponents_.find(p) == startedComponents_.end()) {
+                    if constexpr (app_classification_v<M> == AppClassification::RealTime) {
+                        app_.template prepareExporterForSynchronousRun<T>(*exporter);
+                    }
                     app_.template startExporterSynchronously<T>(env_, exporter);
                     startedComponents_.insert(p);
                 }
